@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../services/supabase';
+import { calculateLoanRepaymentUSD, convertToUSD } from '../utils/finance';
 
 const AppContext = createContext();
 
@@ -787,19 +788,14 @@ export const AppProvider = ({ children }) => {
   };
 
   // Helper: Convert any wallet amount to USD
-  const convertToUSD = (amount, currency) => {
-    if (currency === 'USD') return amount;
-    const rate = rates.find(r => r.currency === currency);
-    if (!rate || rate.rate_to_usd === 0) return 0;
-    return amount / rate.rate_to_usd;
-  };
+  const convertToUSDValue = (amount, currency) => convertToUSD(amount, currency, rates);
 
   // Helper: Calculate total net worth in USD (wallets + active loans as recoverable assets)
   const getNetWorthUSD = () => {
-    const walletsTotal = wallets.reduce((acc, w) => acc + convertToUSD(w.balance, w.currency), 0);
+    const walletsTotal = wallets.reduce((acc, w) => acc + convertToUSDValue(w.balance, w.currency), 0);
     const loansTotal = loans
       .filter(l => l.status === 'pending' || l.status === 'overdue')
-      .reduce((acc, l) => acc + convertToUSD(parseFloat(l.amount) * (1 + parseFloat(l.interest_rate) / 100), l.currency), 0);
+      .reduce((acc, l) => acc + calculateLoanRepaymentUSD(parseFloat(l.amount), l.currency, l.interest_rate, rates), 0);
     return walletsTotal + loansTotal;
   };
 
@@ -807,7 +803,7 @@ export const AppProvider = ({ children }) => {
   const getOutstandingLoansUSD = () => {
     return loans
       .filter(l => l.status === 'pending' || l.status === 'overdue')
-      .reduce((acc, l) => acc + convertToUSD(parseFloat(l.amount) * (1 + parseFloat(l.interest_rate) / 100), l.currency), 0);
+      .reduce((acc, l) => acc + calculateLoanRepaymentUSD(parseFloat(l.amount), l.currency, l.interest_rate, rates), 0);
   };
 
   // Helper: Get pending draft transactions
@@ -839,7 +835,7 @@ export const AppProvider = ({ children }) => {
       addTransaction,
       addExpense,
       updateRates,
-      convertToUSD,
+      convertToUSD: convertToUSDValue,
       getNetWorthUSD,
       getOutstandingLoansUSD,
       getDrafts,

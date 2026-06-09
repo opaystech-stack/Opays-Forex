@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Landmark, Wallet, Plus, Edit, Trash2, ArrowUpRight, ArrowDownLeft, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { Landmark, Plus, Edit, Trash2, ArrowUpRight, ArrowDownLeft, CheckCircle2, AlertCircle, X } from 'lucide-react';
 
 export default function WalletsPage() {
-  const { wallets, createWallet, updateWallet, deleteWallet, addTransaction, convertToUSD } = useApp();
+  const { wallets, createWallet, updateWallet, deleteWallet, addTransaction } = useApp();
   
   // Wallet CRUD state
   const [showAddForm, setShowAddForm] = useState(false);

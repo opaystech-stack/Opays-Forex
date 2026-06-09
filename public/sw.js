@@ -1,7 +1,5 @@
-const CACHE_NAME = 'forex-ledger-v1';
-const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
+const CACHE_NAME = 'forex-ledger-v3';
+const STATIC_ASSETS = [
   './favicon.svg',
   './manifest.json'
 ];
@@ -9,18 +7,21 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      return cache.addAll(STATIC_ASSETS);
     })
   );
+  // Activate immediately, don't wait for old SW to finish
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (e) => {
+  // Delete ALL old caches to prevent stale content
   e.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
+            console.log('[SW] Deleting old cache:', key);
             return caches.delete(key);
           }
         })
@@ -31,11 +32,35 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Skip non-GET or external requests (like Supabase database or Gemini API queries)
+  // Skip non-GET or external requests (Supabase, Gemini API, etc.)
   if (e.request.method !== 'GET' || !e.request.url.startsWith(self.location.origin)) {
     return;
   }
 
+  // For HTML navigation requests: ALWAYS go network-first
+  // This ensures new deployments are always picked up immediately
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request)
+        .then((networkResponse) => {
+          return networkResponse;
+        })
+        .catch(() => {
+          // Only use cache as offline fallback
+          return caches.match('./index.html');
+        })
+    );
+    return;
+  }
+
+  // For JS/CSS bundles (hashed by Vite): network-first, no caching
+  // Vite already hashes filenames, so each deploy has unique URLs
+  if (e.request.url.match(/\/assets\/.*\.(js|css)$/)) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
+
+  // For static assets (icons, manifest): cache-first is fine
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -50,11 +75,6 @@ self.addEventListener('fetch', (e) => {
           cache.put(e.request, responseToCache);
         });
         return networkResponse;
-      }).catch(() => {
-        // Fallback to cached index.html for offline page loads
-        if (e.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
       });
     })
   );

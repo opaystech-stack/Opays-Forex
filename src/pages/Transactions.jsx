@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { supabase } from '../services/supabase';
 import { ArrowLeftRight, Image, Mic, Square, Sparkles, CheckCircle2, AlertCircle, Camera } from 'lucide-react';
 
 export default function Transactions({ draftToEdit, clearDraftToEdit }) {
@@ -85,6 +86,26 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
+  };
+
+  const callGeminiProxy = async ({ kind, prompt, mimeType, base64Data }) => {
+    if (!supabase) {
+      throw new Error('Supabase non configuré');
+    }
+
+    const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+      body: { kind, prompt, mimeType, base64Data }
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data?.success) {
+      throw new Error(data?.error || 'Erreur Gemini proxy');
+    }
+
+    return data.text;
   };
 
   const applyGeminiResult = async (parsed) => {
@@ -182,14 +203,13 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
   };
 
   const processImageWithGemini = async (file) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      console.log('Gemini API Key missing. Simulating OCR.');
+    if (!supabase) {
+      console.log('Supabase non configuré. Simulation OCR activée.');
       setAiLoading(true);
       setTimeout(async () => {
         await simulateOcrResult();
         setAiLoading(false);
-        setMessage({ type: 'success', text: 'Simulé : Reçu analysé (clé API absente).' });
+        setMessage({ type: 'success', text: 'Simulé : Reçu analysé (configuration Supabase absente).' });
       }, 1500);
       return;
     }
@@ -231,42 +251,12 @@ Les captures d'écran SMS de Mobile Money ne contiennent généralement que les 
 Associe la transaction aux portefeuilles correspondants en faisant une recherche floue.
 Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'introduction ni de conclusion.`;
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  { text: prompt },
-                  {
-                    inlineData: {
-                      mimeType: file.type || 'image/jpeg',
-                      data: base64Data
-                    }
-                  }
-                ]
-              }
-            ],
-            generationConfig: {
-              responseMimeType: 'application/json'
-            }
-          })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`API Gemini retournée : ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      if (!textResponse) {
-        throw new Error("Pas de réponse de Gemini");
-      }
+      const textResponse = await callGeminiProxy({
+        kind: 'ocr',
+        prompt,
+        mimeType: file.type || 'image/jpeg',
+        base64Data
+      });
 
       let cleanedText = textResponse.trim();
       if (cleanedText.startsWith('```')) {
@@ -286,14 +276,13 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
   };
 
   const processAudioWithGemini = async (audioBlob) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      console.log('Gemini API Key missing. Simulating Voice transcription.');
+    if (!supabase) {
+      console.log('Supabase non configuré. Simulation vocale activée.');
       setAiLoading(true);
       setTimeout(async () => {
         await simulateVoiceResult();
         setAiLoading(false);
-        setMessage({ type: 'success', text: 'Simulé : Audio transcrit (clé API absente).' });
+        setMessage({ type: 'success', text: 'Simulé : Audio transcrit (configuration Supabase absente).' });
       }, 1500);
       return;
     }
@@ -323,42 +312,12 @@ ${wallets.map(w => `- ${w.name}`).join('\n')}
 Associe les montants aux portefeuilles les plus proches de la liste.
 Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'introduction ni de conclusion.`;
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  { text: prompt },
-                  {
-                    inlineData: {
-                      mimeType: 'audio/webm',
-                      data: base64Data
-                    }
-                  }
-                ]
-              }
-            ],
-            generationConfig: {
-              responseMimeType: 'application/json'
-            }
-          })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`API Gemini retournée : ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      if (!textResponse) {
-        throw new Error("Pas de réponse de Gemini");
-      }
+      const textResponse = await callGeminiProxy({
+        kind: 'audio',
+        prompt,
+        mimeType: 'audio/webm',
+        base64Data
+      });
 
       let cleanedText = textResponse.trim();
       if (cleanedText.startsWith('```')) {
@@ -373,6 +332,7 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
       setMessage({ type: 'error', text: `Erreur vocale réelle Gemini : ${error.message}. Bascule en simulation.` });
       await simulateVoiceResult();
     } finally {
+      setAiLoading(false);
     }
   };
 

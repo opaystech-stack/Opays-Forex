@@ -10,10 +10,8 @@ const fmt = new Intl.NumberFormat('fr-FR');
 
 export default function LoansPage() {
   const {
-    wallets, customers, loans, transactions, convertToUSD,
-    createCustomer, updateCustomer,
-    createLoan, updateLoanStatus,
-    findOrCreateCustomer
+    wallets, customers, loans, transactions,
+    createCustomer, createLoan, updateLoanStatus
   } = useApp();
 
   // Sub-tab state

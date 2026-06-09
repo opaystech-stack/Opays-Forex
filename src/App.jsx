@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import Navbar from './components/Navbar';
-import Dashboard from './pages/Dashboard';
-import Transactions from './pages/Transactions';
-import WalletsPage from './pages/Wallets';
-import Expenses from './pages/Expenses';
-import LoansPage from './pages/Loans';
-import SettingsPage from './pages/Settings';
-import Auth from './pages/Auth';
+
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Transactions = lazy(() => import('./pages/Transactions'));
+const WalletsPage = lazy(() => import('./pages/Wallets'));
+const Expenses = lazy(() => import('./pages/Expenses'));
+const LoansPage = lazy(() => import('./pages/Loans'));
+const SettingsPage = lazy(() => import('./pages/Settings'));
+const Auth = lazy(() => import('./pages/Auth'));
 
 import { Loader2 } from 'lucide-react';
 
@@ -34,7 +35,11 @@ function AppContent() {
 
   // If not authenticated, show login page
   if (!user) {
-    return <Auth />;
+    return (
+      <Suspense fallback={<div className="auth-overlay"><div className="auth-card-container"><div className="card glass-card auth-card">Chargement…</div></div></div>}>
+        <Auth />
+      </Suspense>
+    );
   }
 
   const renderActiveTab = () => {
@@ -95,7 +100,9 @@ function AppContent() {
 
         {/* Dynamic Page Scrollable Body */}
         <main className="page-content">
-          {renderActiveTab()}
+          <Suspense fallback={<div className="card glass-card" style={{ padding: '16px' }}>Chargement de la page…</div>}>
+            {renderActiveTab()}
+          </Suspense>
         </main>
       </div>
     </div>

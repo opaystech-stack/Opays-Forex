@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Settings, Save, AlertTriangle, Key, RefreshCw, LogOut, Landmark } from 'lucide-react';
+import { Settings, Save, AlertTriangle, Key, RefreshCw, LogOut } from 'lucide-react';
 
 export default function SettingsPage() {
   const { rates, updateRates, isUsingMock, resetMockData, user, logOut, wallets, adjustWalletBalance } = useApp();
@@ -17,6 +17,7 @@ export default function SettingsPage() {
   const [message, setMessage] = useState(null);
 
   // Sync inputs with rates context
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const ugx = rates.find(r => r.currency === 'UGX');
     const kes = rates.find(r => r.currency === 'KES');
@@ -26,7 +27,6 @@ export default function SettingsPage() {
     const eur = rates.find(r => r.currency === 'EUR');
     const fcfa = rates.find(r => r.currency === 'FCFA');
 
-    /* eslint-disable react-hooks/set-state-in-effect */
     if (ugx) setUgxRate(ugx.rate_to_usd.toString());
     if (kes) setKesRate(kes.rate_to_usd.toString());
     if (cdf) setCdfRate(cdf.rate_to_usd.toString());
@@ -34,8 +34,8 @@ export default function SettingsPage() {
     if (bif) setBifRate(bif.rate_to_usd.toString());
     if (eur) setEurRate(eur.rate_to_usd.toString());
     if (fcfa) setFcfaRate(fcfa.rate_to_usd.toString());
-    /* eslint-enable react-hooks/set-state-in-effect */
   }, [rates]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleSaveRates = async (e) => {
     e.preventDefault();
@@ -290,9 +290,11 @@ function WalletStockAdjuster({ wallet, onAdjust }) {
   const [success, setSuccess] = useState(false);
 
   // Sync state if wallet balance changes externally
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setBalance(wallet.balance.toString());
   }, [wallet.balance]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleSubmit = async (e) => {
     e.preventDefault();

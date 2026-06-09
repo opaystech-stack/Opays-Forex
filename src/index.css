@@ -900,3 +900,214 @@ body {
   background-color: var(--color-red);
 }
 
+/* ==========================================
+   DESKTOP RESPONSIVE LAYOUT (PC)
+   ========================================== */
+
+/* Logo is hidden on mobile by default */
+.sidebar-logo {
+  display: none;
+}
+
+/* On mobile, tabs-container is just a flex row wrapper */
+.navbar-tabs-container {
+  display: flex;
+  width: 100%;
+  justify-content: space-around;
+  align-items: center;
+}
+
+@media (min-width: 441px) and (max-width: 767px) {
+  .app-container {
+    height: 850px;
+    border-radius: 40px;
+    border: 12px solid #1c2d5a;
+  }
+}
+
+@media (min-width: 768px) {
+  /* Body Reset for Desktop scroll */
+  body {
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Expand Container */
+  .app-container {
+    max-width: 100% !important;
+    height: 100vh !important;
+    flex-direction: row !important;
+    padding-bottom: 0 !important;
+    border-radius: 0 !important;
+    border: none !important;
+    background: #f1f5f9;
+  }
+
+  /* Main Workspace Layout */
+  .main-layout {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: auto;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* Header adjustments */
+  .app-header {
+    padding: 30px 40px 15px !important;
+  }
+  
+  .app-title {
+    font-size: 30px;
+    color: var(--deep-navy);
+  }
+  
+  .app-subtitle {
+    color: var(--text-secondary);
+  }
+
+  .floating-spheres {
+    display: none; /* Hide spheres on PC to keep it cleaner */
+  }
+
+  /* Sidebar Styling */
+  .mobile-navbar {
+    width: 280px !important;
+    height: 100vh !important;
+    position: static !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    padding: 40px 24px !important;
+    border-right: 1px solid var(--border-color) !important;
+    border-top: none !important;
+    box-shadow: var(--shadow-sm) !important;
+    flex-shrink: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .sidebar-logo {
+    display: block;
+    margin-bottom: 40px;
+    padding-left: 10px;
+  }
+  
+  .logo-title {
+    font-family: var(--font-title);
+    font-weight: 700;
+    font-size: 24px;
+    color: var(--primary-blue);
+    margin-top: 2px;
+  }
+  
+  .logo-subtitle {
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+  }
+
+  .navbar-tabs-container {
+    flex-direction: column !important;
+    gap: 8px !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+  }
+
+  .navbar-tab {
+    flex: none !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 14px 20px !important;
+    border-radius: 12px !important;
+    width: 100% !important;
+    gap: 14px !important;
+    color: var(--text-secondary) !important;
+  }
+
+  .navbar-tab:hover {
+    background-color: var(--bg-light);
+    color: var(--primary-blue) !important;
+  }
+
+  .navbar-tab.active {
+    background-color: var(--primary-blue-glow) !important;
+    color: var(--primary-blue) !important;
+  }
+
+  .navbar-tab.active .navbar-icon {
+    transform: none !important;
+  }
+
+  .navbar-tab::after {
+    display: none !important;
+  }
+
+  .navbar-icon {
+    margin-bottom: 0 !important;
+  }
+
+  .navbar-label {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+  }
+
+  /* Page Content (main body) */
+  .page-content {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 10px 40px 40px !important;
+  }
+
+  /* Dashboard Layout Grid */
+  .dashboard-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 30px;
+    align-items: start;
+    width: 100%;
+  }
+
+  /* Cards in Transparent Page Content should be white and have shadows */
+  .card {
+    background-color: #ffffff !important;
+    box-shadow: var(--shadow-sm) !important;
+    border: 1px solid var(--border-color) !important;
+  }
+
+  .card:hover {
+    box-shadow: var(--shadow-md) !important;
+    border-color: var(--text-muted) !important;
+  }
+
+  .glass-card {
+    background: linear-gradient(135deg, #ffffff 0%, #edf2fb 100%) !important;
+    border: 1px solid var(--border-color) !important;
+  }
+
+  /* Wallets flex layout on desktop */
+  .wallet-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+  }
+
+  /* Stats strip */
+  .stats-strip {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Wallet Card Active State (when filtering) */
+.wallet-card.active {
+  border-color: var(--primary-blue) !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 3px var(--primary-blue-glow) !important;
+  transform: translateY(-2px);
+}
+
+

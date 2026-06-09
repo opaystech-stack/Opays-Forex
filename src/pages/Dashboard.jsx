@@ -6,6 +6,7 @@ export default function Dashboard({ onSelectDraft }) {
   const { wallets, transactions, expenses, getNetWorthUSD, convertToUSD, getDrafts, confirmDraft, deleteDraft, loading } = useApp();
   const [selectedTxn, setSelectedTxn] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedWalletId, setSelectedWalletId] = useState(null);
 
   if (loading) {
     return (
@@ -50,8 +51,13 @@ export default function Dashboard({ onSelectDraft }) {
     return new Intl.NumberFormat('fr-FR').format(value) + ' ' + currency;
   };
 
-  // Filter transactions for search (useful to find transaction ID disputes)
+  // Filter transactions for search (useful to find transaction ID disputes) & selected wallet
   const filteredTransactions = completedTxns.filter(t => {
+    // 1. Filter by selected wallet
+    if (selectedWalletId && t.source_wallet_id !== selectedWalletId && t.dest_wallet_id !== selectedWalletId) {
+      return false;
+    }
+    // 2. Filter by search query
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     const sourceWallet = wallets.find(w => w.id === t.source_wallet_id)?.name || '';
@@ -62,7 +68,7 @@ export default function Dashboard({ onSelectDraft }) {
       sourceWallet.toLowerCase().includes(query) ||
       destWallet.toLowerCase().includes(query)
     );
-  }).slice(0, 5); // top 5 matches
+  }).slice(0, 10); // top 10 matches on desktop
 
   // Handle draft confirmation
   const handleConfirmDraft = async (draft) => {
@@ -80,195 +86,218 @@ export default function Dashboard({ onSelectDraft }) {
   };
 
   return (
-    <div>
-      {/* 0. Draft Notifications Panel */}
-      {drafts.length > 0 && (
-        <div className="drafts-panel">
-          <div className="drafts-header">
-            <Clock size={14} />
-            <span>{drafts.length} brouillon{drafts.length > 1 ? 's' : ''} en attente</span>
+    <div className="dashboard-layout">
+      {/* Left Column: Metrics & Wallets */}
+      <div className="dashboard-col-left">
+        {/* 1. Net Worth Card */}
+        <div className="card glass-card" style={{ marginBottom: '20px' }}>
+          <span className="net-worth-label">Patrimoine Global</span>
+          <div className="net-worth-amount">
+            {new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(getNetWorthUSD())}
+            <span className="net-worth-currency">USD</span>
           </div>
-          {drafts.map(d => {
-            const sWallet = wallets.find(w => w.id === d.source_wallet_id);
-            const dWallet = wallets.find(w => w.id === d.dest_wallet_id);
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+            Consolidation automatique en temps réel de toutes vos caisses et wallets.
+          </p>
+        </div>
+
+        {/* 2. Daily Summary */}
+        <div className="screen-header" style={{ marginBottom: '10px' }}>
+          <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>Résumé d'aujourd'hui</h3>
+        </div>
+        <div className="stats-strip">
+          <div className="stat-box">
+            <span className="stat-label">Bénéfice de Change</span>
+            <div className="stat-value income" style={{ color: 'var(--color-green)' }}>
+              +{formatValue(stats.profitUSD, 'USD')}
+            </div>
+          </div>
+          <div className="stat-box">
+            <span className="stat-label">Dépenses Agence</span>
+            <div className="stat-value expense" style={{ color: 'var(--color-red)' }}>
+              -{formatValue(stats.bizExpenseUSD, 'USD')}
+            </div>
+          </div>
+        </div>
+
+        <div className="card" style={{ padding: '14px 18px', marginTop: '-10px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>Bénéfice Net Kiosque :</span>
+            <span style={{ fontWeight: '600', color: stats.netProfitUSD >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
+              {formatValue(stats.netProfitUSD, 'USD')}
+            </span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', borderTop: '1px solid var(--border-color)', paddingTop: '6px' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>Prélèvements Personnels :</span>
+            <span style={{ fontWeight: '600', color: 'var(--color-orange)' }}>
+              {formatValue(stats.persExpenseUSD, 'USD')}
+            </span>
+          </div>
+        </div>
+
+        {/* 3. Wallets Grid */}
+        <div className="screen-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>Vos Caisses & Wallets</h3>
+        </div>
+        <div className="wallet-grid">
+          {wallets.map(w => {
+            const isCash = w.type === 'cash';
+            const isActive = selectedWalletId === w.id;
             return (
-              <div key={d.id} className="draft-card">
-                <div className="draft-info" onClick={() => onSelectDraft?.(d)} title="Cliquer pour modifier/valider">
-                  <span className="draft-route">
-                    {sWallet?.name?.split(' ')[0]} → {dWallet?.name?.split(' ')[0]}
-                  </span>
-                  <span className="draft-amounts">
-                    {formatValue(d.source_amount, sWallet?.currency)} → {formatValue(d.dest_amount, dWallet?.currency)}
-                  </span>
-                  {d.note && <span className="draft-note">{d.note}</span>}
+              <div 
+                key={w.id} 
+                className={`wallet-card ${isActive ? 'active' : ''}`}
+                onClick={() => setSelectedWalletId(isActive ? null : w.id)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div className="wallet-info">
+                    <span className="wallet-name" title={w.name}>{w.name}</span>
+                    <span className="wallet-type-badge">{isCash ? 'Espèces' : 'Mobile Money'}</span>
+                  </div>
+                  {isCash ? (
+                    <Landmark size={14} color="var(--text-secondary)" />
+                  ) : (
+                    <Wallet size={14} color="var(--primary-blue)" />
+                  )}
                 </div>
-                <div className="draft-actions">
-                  <button 
-                    className="draft-btn edit" 
-                    onClick={() => onSelectDraft?.(d)}
-                    title="Modifier et valider ce brouillon"
-                    style={{ backgroundColor: 'var(--primary-blue-glow)', color: 'var(--primary-blue)' }}
-                  >
-                    <Edit size={14} />
-                  </button>
-                  <button 
-                    className="draft-btn confirm" 
-                    onClick={() => handleConfirmDraft(d)}
-                    title="Valider immédiatement ce brouillon"
-                  >
-                    <FileCheck size={16} />
-                  </button>
-                  <button 
-                    className="draft-btn reject" 
-                    onClick={() => handleDeleteDraft(d.id)}
-                    title="Supprimer ce brouillon"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                <div className="wallet-balance">
+                  {formatValue(w.balance, w.currency)}
                 </div>
               </div>
             );
           })}
         </div>
-      )}
-
-      {/* 1. Net Worth Card */}
-      <div className="card glass-card" style={{ marginBottom: '20px' }}>
-        <span className="net-worth-label">Patrimoine Global</span>
-        <div className="net-worth-amount">
-          {new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(getNetWorthUSD())}
-          <span className="net-worth-currency">USD</span>
-        </div>
-        <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-          Consolidation automatique en temps réel de toutes vos caisses et wallets.
-        </p>
       </div>
 
-      {/* 2. Daily Summary */}
-      <div className="screen-header" style={{ marginBottom: '10px' }}>
-        <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>Résumé d'aujourd'hui</h3>
-      </div>
-      <div className="stats-strip">
-        <div className="stat-box">
-          <span className="stat-label">Bénéfice de Change</span>
-          <div className="stat-value income" style={{ color: 'var(--color-green)' }}>
-            +{formatValue(stats.profitUSD, 'USD')}
-          </div>
-        </div>
-        <div className="stat-box">
-          <span className="stat-label">Dépenses Agence</span>
-          <div className="stat-value expense" style={{ color: 'var(--color-red)' }}>
-            -{formatValue(stats.bizExpenseUSD, 'USD')}
-          </div>
-        </div>
-      </div>
-
-      <div className="card" style={{ padding: '14px 18px', marginTop: '-10px', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>Bénéfice Net Kiosque :</span>
-          <span style={{ fontWeight: '600', color: stats.netProfitUSD >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
-            {formatValue(stats.netProfitUSD, 'USD')}
-          </span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', borderTop: '1px solid var(--border-color)', paddingTop: '6px' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>Prélèvements Personnels :</span>
-          <span style={{ fontWeight: '600', color: 'var(--color-orange)' }}>
-            {formatValue(stats.persExpenseUSD, 'USD')}
-          </span>
-        </div>
-      </div>
-
-      {/* 3. Wallets Grid */}
-      <div className="screen-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>Vos Caisses & Wallets</h3>
-      </div>
-      <div className="wallet-grid">
-        {wallets.map(w => {
-          const isCash = w.type === 'cash';
-          return (
-            <div key={w.id} className="wallet-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div className="wallet-info">
-                  <span className="wallet-name" title={w.name}>{w.name}</span>
-                  <span className="wallet-type-badge">{isCash ? 'Espèces' : 'Mobile Money'}</span>
-                </div>
-                {isCash ? (
-                  <Landmark size={14} color="var(--text-secondary)" />
-                ) : (
-                  <Wallet size={14} color="var(--primary-blue)" />
-                )}
-              </div>
-              <div className="wallet-balance">
-                {formatValue(w.balance, w.currency)}
-              </div>
+      {/* Right Column: Drafts & Search/Ledger */}
+      <div className="dashboard-col-right">
+        {/* 0. Draft Notifications Panel */}
+        {drafts.length > 0 && (
+          <div className="drafts-panel">
+            <div className="drafts-header">
+              <Clock size={14} />
+              <span>{drafts.length} brouillon{drafts.length > 1 ? 's' : ''} en attente</span>
             </div>
-          );
-        })}
-      </div>
-
-      {/* 4. Quick Search / Recent transactions */}
-      <div className="screen-header" style={{ marginTop: '25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>Recherche & Litiges</h3>
-      </div>
-      
-      <div className="form-group" style={{ marginBottom: '12px' }}>
-        <div className="input-icon-wrapper">
-          <Search className="input-icon" size={16} />
-          <input
-            type="text"
-            className="form-control input-with-icon"
-            placeholder="Rechercher par ID Transaction, Note..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="ledger-list">
-        {filteredTransactions.length === 0 ? (
-          <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', padding: '15px' }}>
-            Aucune transaction trouvée.
-          </p>
-        ) : (
-          filteredTransactions.map(t => {
-            const sWallet = wallets.find(w => w.id === t.source_wallet_id);
-            const dWallet = wallets.find(w => w.id === t.dest_wallet_id);
-            const dateStr = new Date(t.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-            return (
-              <div 
-                key={t.id} 
-                className="ledger-item" 
-                style={{ cursor: 'pointer' }}
-                onClick={() => setSelectedTxn(t)}
-              >
-                <div className="ledger-left">
-                  <div className="ledger-icon-box exchange">
-                    <ArrowLeftRight size={18} />
+            {drafts.map(d => {
+              const sWallet = wallets.find(w => w.id === d.source_wallet_id);
+              const dWallet = wallets.find(w => w.id === d.dest_wallet_id);
+              return (
+                <div key={d.id} className="draft-card">
+                  <div className="draft-info" onClick={() => onSelectDraft?.(d)} title="Cliquer pour modifier/valider">
+                    <span className="draft-route">
+                      {sWallet?.name?.split(' ')[0]} → {dWallet?.name?.split(' ')[0]}
+                    </span>
+                    <span className="draft-amounts">
+                      {formatValue(d.source_amount, sWallet?.currency)} → {formatValue(d.dest_amount, dWallet?.currency)}
+                    </span>
+                    {d.note && <span className="draft-note">{d.note}</span>}
                   </div>
-                  <div className="ledger-details">
-                    <span className="ledger-title">
-                      {sWallet?.name} ➡️ {dWallet?.name}
-                    </span>
-                    <span className="ledger-subtitle">
-                      {dateStr} • {t.note || 'Pas de note'}
-                    </span>
+                  <div className="draft-actions">
+                    <button 
+                      className="draft-btn edit" 
+                      onClick={() => onSelectDraft?.(d)}
+                      title="Modifier et valider ce brouillon"
+                      style={{ backgroundColor: 'var(--primary-blue-glow)', color: 'var(--primary-blue)' }}
+                    >
+                      <Edit size={14} />
+                    </button>
+                    <button 
+                      className="draft-btn confirm" 
+                      onClick={() => handleConfirmDraft(d)}
+                      title="Valider immédiatement ce brouillon"
+                    >
+                      <FileCheck size={16} />
+                    </button>
+                    <button 
+                      className="draft-btn reject" 
+                      onClick={() => handleDeleteDraft(d.id)}
+                      title="Supprimer ce brouillon"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </div>
-                <div className="ledger-right">
-                  <span className="ledger-value negative">
-                    -{formatValue(t.source_amount, sWallet?.currency)}
-                  </span>
-                  <span className="ledger-value positive" style={{ fontSize: '12px', marginTop: '2px', color: 'var(--color-green)' }}>
-                    +{formatValue(t.dest_amount, dWallet?.currency)}
-                  </span>
-                  {t.transaction_id && (
-                    <span className="ledger-txn-id">ID: {t.transaction_id}</span>
-                  )}
-                </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
+
+        {/* 4. Quick Search / Recent transactions */}
+        <div className="screen-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>Recherche & Litiges</h3>
+        </div>
+        
+        {/* Active Filter Badge */}
+        {selectedWalletId && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Filtre actif :</span>
+            <span className="mock-badge" style={{ backgroundColor: 'var(--primary-blue-glow)', border: '1px solid var(--primary-blue)', color: 'var(--primary-blue)', display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '600' }} onClick={() => setSelectedWalletId(null)}>
+              {wallets.find(w => w.id === selectedWalletId)?.name}
+              <span style={{ fontWeight: 'bold', fontSize: '12px' }}>×</span>
+            </span>
+          </div>
+        )}
+
+        <div className="form-group" style={{ marginBottom: '12px' }}>
+          <div className="input-icon-wrapper">
+            <Search className="input-icon" size={16} />
+            <input
+              type="text"
+              className="form-control input-with-icon"
+              placeholder="Rechercher par ID Transaction, Note..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="ledger-list">
+          {filteredTransactions.length === 0 ? (
+            <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', padding: '15px' }}>
+              Aucune transaction trouvée.
+            </p>
+          ) : (
+            filteredTransactions.map(t => {
+              const sWallet = wallets.find(w => w.id === t.source_wallet_id);
+              const dWallet = wallets.find(w => w.id === t.dest_wallet_id);
+              const dateStr = new Date(t.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+              return (
+                <div 
+                  key={t.id} 
+                  className="ledger-item" 
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => setSelectedTxn(t)}
+                >
+                  <div className="ledger-left">
+                    <div className="ledger-icon-box exchange">
+                      <ArrowLeftRight size={18} />
+                    </div>
+                    <div className="ledger-details">
+                      <span className="ledger-title">
+                        {sWallet?.name} ➡️ {dWallet?.name}
+                      </span>
+                      <span className="ledger-subtitle">
+                        {dateStr} • {t.note || 'Pas de note'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="ledger-right">
+                    <span className="ledger-value negative">
+                      -{formatValue(t.source_amount, sWallet?.currency)}
+                    </span>
+                    <span className="ledger-value positive" style={{ fontSize: '12px', marginTop: '2px', color: 'var(--color-green)' }}>
+                      +{formatValue(t.dest_amount, dWallet?.currency)}
+                    </span>
+                    {t.transaction_id && (
+                      <span className="ledger-txn-id">ID: {t.transaction_id}</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
 
       {/* Transaction Detail Modal Drawer */}

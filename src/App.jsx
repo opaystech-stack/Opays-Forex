@@ -40,32 +40,34 @@ function AppContent() {
 
   return (
     <div className="app-container">
-      {/* 3D spheres background from design */}
-      <div className="floating-spheres">
-        <div className="sphere sphere-1"></div>
-        <div className="sphere sphere-2"></div>
-        <div className="sphere sphere-3"></div>
-        <div className="sphere sphere-4"></div>
-      </div>
+      {/* Navigation (Sidebar on PC, Bottom tabbar on Mobile) */}
+      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} isUsingMock={isUsingMock} />
 
-      {/* App Header */}
-      <header className="app-header">
-        <div>
-          <span className="app-subtitle">Gestion Kiosque</span>
-          <h1 className="app-title">Forex Ledger</h1>
+      <div className="main-layout">
+        {/* 3D spheres background from design */}
+        <div className="floating-spheres">
+          <div className="sphere sphere-1"></div>
+          <div className="sphere sphere-2"></div>
+          <div className="sphere sphere-3"></div>
+          <div className="sphere sphere-4"></div>
         </div>
-        {isUsingMock && (
-          <span className="mock-badge">Démo</span>
-        )}
-      </header>
 
-      {/* Dynamic Page Scrollable Body */}
-      <main className="page-content">
-        {renderActiveTab()}
-      </main>
+        {/* App Header */}
+        <header className="app-header">
+          <div>
+            <span className="app-subtitle">Gestion Kiosque</span>
+            <h1 className="app-title">Forex Ledger</h1>
+          </div>
+          {isUsingMock && (
+            <span className="mock-badge">Démo</span>
+          )}
+        </header>
 
-      {/* Bottom Navigation */}
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+        {/* Dynamic Page Scrollable Body */}
+        <main className="page-content">
+          {renderActiveTab()}
+        </main>
+      </div>
     </div>
   );
 }

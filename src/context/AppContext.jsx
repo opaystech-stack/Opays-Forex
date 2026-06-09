@@ -82,7 +82,8 @@ export const AppProvider = ({ children }) => {
   // Check if Supabase credentials are valid
   const hasCredentials = 
     import.meta.env.VITE_SUPABASE_URL && 
-    import.meta.env.VITE_SUPABASE_ANON_KEY;
+    import.meta.env.VITE_SUPABASE_ANON_KEY &&
+    supabase !== null;
 
   const fetchData = useCallback(async (showLoading = false) => {
     if (showLoading) {

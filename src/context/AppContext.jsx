@@ -231,7 +231,13 @@ export const AppProvider = ({ children }) => {
   const signUp = async (email, password) => {
     if (!supabase) return { success: false, error: 'Supabase non configuré' };
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          emailRedirectTo: window.location.origin
+        }
+      });
       if (error) throw error;
       return { success: true, data };
     } catch (err) {

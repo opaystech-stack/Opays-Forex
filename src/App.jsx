@@ -5,11 +5,35 @@ import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Expenses from './pages/Expenses';
 import SettingsPage from './pages/Settings';
+import Auth from './pages/Auth';
+
+import { Loader2 } from 'lucide-react';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [draftToEdit, setDraftToEdit] = useState(null);
-  const { isUsingMock } = useApp();
+  const { isUsingMock, user, loading } = useApp();
+
+  // Show a premium loading screen during initial session verification
+  if (loading) {
+    return (
+      <div className="auth-overlay" style={{ display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center', alignItems: 'center' }}>
+        <div className="auth-header" style={{ marginBottom: '0' }}>
+          <span className="auth-subtitle">Forex Ledger</span>
+          <h1 className="auth-title" style={{ fontSize: '28px', marginTop: '4px' }}>Initialisation...</h1>
+        </div>
+        <div style={{ color: '#ffffff', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', fontWeight: '500', opacity: 0.8 }}>
+          <Loader2 className="animate-spin" size={20} style={{ animation: 'spin 1s linear infinite' }} />
+          <span>Vérification de la session en cours</span>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, show login page
+  if (!user) {
+    return <Auth />;
+  }
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -79,3 +103,4 @@ export default function App() {
     </AppProvider>
   );
 }
+

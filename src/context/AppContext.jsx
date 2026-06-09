@@ -77,7 +77,9 @@ export const AppProvider = ({ children }) => {
   const [transactions, setTransactions] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
   const [isUsingMock, setIsUsingMock] = useState(false);
+  const [user, setUser] = useState(null);
 
   // Check if Supabase credentials are valid
   const hasCredentials = 
@@ -89,8 +91,14 @@ export const AppProvider = ({ children }) => {
     if (showLoading) {
       setLoading(true);
     }
-    if (!hasCredentials) {
-      console.log('Supabase credentials not found. Using Mock Data.');
+
+    // If session check hasn't finished, wait
+    if (hasCredentials && !authChecked) {
+      return;
+    }
+
+    if (!hasCredentials || user?.isDemo) {
+      console.log('Supabase credentials not found or Demo Mode active. Using Mock Data.');
       // Load mock from localStorage or defaults
       const localWallets = localStorage.getItem('forex_wallets');
       const localRates = localStorage.getItem('forex_rates');
@@ -102,6 +110,11 @@ export const AppProvider = ({ children }) => {
       setTransactions(localTxns ? JSON.parse(localTxns) : MOCK_TRANSACTIONS);
       setExpenses(localExp ? JSON.parse(localExp) : MOCK_EXPENSES);
       setIsUsingMock(true);
+      setLoading(false);
+      return;
+    }
+
+    if (!user) {
       setLoading(false);
       return;
     }
@@ -132,7 +145,96 @@ export const AppProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [hasCredentials]);
+  }, [hasCredentials, authChecked, user]);
+
+  // Listen to Supabase Auth Changes
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (!supabase) {
+      setAuthChecked(true);
+      setLoading(false);
+      return;
+    }
+
+    // Get active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setAuthChecked(true);
+    });
+
+    // Listen to changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setAuthChecked(true);
+    });
+    /* eslint-enable react-hooks/set-state-in-effect */
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
+
+  // Sign up with email/password
+  const signUp = async (email, password) => {
+    if (!supabase) return { success: false, error: 'Supabase non configuré' };
+    try {
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Sign in with email/password
+  const signIn = async (email, password) => {
+    if (!supabase) return { success: false, error: 'Supabase non configuré' };
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Sign in with Google OAuth
+  const signInWithGoogle = async () => {
+    if (!supabase) return { success: false, error: 'Supabase non configuré' };
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) throw error;
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Sign out
+  const logOut = async () => {
+    if (!supabase || user?.isDemo) {
+      setUser(null);
+      return { success: true };
+    }
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setUser(null);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Login as demo user
+  const loginAsDemo = () => {
+    setUser({ email: 'demo@opays.com', id: 'demo-user', isDemo: true });
+  };
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -375,6 +477,12 @@ export const AppProvider = ({ children }) => {
       expenses,
       loading,
       isUsingMock,
+      user,
+      signUp,
+      signIn,
+      signInWithGoogle,
+      logOut,
+      loginAsDemo,
       addTransaction,
       addExpense,
       updateRates,

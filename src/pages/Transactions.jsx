@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { ArrowLeftRight, Image, Mic, Square, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
 
@@ -18,6 +18,39 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
   const [message, setMessage] = useState(null); // { type: 'success' | 'error', text: '' }
   const [aiLoading, setAiLoading] = useState(false);
   const [receiptPreviewUrl, setReceiptPreviewUrl] = useState(null);
+
+  // Initialize wallet dropdowns on mount if they are empty
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (wallets.length > 0 && !sourceWalletId && !destWalletId) {
+      setSourceWalletId(wallets[0].id);
+      setDestWalletId(wallets.length > 1 ? wallets[1].id : wallets[0].id);
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [wallets, sourceWalletId, destWalletId]);
+
+  // Pre-populate form when draftToEdit changes
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (draftToEdit) {
+      setSourceWalletId(draftToEdit.source_wallet_id || '');
+      setDestWalletId(draftToEdit.dest_wallet_id || '');
+      setSourceAmount(draftToEdit.source_amount ? draftToEdit.source_amount.toString() : '');
+      setDestAmount(draftToEdit.dest_amount ? draftToEdit.dest_amount.toString() : '');
+      setFee(draftToEdit.fee ? draftToEdit.fee.toString() : '0');
+      setTransactionId(draftToEdit.transaction_id || '');
+      setNote(draftToEdit.note || '');
+      setReceiptPreviewUrl(draftToEdit.image_url || null);
+    } else {
+      setSourceAmount('');
+      setDestAmount('');
+      setFee('0');
+      setTransactionId('');
+      setNote('');
+      setReceiptPreviewUrl(null);
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [draftToEdit]);
 
   const sWallet = wallets.find(w => w.id === sourceWalletId);
   const dWallet = wallets.find(w => w.id === destWalletId);

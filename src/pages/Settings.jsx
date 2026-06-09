@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Settings, Save, AlertTriangle, Key, RefreshCw } from 'lucide-react';
+import { Settings, Save, AlertTriangle, Key, RefreshCw, LogOut } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { rates, updateRates, isUsingMock, resetMockData } = useApp();
+  const { rates, updateRates, isUsingMock, resetMockData, user, logOut } = useApp();
   
   // Rates inputs
   const [ugxRate, setUgxRate] = useState('3750');
@@ -162,6 +162,31 @@ export default function SettingsPage() {
           </button>
         </div>
       )}
+
+      {/* 4. User Session & Logout */}
+      <div className="card">
+        <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <LogOut size={18} color="var(--color-red)" />
+          <span>Session Utilisateur</span>
+        </h3>
+        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+          Connecté en tant que : <strong>{user?.email || 'Utilisateur démo'}</strong>
+        </p>
+        <button 
+          type="button" 
+          className="btn btn-outline" 
+          style={{ borderColor: 'var(--color-red)', color: 'var(--color-red)' }}
+          onClick={async () => {
+            const res = await logOut();
+            if (!res.success) {
+              alert('Erreur lors de la déconnexion : ' + res.error);
+            }
+          }}
+        >
+          <LogOut size={14} />
+          <span>Se Déconnecter</span>
+        </button>
+      </div>
     </div>
   );
 }

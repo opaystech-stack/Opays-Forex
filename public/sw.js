@@ -1,5 +1,7 @@
-const CACHE_NAME = 'opaysfox-v1';
+const CACHE_NAME = 'opaysfox-v2';
 const STATIC_ASSETS = [
+  './',
+  './index.html',
   './favicon.svg',
   './manifest.json'
 ];

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'forex-ledger-v3';
+const CACHE_NAME = 'opaysfox-v1';
 const STATIC_ASSETS = [
   './favicon.svg',
   './manifest.json'

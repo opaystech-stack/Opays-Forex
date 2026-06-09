@@ -45,7 +45,7 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
       setTransactionId(draftToEdit.transaction_id || '');
       setCustomerId(draftToEdit.customer_id || '');
       setNote(draftToEdit.note || '');
-      setReceiptPreviewUrl(draftToEdit.image_url || null);
+      setReceiptPreviewUrl(null);
     } else {
       setType('exchange');
       setSourceAmount('');
@@ -290,7 +290,7 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
     try {
       setAiLoading(true);
       const base64Data = await fileToBase64(audioBlob);
-      const prompt = `Tu es un assistant de saisie vocale pour l'application Forex Ledger.
+      const prompt = `Tu es un assistant de saisie vocale pour l'application OpaysFox.
 Écoute cet enregistrement audio décrivant une transaction financière (ex: "échange de 100 dollars contre 365 000 shillings" ou "j'ai reçu 10 dollars cash" ou "retrait de 5000 shillings sur MTN").
 Extrais les informations requises et renvoie-les sous la forme d'un objet JSON brut. Le JSON doit suivre exactement ce format :
 {
@@ -420,8 +420,7 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
       fee_wallet_id: type === 'deposit' ? destWalletId : sourceWalletId,
       profit_usd: type === 'exchange' ? calculatedProfitUSD : 0,
       transaction_id: transactionId || null,
-      note: note || '',
-      image_url: receiptPreviewUrl || (draftToEdit ? draftToEdit.image_url : null)
+      note: note || ''
     };
 
     let res;
@@ -677,13 +676,13 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
 
           {/* Customer Selection */}
           <div className="form-group">
-            <label className="form-label">Client associé (optionnel)</label>
+            <label className="form-label">Client (optionnel)</label>
             <select
               className="form-control"
               value={customerId}
               onChange={(e) => setCustomerId(e.target.value)}
             >
-              <option value="">— Aucun client associé —</option>
+              <option value="">— Aucun client —</option>
               {customers.map(c => (
                 <option key={c.id} value={c.id}>
                   {c.name} {c.phone ? ` (${c.phone})` : ''}
@@ -691,6 +690,10 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
               ))}
             </select>
           </div>
+
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+            Les images ne sont pas stockées dans la base ; seules les informations utiles extraites de la capture sont conservées pour la transaction.
+          </p>
 
           {/* Note */}
           <div className="form-group">

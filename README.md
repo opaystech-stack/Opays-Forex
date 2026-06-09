@@ -1,4 +1,4 @@
-# Forex & Mobile Money Ledger (Kampala Kiosk)
+# OpaysFox - Gestion Forex
 
 Application web (PWA) sur-mesure d'aide à la comptabilité et de suivi de trésorerie pour un kiosque multi-devises et mobile money basé à Kampala (Ouganda).
 

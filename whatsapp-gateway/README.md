@@ -101,4 +101,4 @@ Pour installer l'Edge Function de réception et d'analyse IA sur votre compte Su
 
 1. Envoyez un message ou une capture d'écran de reçu mobile money vers le compte WhatsApp configuré.
 2. Surveillez les logs de l'Edge Function Supabase dans le tableau de bord Supabase (Section *Edge Functions > whatsapp-webhook > Logs*) pour voir l'extraction IA s'exécuter.
-3. Allez sur le Dashboard de l'application **Forex Ledger** : le brouillon de transaction extrait par l'IA doit apparaître immédiatement dans la boîte orange, prêt à être édité ou validé d'un clic !
+3. Allez sur le Dashboard de l'application **OpaysFox** : le brouillon de transaction extrait par l'IA doit apparaître immédiatement dans la boîte orange, prêt à être édité ou validé d'un clic !

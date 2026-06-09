@@ -19,7 +19,7 @@ services:
       - WEBHOOK_SECRET=votre_cle_secret_hmac_pour_signature # Pour authentifier les requêtes webhook
       
       # Options de session et de sécurité
-      - SESSION_NAME=forex-ledger-session
+      - SESSION_NAME=opaysfox-session
       - API_KEY=votre_cle_api_pour_securiser_les_appels_rest # Facultatif
     volumes:
       # Persistance de la session WhatsApp (évite de devoir re-scanner le QR code au redémarrage)

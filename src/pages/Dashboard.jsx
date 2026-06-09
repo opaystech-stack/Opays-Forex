@@ -411,14 +411,6 @@ export default function Dashboard({ onSelectDraft }) {
                 <p style={{ fontSize: '13px' }}>{new Date(selectedTxn.timestamp).toLocaleString('fr-FR')}</p>
               </div>
 
-              {selectedTxn.image_url && (
-                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Capture d'Écran du Reçu</span>
-                  <a href={selectedTxn.image_url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
-                    <img src={selectedTxn.image_url} alt="Reçu" style={{ width: '100%', maxHeight: '200px', objectFit: 'contain' }} />
-                  </a>
-                </div>
-              )}
             </div>
           </div>
         </div>

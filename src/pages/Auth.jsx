@@ -5,7 +5,45 @@ import { supabase } from '../services/supabase';
 
 export default function Auth() {
   const { signIn, signUp, signInWithGoogle, loginAsDemo } = useApp();
-  
+
+  const translations = {
+    fr: {
+      subtitle: 'Gestion Forex',
+      title: 'OpaysFox',
+      demoTitle: 'Mode Démo Actif',
+      demoText: 'Supabase n\'est pas configuré. Vous pouvez tester l\'ensemble de l\'application en mode local sécurisé en cliquant sur le bouton ci-dessous.',
+      demoButton: 'Accéder en mode Démo',
+      connectTab: 'Se connecter',
+      signupTab: 'Créer un compte',
+      emailLabel: 'Adresse Email',
+      passwordLabel: 'Mot de Passe',
+      confirmLabel: 'Confirmer le Mot de Passe',
+      submitLogin: 'Se connecter',
+      submitSignup: 'Créer mon compte',
+      googleButton: 'Continuer avec Google',
+      demoLink: 'Continuer en mode démo local',
+      loading: 'Chargement...'
+    },
+    en: {
+      subtitle: 'Forex Management',
+      title: 'OpaysFox',
+      demoTitle: 'Demo Mode Active',
+      demoText: 'Supabase is not configured. You can test the full application in secure local mode by clicking the button below.',
+      demoButton: 'Access Demo Mode',
+      connectTab: 'Sign in',
+      signupTab: 'Create account',
+      emailLabel: 'Email Address',
+      passwordLabel: 'Password',
+      confirmLabel: 'Confirm Password',
+      submitLogin: 'Sign in',
+      submitSignup: 'Create account',
+      googleButton: 'Continue with Google',
+      demoLink: 'Continue in local demo mode',
+      loading: 'Loading...'
+    }
+  };
+
+  const [language, setLanguage] = useState('fr');
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -70,6 +108,7 @@ export default function Auth() {
   };
 
   const isSupabaseConfigured = supabase !== null;
+  const t = translations[language];
 
   return (
     <div className="auth-overlay">
@@ -83,8 +122,14 @@ export default function Auth() {
 
       <div className="auth-card-container">
         <div className="auth-header">
-          <span className="auth-subtitle">Gestion Kiosque</span>
-          <h1 className="auth-title">Forex Ledger</h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+            <span className="auth-subtitle">{t.subtitle}</span>
+            <div className="toggle-group" style={{ padding: '2px', borderRadius: '999px' }}>
+              <button type="button" className={`toggle-button ${language === 'fr' ? 'active' : ''}`} onClick={() => setLanguage('fr')} style={{ padding: '6px 8px', fontSize: '11px' }}>FR</button>
+              <button type="button" className={`toggle-button ${language === 'en' ? 'active' : ''}`} onClick={() => setLanguage('en')} style={{ padding: '6px 8px', fontSize: '11px' }}>EN</button>
+            </div>
+          </div>
+          <h1 className="auth-title">{t.title}</h1>
         </div>
 
         <div className="card glass-card auth-card">
@@ -99,17 +144,17 @@ export default function Auth() {
             <div style={{ textAlign: 'center', padding: '10px 0' }}>
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                 <Sparkles size={20} color="var(--primary-blue)" style={{ animation: 'pulse 1.5s infinite' }} />
-                <span style={{ fontWeight: '600', color: 'var(--deep-navy)', fontSize: '15px' }}>Mode Démo Actif</span>
+                <span style={{ fontWeight: '600', color: 'var(--deep-navy)', fontSize: '15px' }}>{t.demoTitle}</span>
               </div>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: '1.6' }}>
-                Supabase n'est pas configuré. Vous pouvez tester l'ensemble de l'application en mode local sécurisé en cliquant sur le bouton ci-dessous.
+                {t.demoText}
               </p>
               <button 
                 type="button" 
                 className="btn btn-primary" 
                 onClick={loginAsDemo}
               >
-                <span>Accéder en mode Démo</span>
+                <span>{t.demoButton}</span>
               </button>
             </div>
           ) : (
@@ -125,7 +170,7 @@ export default function Auth() {
                   }}
                   style={{ flex: 1, border: 'none', background: 'none', padding: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', color: !isSignUp ? 'var(--primary-blue)' : 'var(--text-secondary)', transition: 'all 0.2s' }}
                 >
-                  Se connecter
+                  {t.connectTab}
                 </button>
                 <button 
                   type="button" 
@@ -136,7 +181,7 @@ export default function Auth() {
                   }}
                   style={{ flex: 1, border: 'none', background: 'none', padding: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', color: isSignUp ? 'var(--primary-blue)' : 'var(--text-secondary)', transition: 'all 0.2s' }}
                 >
-                  Créer un compte
+                  {t.signupTab}
                 </button>
                 <div 
                   className="auth-tab-bar" 
@@ -155,7 +200,7 @@ export default function Auth() {
               {/* Standard Email Auth Form */}
               <form onSubmit={handleEmailAuth}>
                 <div className="form-group">
-                  <label className="form-label">Adresse Email</label>
+                  <label className="form-label">{t.emailLabel}</label>
                   <div className="input-icon-wrapper">
                     <Mail className="input-icon" size={16} />
                     <input 
@@ -170,7 +215,7 @@ export default function Auth() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Mot de Passe</label>
+                  <label className="form-label">{t.passwordLabel}</label>
                   <div className="input-icon-wrapper">
                     <Lock className="input-icon" size={16} />
                     <input 
@@ -187,7 +232,7 @@ export default function Auth() {
 
                 {isSignUp && (
                   <div className="form-group">
-                    <label className="form-label">Confirmer le Mot de Passe</label>
+                    <label className="form-label">{t.confirmLabel}</label>
                     <div className="input-icon-wrapper">
                       <Lock className="input-icon" size={16} />
                       <input 
@@ -211,7 +256,7 @@ export default function Auth() {
                 >
                   {isSignUp ? <UserPlus size={16} /> : <LogIn size={16} />}
                   <span>
-                    {loading ? 'Chargement...' : isSignUp ? 'Créer mon compte' : 'Se connecter'}
+                    {loading ? t.loading : isSignUp ? t.submitSignup : t.submitLogin}
                   </span>
                 </button>
               </form>
@@ -237,7 +282,7 @@ export default function Auth() {
                   <path fill="#FBBC05" d="M3.95 10.7a5.4 5.4 0 0 1 0-3.4V4.98H.89a9 9 0 0 0 0 8.04l3.06-2.32z"/>
                   <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.02C13.46.59 11.43 0 9 0 5.43 0 2.37 2.04.89 5.02l3.06 2.32c.71-2.14 2.7-3.73 5.05-3.73z"/>
                 </svg>
-                <span>Continuer avec Google</span>
+                <span>{t.googleButton}</span>
               </button>
 
               {/* Demo bypass button even if Supabase is connected (useful for quick testing) */}
@@ -247,7 +292,7 @@ export default function Auth() {
                   onClick={loginAsDemo}
                   style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: '600', textDecoration: 'underline', cursor: 'pointer' }}
                 >
-                  Continuer en mode démo local
+                  {t.demoLink}
                 </button>
               </div>
             </div>

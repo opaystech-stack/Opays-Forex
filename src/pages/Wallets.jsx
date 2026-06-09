@@ -324,7 +324,7 @@ export default function WalletsPage() {
               style={{ padding: '8px 12px' }}
             >
               <ArrowDownLeft size={14} style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle' }} />
-              Prélèvement Associé
+              Prélèvement
             </button>
           </div>
 

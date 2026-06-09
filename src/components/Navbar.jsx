@@ -14,8 +14,8 @@ export default function Navbar({ activeTab, setActiveTab, isUsingMock }) {
     <nav className="mobile-navbar">
       {/* Sidebar header (visible only on desktop via CSS) */}
       <div className="sidebar-logo">
-        <span className="logo-subtitle">Gestion Kiosque</span>
-        <h2 className="logo-title">Forex Ledger</h2>
+        <span className="logo-subtitle">Gestion Forex</span>
+        <h2 className="logo-title">OpaysFox</h2>
         {isUsingMock && (
           <span className="mock-badge" style={{ marginTop: '8px', display: 'inline-block' }}>Démo</span>
         )}

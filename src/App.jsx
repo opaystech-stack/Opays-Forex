@@ -22,7 +22,7 @@ function AppContent() {
     return (
       <div className="auth-overlay" style={{ display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center', alignItems: 'center' }}>
         <div className="auth-header" style={{ marginBottom: '0' }}>
-          <span className="auth-subtitle">Forex Ledger</span>
+          <span className="auth-subtitle">OpaysFox</span>
           <h1 className="auth-title" style={{ fontSize: '28px', marginTop: '4px' }}>Initialisation...</h1>
         </div>
         <div style={{ color: '#ffffff', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', fontWeight: '500', opacity: 0.8 }}>
@@ -90,8 +90,8 @@ function AppContent() {
         {/* App Header */}
         <header className="app-header">
           <div>
-            <span className="app-subtitle">Gestion Kiosque</span>
-            <h1 className="app-title">Forex Ledger</h1>
+            <span className="app-subtitle">Gestion Forex</span>
+            <h1 className="app-title">OpaysFox</h1>
           </div>
           {isUsingMock && (
             <span className="mock-badge">Démo</span>

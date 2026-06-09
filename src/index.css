@@ -929,6 +929,12 @@ body {
   display: none;
 }
 
+@media (max-width: 767px) {
+  .navbar-tab {
+    flex: 0 0 75px !important;
+  }
+}
+
 @media (min-width: 441px) and (max-width: 767px) {
   .app-container {
     height: 850px;

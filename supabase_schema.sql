@@ -237,9 +237,20 @@ ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE loans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Allow full access on wallets" ON wallets;
 CREATE POLICY "Allow full access on wallets" ON wallets FOR ALL TO anon USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow full access on exchange_rates" ON exchange_rates;
 CREATE POLICY "Allow full access on exchange_rates" ON exchange_rates FOR ALL TO anon USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow full access on customers" ON customers;
 CREATE POLICY "Allow full access on customers" ON customers FOR ALL TO anon USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow full access on transactions" ON transactions;
 CREATE POLICY "Allow full access on transactions" ON transactions FOR ALL TO anon USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow full access on loans" ON loans;
 CREATE POLICY "Allow full access on loans" ON loans FOR ALL TO anon USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow full access on expenses" ON expenses;
 CREATE POLICY "Allow full access on expenses" ON expenses FOR ALL TO anon USING (true) WITH CHECK (true);

@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  whatsapp-gateway:
+    image: rmyndharis/openwa:latest
+    container_name: forex-whatsapp-gateway
+    restart: always
+    ports:
+      - "2785:2785" # Port de l'API REST
+      - "2886:2886" # Port du Dashboard Web (pour scanner le code QR)
+    environment:
+      - PORT=2785
+      - DASHBOARD_PORT=2886
+      - NODE_ENV=production
+      
+      # Configuration du Webhook
+      # Remplacez par l'URL réelle de votre Supabase Edge Function
+      - WEBHOOK_URL=https://votre-projet.supabase.co/functions/v1/whatsapp-webhook
+      - WEBHOOK_SECRET=votre_cle_secret_hmac_pour_signature # Pour authentifier les requêtes webhook
+      
+      # Options de session et de sécurité
+      - SESSION_NAME=forex-ledger-session
+      - API_KEY=votre_cle_api_pour_securiser_les_appels_rest # Facultatif
+    volumes:
+      # Persistance de la session WhatsApp (évite de devoir re-scanner le QR code au redémarrage)
+      - ./sessions:/app/sessions
+      - ./storage:/app/storage
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

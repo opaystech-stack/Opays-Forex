@@ -1,0 +1,29 @@
+{
+  "short_name": "Forex Ledger",
+  "name": "Forex & Mobile Money Ledger",
+  "description": "Gestion en temps réel des caisses de devises et portefeuilles mobile money avec assistant IA.",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#2f50a3",
+  "background_color": "#cbdcf7",
+  "orientation": "portrait"
+}

@@ -1,10 +1,12 @@
-import { LayoutDashboard, ArrowLeftRight, TrendingDown, Settings } from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, TrendingDown, Settings, Landmark, Coins } from 'lucide-react';
 
 export default function Navbar({ activeTab, setActiveTab, isUsingMock }) {
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'transactions', label: 'Transactions', icon: ArrowLeftRight },
+    { id: 'wallets', label: 'Portefeuilles', icon: Landmark },
     { id: 'expenses', label: 'Dépenses', icon: TrendingDown },
+    { id: 'loans', label: 'Prêts', icon: Coins },
     { id: 'settings', label: 'Paramètres', icon: Settings },
   ];
 

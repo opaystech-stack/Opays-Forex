@@ -98,68 +98,78 @@ export default function Expenses() {
       </div>
 
       {/* 2. Expense Input Form */}
-      <form onSubmit={handleSubmit} className="card">
-        {/* Wallet debited */}
-        <div className="form-group">
-          <label className="form-label">Caisse / Portefeuille débité</label>
-          <select
-            className="form-control"
-            value={activeWalletId}
-            onChange={(e) => setWalletId(e.target.value)}
-          >
-            {wallets.map(w => (
-              <option key={w.id} value={w.id}>{w.name} ({w.currency})</option>
-            ))}
-          </select>
+      {wallets.length === 0 ? (
+        <div className="card" style={{ textAlign: 'center', padding: '30px 20px' }}>
+          <AlertCircle size={40} color="var(--color-orange)" style={{ margin: '0 auto 12px' }} />
+          <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>Aucune caisse disponible</h3>
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: '1.6' }}>
+            Veuillez d'abord créer vos caisses (ex: Caisse USD, MTN UGX) dans le menu dédié « Portefeuilles » pour pouvoir enregistrer des dépenses.
+          </p>
         </div>
-
-        {/* Amount & Category */}
-        <div className="form-row">
+      ) : (
+        <form onSubmit={handleSubmit} className="card">
+          {/* Wallet debited */}
           <div className="form-group">
-            <label className="form-label">Montant dépensé</label>
-            <input
-              type="number"
-              step="any"
+            <label className="form-label">Caisse / Portefeuille débité</label>
+            <select
               className="form-control"
-              placeholder="Ex: 5000"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              required
+              value={activeWalletId}
+              onChange={(e) => setWalletId(e.target.value)}
+            >
+              {wallets.map(w => (
+                <option key={w.id} value={w.id}>{w.name} ({w.currency})</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Amount & Category */}
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Montant dépensé</label>
+              <input
+                type="number"
+                step="any"
+                className="form-control"
+                placeholder="Ex: 5000"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Catégorie</label>
+              <select
+                className="form-control"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+              >
+                {isBusiness 
+                  ? BUSINESS_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)
+                  : PERSONAL_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)
+                }
+              </select>
+            </div>
+          </div>
+
+          {/* Note */}
+          <div className="form-group">
+            <label className="form-label">Détail / Note explicative</label>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Ex: Transport Kampala centre, Achat pain..."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Catégorie</label>
-            <select
-              className="form-control"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              {isBusiness 
-                ? BUSINESS_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)
-                : PERSONAL_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)
-              }
-            </select>
-          </div>
-        </div>
-
-        {/* Note */}
-        <div className="form-group">
-          <label className="form-label">Détail / Note explicative</label>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Ex: Transport Kampala centre, Achat pain..."
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-          />
-        </div>
-
-        <button type="submit" className="btn btn-primary" style={{ backgroundColor: isBusiness ? 'var(--color-cyan)' : 'var(--color-orange)', color: '#090c10', boxShadow: isBusiness ? '0 4px 14px var(--color-cyan-glow)' : '0 4px 14px var(--color-orange-glow)' }}>
-          <TrendingDown size={16} />
-          <span>Enregistrer le Retrait</span>
-        </button>
-      </form>
+          <button type="submit" className="btn btn-primary" style={{ backgroundColor: isBusiness ? 'var(--color-cyan)' : 'var(--color-orange)', color: '#090c10', boxShadow: isBusiness ? '0 4px 14px var(--color-cyan-glow)' : '0 4px 14px var(--color-orange-glow)' }}>
+            <TrendingDown size={16} />
+            <span>Enregistrer le Retrait</span>
+          </button>
+        </form>
+      )}
 
       {/* 3. Recent Expenses List */}
       <div className="screen-header" style={{ marginTop: '25px' }}>

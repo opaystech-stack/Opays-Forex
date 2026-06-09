@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { ArrowLeftRight, Image, Mic, Square, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ArrowLeftRight, Image, Mic, Square, Sparkles, CheckCircle2, AlertCircle, Camera } from 'lucide-react';
 
 export default function Transactions({ draftToEdit, clearDraftToEdit }) {
-  const { wallets, addTransaction, confirmDraft, convertToUSD } = useApp();
+  const { wallets, addTransaction, confirmDraft, convertToUSD, customers, findOrCreateCustomer } = useApp();
   
   // Form state
+  const [type, setType] = useState('exchange'); // 'exchange', 'deposit', 'withdrawal'
   const [sourceWalletId, setSourceWalletId] = useState('');
   const [destWalletId, setDestWalletId] = useState('');
   const [sourceAmount, setSourceAmount] = useState('');
   const [destAmount, setDestAmount] = useState('');
   const [fee, setFee] = useState('0');
   const [transactionId, setTransactionId] = useState('');
+  const [customerId, setCustomerId] = useState('');
   const [note, setNote] = useState('');
   
   // Interactive / UI states
@@ -33,19 +35,23 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
     if (draftToEdit) {
+      setType(draftToEdit.type || 'exchange');
       setSourceWalletId(draftToEdit.source_wallet_id || '');
       setDestWalletId(draftToEdit.dest_wallet_id || '');
       setSourceAmount(draftToEdit.source_amount ? draftToEdit.source_amount.toString() : '');
       setDestAmount(draftToEdit.dest_amount ? draftToEdit.dest_amount.toString() : '');
       setFee(draftToEdit.fee ? draftToEdit.fee.toString() : '0');
       setTransactionId(draftToEdit.transaction_id || '');
+      setCustomerId(draftToEdit.customer_id || '');
       setNote(draftToEdit.note || '');
       setReceiptPreviewUrl(draftToEdit.image_url || null);
     } else {
+      setType('exchange');
       setSourceAmount('');
       setDestAmount('');
       setFee('0');
       setTransactionId('');
+      setCustomerId('');
       setNote('');
       setReceiptPreviewUrl(null);
     }
@@ -81,7 +87,9 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
     });
   };
 
-  const applyGeminiResult = (parsed) => {
+  const applyGeminiResult = async (parsed) => {
+    if (parsed.type) setType(parsed.type);
+
     const matchedSource = wallets.find(w => 
       w.name.toLowerCase().includes(parsed.sourceWalletName?.toLowerCase()) || 
       parsed.sourceWalletName?.toLowerCase().includes(w.name.toLowerCase())
@@ -94,43 +102,82 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
     if (matchedSource) setSourceWalletId(matchedSource.id);
     if (matchedDest) setDestWalletId(matchedDest.id);
     
-    if (parsed.sourceAmount) setSourceAmount(parsed.sourceAmount.toString());
-    if (parsed.destAmount) setDestAmount(parsed.destAmount.toString());
+    // Support partial extraction (asymmetric MM SMS)
+    if (parsed.sourceAmount !== undefined && parsed.sourceAmount !== null) {
+      setSourceAmount(parsed.sourceAmount.toString());
+    } else {
+      setSourceAmount('');
+    }
+
+    if (parsed.destAmount !== undefined && parsed.destAmount !== null) {
+      setDestAmount(parsed.destAmount.toString());
+    } else {
+      setDestAmount('');
+    }
+
     if (parsed.fee) setFee(parsed.fee.toString());
     if (parsed.transactionId) setTransactionId(parsed.transactionId.toString());
     if (parsed.note) setNote(parsed.note);
+
+    // Auto-detect and find or create customer
+    if (parsed.customerName || parsed.customerPhone) {
+      const custRes = await findOrCreateCustomer({
+        name: parsed.customerName,
+        phone: parsed.customerPhone
+      });
+      if (custRes.success && custRes.data) {
+        setCustomerId(custRes.data.id);
+        if (custRes.isNew) {
+          setMessage({
+            type: 'success',
+            text: `Nouveau client "${custRes.data.name}" créé automatiquement à partir du reçu.`
+          });
+        }
+      }
+    } else {
+      setCustomerId('');
+    }
   };
 
-  const simulateOcrResult = () => {
+  const simulateOcrResult = async () => {
     const randomReceipt = Math.random() > 0.5 ? {
+      type: 'exchange',
       sourceWalletName: 'Caisse USD Cash',
       destWalletName: 'MTN Uganda (UGX)',
       sourceAmount: '150',
       destAmount: '552000',
       fee: '0',
       transactionId: 'MTN-UG-' + Math.floor(1000000 + Math.random() * 9000000),
-      note: 'Reçu simulé (clé Gemini absente dans .env) - Capture'
+      note: 'Reçu simulé (clé Gemini absente dans .env) - Capture',
+      customerName: 'Mama Sarah',
+      customerPhone: '+256788291039'
     } : {
+      type: 'exchange',
       sourceWalletName: 'Airtel Money RDC (USD)',
       destWalletName: 'Caisse UGX Cash',
       sourceAmount: '200',
       destAmount: '734000',
       fee: '2',
       transactionId: 'ART-CD-' + Math.floor(1000000 + Math.random() * 9000000),
-      note: 'Reçu simulé (clé Gemini absente dans .env) - Airtel RDC'
+      note: 'Reçu simulé (clé Gemini absente dans .env) - Airtel RDC',
+      customerName: 'Nouveau Client Ocr',
+      customerPhone: '+243888777666'
     };
-    applyGeminiResult(randomReceipt);
+    await applyGeminiResult(randomReceipt);
   };
 
-  const simulateVoiceResult = () => {
-    applyGeminiResult({
+  const simulateVoiceResult = async () => {
+    await applyGeminiResult({
+      type: 'exchange',
       sourceWalletName: 'Caisse USD Cash',
       destWalletName: 'MTN Uganda (UGX)',
       sourceAmount: '100',
       destAmount: '366000',
       fee: '0',
       transactionId: 'VOC-' + Math.floor(100000 + Math.random() * 900000),
-      note: 'Transcription simulée (clé Gemini absente) : "Échange de 100 USD contre 366000 UGX"'
+      note: 'Transcription simulée (clé Gemini absente) : "Échange de 100 USD contre 366000 UGX"',
+      customerName: 'Jean Kabamba',
+      customerPhone: '+243999988271'
     });
   };
 
@@ -139,8 +186,8 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
     if (!apiKey) {
       console.log('Gemini API Key missing. Simulating OCR.');
       setAiLoading(true);
-      setTimeout(() => {
-        simulateOcrResult();
+      setTimeout(async () => {
+        await simulateOcrResult();
         setAiLoading(false);
         setMessage({ type: 'success', text: 'Simulé : Reçu analysé (clé API absente).' });
       }, 1500);
@@ -153,20 +200,36 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
       const prompt = `Tu es un assistant comptable expert pour un bureau de change Forex et Mobile Money.
 Analyse cette capture d'écran de reçu ou message de transaction. Extrais les informations requises et renvoie-les sous la forme d'un objet JSON brut. Le JSON doit suivre exactement ce format :
 {
-  "sourceWalletName": "Nom exact du portefeuille source",
-  "destWalletName": "Nom exact du portefeuille destination",
-  "sourceAmount": "Montant envoyé",
-  "destAmount": "Montant reçu",
-  "fee": "Frais s'ils sont indiqués, sinon 0",
+  "type": "exchange", // Mettre "exchange" par défaut
+  "sourceWalletName": "Nom exact du portefeuille de départ si l'opérateur a ENVOYÉ des fonds",
+  "destWalletName": "Nom exact du portefeuille d'arrivée si l'opérateur a REÇU des fonds",
+  "sourceAmount": "Montant débité/envoyé (nombre ou null)",
+  "destAmount": "Montant crédité/reçu (nombre ou null)",
+  "fee": "Frais réseau s'ils sont indiqués, sinon 0",
   "transactionId": "ID unique de la transaction (réseau)",
-  "note": "Note courte décrivant la transaction ou le client"
+  "customerName": "Nom complet du client s'il est mentionné dans le reçu/SMS ou si l'on peut l'identifier",
+  "customerPhone": "Numéro de téléphone du client s'il est mentionné dans le reçu/SMS",
+  "note": "Note courte décrivant la transaction (ex: 'Transféré à ZAMWANA')"
 }
 
 Les portefeuilles disponibles dans l'application sont :
 ${wallets.map(w => `- ${w.name}`).join('\n')}
 
-Associe la transaction aux portefeuilles correspondants.
-Si une information n'est pas présente, laisse le champ à "" ou 0 pour fee. Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'introduction ni de conclusion.`;
+INSTRUCTIONS CRITIQUES POUR LES CAPTURES MOBILE MONEY A SENS UNIQUE :
+Les captures d'écran SMS de Mobile Money ne contiennent généralement que les détails de l'envoi réseau (ex: "transferred to [Name] at [Date]" ou "You have received [Amount] from [Name] [Phone]").
+- Si le SMS indique que l'opérateur a ENVOYÉ/TRANSFÉRÉ de l'argent :
+  * Définis "sourceWalletName" comme le portefeuille Mobile Money correspondant (ex: MTN Uganda, Airtel Money).
+  * Définis "sourceAmount" comme le montant transféré.
+  * Laisse "destWalletName" et "destAmount" à null (l'opérateur complétera manuellement la devise/montant cash qu'il a reçue du client).
+  * Extrais le nom et téléphone du destinataire dans "customerName" et "customerPhone".
+- Si le SMS indique que l'opérateur a REÇU/DÉPOSÉ de l'argent :
+  * Définis "destWalletName" comme le portefeuille Mobile Money correspondant.
+  * Définis "destAmount" comme le montant reçu.
+  * Laisse "sourceWalletName" et "sourceAmount" à null.
+  * Extrais le nom et téléphone de l'expéditeur dans "customerName" et "customerPhone".
+
+Associe la transaction aux portefeuilles correspondants en faisant une recherche floue.
+Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'introduction ni de conclusion.`;
 
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
@@ -211,12 +274,12 @@ Si une information n'est pas présente, laisse le champ à "" ou 0 pour fee. Ré
       }
 
       const parsed = JSON.parse(cleanedText.trim());
-      applyGeminiResult(parsed);
-      setMessage({ type: 'success', text: 'Reçu analysé par l\'IA Gemini avec succès !' });
+      await applyGeminiResult(parsed);
+      setMessage({ type: 'success', text: 'Reçu analysé par l\'IA Gemini avec succès ! Complétez les champs manquants.' });
     } catch (error) {
       console.error("Erreur Gemini OCR:", error);
       setMessage({ type: 'error', text: `Erreur d'analyse réelle Gemini : ${error.message}. Bascule en simulation.` });
-      simulateOcrResult();
+      await simulateOcrResult();
     } finally {
       setAiLoading(false);
     }
@@ -227,8 +290,8 @@ Si une information n'est pas présente, laisse le champ à "" ou 0 pour fee. Ré
     if (!apiKey) {
       console.log('Gemini API Key missing. Simulating Voice transcription.');
       setAiLoading(true);
-      setTimeout(() => {
-        simulateVoiceResult();
+      setTimeout(async () => {
+        await simulateVoiceResult();
         setAiLoading(false);
         setMessage({ type: 'success', text: 'Simulé : Audio transcrit (clé API absente).' });
       }, 1500);
@@ -239,15 +302,18 @@ Si une information n'est pas présente, laisse le champ à "" ou 0 pour fee. Ré
       setAiLoading(true);
       const base64Data = await fileToBase64(audioBlob);
       const prompt = `Tu es un assistant de saisie vocale pour l'application Forex Ledger.
-Écoute cet enregistrement audio décrivant une transaction financière (ex: "échange de 100 dollars contre 365 000 shillings" ou "retrait de 5000 shillings sur MTN").
+Écoute cet enregistrement audio décrivant une transaction financière (ex: "échange de 100 dollars contre 365 000 shillings" ou "j'ai reçu 10 dollars cash" ou "retrait de 5000 shillings sur MTN").
 Extrais les informations requises et renvoie-les sous la forme d'un objet JSON brut. Le JSON doit suivre exactement ce format :
 {
-  "sourceWalletName": "Nom du portefeuille de départ",
-  "destWalletName": "Nom du portefeuille d'arrivée",
-  "sourceAmount": "Montant donné",
-  "destAmount": "Montant reçu/remis",
+  "type": "exchange", // Ou "deposit" ou "withdrawal" en fonction du contexte
+  "sourceWalletName": "Nom du portefeuille de départ si l'opérateur paye/donne/débite",
+  "destWalletName": "Nom du portefeuille d'arrivée si l'opérateur reçoit/crédite",
+  "sourceAmount": "Montant donné (nombre ou null)",
+  "destAmount": "Montant reçu/remis (nombre ou null)",
   "fee": "Frais s'ils sont indiqués, sinon 0",
   "transactionId": "ID unique s'il est mentionné, sinon null",
+  "customerName": "Nom du client s'il est mentionné dans l'audio, sinon null",
+  "customerPhone": "Téléphone du client s'il est mentionné dans l'audio, sinon null",
   "note": "Note ou transcription résumée de l'audio"
 }
 
@@ -300,14 +366,13 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
       }
 
       const parsed = JSON.parse(cleanedText.trim());
-      applyGeminiResult(parsed);
+      await applyGeminiResult(parsed);
       setMessage({ type: 'success', text: 'Commande vocale analysée par l\'IA Gemini avec succès !' });
     } catch (error) {
       console.error("Erreur Gemini Audio:", error);
       setMessage({ type: 'error', text: `Erreur vocale réelle Gemini : ${error.message}. Bascule en simulation.` });
-      simulateVoiceResult();
+      await simulateVoiceResult();
     } finally {
-      setAiLoading(false);
     }
   };
 
@@ -360,25 +425,40 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!sourceWalletId || !destWalletId || !sourceAmount || !destAmount) {
-      setMessage({ type: 'error', text: 'Veuillez remplir les champs obligatoires.' });
-      return;
-    }
-
-    if (sourceWalletId === destWalletId) {
-      setMessage({ type: 'error', text: 'Le portefeuille de départ doit être différent de celui d\'arrivée.' });
-      return;
+    
+    // Validate depending on type
+    if (type === 'exchange') {
+      if (!sourceWalletId || !destWalletId || !sourceAmount || !destAmount) {
+        setMessage({ type: 'error', text: 'Veuillez remplir tous les champs requis pour un échange.' });
+        return;
+      }
+      if (sourceWalletId === destWalletId) {
+        setMessage({ type: 'error', text: 'Le portefeuille de départ doit être différent de celui d\'arrivée.' });
+        return;
+      }
+    } else if (type === 'deposit') {
+      if (!destWalletId || !destAmount) {
+        setMessage({ type: 'error', text: 'Veuillez renseigner le portefeuille à créditer et le montant.' });
+        return;
+      }
+    } else if (type === 'withdrawal') {
+      if (!sourceWalletId || !sourceAmount) {
+        setMessage({ type: 'error', text: 'Veuillez renseigner le portefeuille à débiter et le montant.' });
+        return;
+      }
     }
 
     const payload = {
-      source_wallet_id: sourceWalletId,
-      dest_wallet_id: destWalletId,
-      source_amount: parseFloat(sourceAmount),
-      dest_amount: parseFloat(destAmount),
-      exchange_rate: parseFloat(destAmount) / parseFloat(sourceAmount),
+      type,
+      source_wallet_id: type === 'deposit' ? null : sourceWalletId,
+      dest_wallet_id: type === 'withdrawal' ? null : destWalletId,
+      customer_id: customerId || null,
+      source_amount: type === 'deposit' ? parseFloat(destAmount) : parseFloat(sourceAmount),
+      dest_amount: type === 'withdrawal' ? parseFloat(sourceAmount) : parseFloat(destAmount),
+      exchange_rate: type === 'exchange' ? parseFloat(destAmount) / parseFloat(sourceAmount) : 1.0,
       fee: parseFloat(fee) || 0,
-      fee_wallet_id: sourceWalletId,
-      profit_usd: calculatedProfitUSD,
+      fee_wallet_id: type === 'deposit' ? destWalletId : sourceWalletId,
+      profit_usd: type === 'exchange' ? calculatedProfitUSD : 0,
       transaction_id: transactionId || null,
       note: note || '',
       image_url: receiptPreviewUrl || (draftToEdit ? draftToEdit.image_url : null)
@@ -403,6 +483,7 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
       setDestAmount('');
       setFee('0');
       setTransactionId('');
+      setCustomerId('');
       setNote('');
       setReceiptPreviewUrl(null);
       if (draftToEdit) {
@@ -417,12 +498,12 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
     <div>
       <div className="screen-header">
         <h2 className="screen-title" style={{ color: draftToEdit ? 'var(--color-orange)' : 'var(--deep-navy)' }}>
-          {draftToEdit ? 'Validation Brouillon' : 'Nouvelle Transaction'}
+          {draftToEdit ? 'Validation Brouillon' : 'Nouvelle Opération'}
         </h2>
         <p className="screen-desc">
           {draftToEdit 
             ? 'Vérifier et compléter les détails du brouillon avant validation.' 
-            : 'Échange de devises ou transfert de fonds mobile money.'}
+            : 'Saisir un échange de devises, un renforcement de fonds ou un retrait.'}
         </p>
       </div>
 
@@ -433,25 +514,39 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
         </div>
       )}
 
-      {/* A. AI Assistant shortcuts (Voice & Screenshot) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' }}>
+      {/* A. AI Assistant shortcuts (Voice, Camera capture, Upload) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '8px', marginBottom: '15px' }}>
         {/* Voice recorder button */}
         {!isRecording ? (
-          <button type="button" className="btn btn-outline" onClick={startRecording} disabled={aiLoading}>
-            <Mic size={16} color="var(--color-red)" />
+          <button type="button" className="btn btn-outline" style={{ padding: '10px 6px', fontSize: '11px' }} onClick={startRecording} disabled={aiLoading}>
+            <Mic size={14} color="var(--color-red)" />
             <span>Saisie Vocale</span>
           </button>
         ) : (
-          <button type="button" className="btn btn-primary" style={{ backgroundColor: 'var(--color-red)' }} onClick={stopRecording}>
-            <Square size={16} />
-            <span style={{ fontSize: '12px' }}>En écoute... (Fin)</span>
+          <button type="button" className="btn btn-primary" style={{ backgroundColor: 'var(--color-red)', padding: '10px 6px', fontSize: '11px' }} onClick={stopRecording}>
+            <Square size={14} />
+            <span>Fin écoute</span>
           </button>
         )}
 
-        {/* OCR Screenshot button */}
-        <label className="btn btn-outline" style={{ cursor: 'pointer' }}>
-          <Image size={16} color="var(--color-primary)" />
-          <span>Scanner Reçu</span>
+        {/* OCR Camera Photo button */}
+        <label className="btn btn-outline" style={{ cursor: 'pointer', padding: '10px 6px', fontSize: '11px' }}>
+          <Camera size={14} color="var(--color-green)" />
+          <span>Prendre Photo</span>
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleReceiptUpload}
+            style={{ display: 'none' }}
+            disabled={aiLoading}
+          />
+        </label>
+
+        {/* OCR File Upload button */}
+        <label className="btn btn-outline" style={{ cursor: 'pointer', padding: '10px 6px', fontSize: '11px' }}>
+          <Image size={14} color="var(--primary-blue)" />
+          <span>Choisir Fichier</span>
           <input
             type="file"
             accept="image/*"
@@ -471,161 +566,225 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
         </div>
       )}
 
-      {/* B. Transaction Form */}
-      <form onSubmit={handleSubmit} className="card">
-        {/* Source Wallet selection */}
-        <div className="form-row">
+      {/* B. Check Wallets List availability */}
+      {wallets.length === 0 ? (
+        <div className="card" style={{ textAlign: 'center', padding: '30px 20px' }}>
+          <AlertCircle size={40} color="var(--color-orange)" style={{ margin: '0 auto 12px' }} />
+          <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>Aucune caisse disponible</h3>
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: '1.6' }}>
+            Veuillez d'abord créer vos caisses (ex: Caisse USD, MTN UGX) dans le menu dédié « Portefeuilles » pour pouvoir enregistrer une transaction.
+          </p>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="card">
+          
+          {/* Transaction Type Selector */}
+          <div className="toggle-group" style={{ marginBottom: '18px', padding: '4px' }}>
+            <button
+              type="button"
+              className={`toggle-button ${type === 'exchange' ? 'active business' : ''}`}
+              onClick={() => setType('exchange')}
+              style={{ fontSize: '12px', padding: '8px 6px' }}
+            >
+              Échange Forex
+            </button>
+            <button
+              type="button"
+              className={`toggle-button ${type === 'deposit' ? 'active' : ''}`}
+              onClick={() => setType('deposit')}
+              style={{ fontSize: '12px', padding: '8px 6px' }}
+            >
+              Renforcement (+)
+            </button>
+            <button
+              type="button"
+              className={`toggle-button ${type === 'withdrawal' ? 'active' : ''}`}
+              onClick={() => setType('withdrawal')}
+              style={{ fontSize: '12px', padding: '8px 6px' }}
+            >
+              Prélèvement (-)
+            </button>
+          </div>
+
+          {/* Wallets Dropdown Selection */}
+          <div className="form-row">
+            {type !== 'deposit' && (
+              <div className="form-group">
+                <label className="form-label">{type === 'withdrawal' ? 'Caisse Débitée' : 'Client Donne (Source)'}</label>
+                <select
+                  className="form-control"
+                  value={sourceWalletId}
+                  onChange={(e) => setSourceWalletId(e.target.value)}
+                >
+                  {wallets.map(w => (
+                    <option key={w.id} value={w.id}>{w.name} ({w.currency})</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {type !== 'withdrawal' && (
+              <div className="form-group">
+                <label className="form-label">{type === 'deposit' ? 'Caisse Créditée' : 'Client Reçoit (Dest)'}</label>
+                <select
+                  className="form-control"
+                  value={destWalletId}
+                  onChange={(e) => setDestWalletId(e.target.value)}
+                >
+                  {wallets.map(w => (
+                    <option key={w.id} value={w.id}>{w.name} ({w.currency})</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Amounts inputs */}
+          <div className="form-row">
+            {type !== 'deposit' && (
+              <div className="form-group">
+                <label className="form-label">{type === 'withdrawal' ? 'Montant Prélèvement' : 'Montant Donné'}</label>
+                <input
+                  type="number"
+                  step="any"
+                  className="form-control"
+                  placeholder="Ex: 100"
+                  value={sourceAmount}
+                  onChange={(e) => setSourceAmount(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+
+            {type !== 'withdrawal' && (
+              <div className="form-group">
+                <label className="form-label">{type === 'deposit' ? 'Montant Apporté' : 'Montant Remis'}</label>
+                <input
+                  type="number"
+                  step="any"
+                  className="form-control"
+                  placeholder="Ex: 365000"
+                  value={destAmount}
+                  onChange={(e) => setDestAmount(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Rate indicator & Profit simulation (only for exchange) */}
+          {type === 'exchange' && calculatedRate > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', backgroundColor: '#0c1017', borderRadius: '8px', marginBottom: '16px', fontSize: '12px' }}>
+              <div>
+                <span style={{ color: 'var(--text-secondary)' }}>Taux pratiqué : </span>
+                <span style={{ fontWeight: '600' }}>
+                  1 {sWallet?.currency} = {calculatedRate.toFixed(4)} {dWallet?.currency}
+                </span>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-secondary)' }}>Marge estimée : </span>
+                <span style={{ fontWeight: '600', color: calculatedProfitUSD >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
+                  {calculatedProfitUSD.toFixed(2)} USD
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Transaction ID & Fee */}
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Frais télécom (déduit)</label>
+              <input
+                type="number"
+                step="any"
+                className="form-control"
+                value={fee}
+                onChange={(e) => setFee(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">ID Réseau (Preuve/Litige)</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Ex: AP9841893"
+                value={transactionId}
+                onChange={(e) => setTransactionId(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Customer Selection */}
           <div className="form-group">
-            <label className="form-label">Client Donne (Source)</label>
+            <label className="form-label">Client associé (optionnel)</label>
             <select
               className="form-control"
-              value={sourceWalletId}
-              onChange={(e) => setSourceWalletId(e.target.value)}
+              value={customerId}
+              onChange={(e) => setCustomerId(e.target.value)}
             >
-              {wallets.map(w => (
-                <option key={w.id} value={w.id}>{w.name} ({w.currency})</option>
+              <option value="">— Aucun client associé —</option>
+              {customers.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.name} {c.phone ? ` (${c.phone})` : ''}
+                </option>
               ))}
             </select>
           </div>
 
+          {/* Note */}
           <div className="form-group">
-            <label className="form-label">Client Reçoit (Destination)</label>
-            <select
-              className="form-control"
-              value={destWalletId}
-              onChange={(e) => setDestWalletId(e.target.value)}
-            >
-              {wallets.map(w => (
-                <option key={w.id} value={w.id}>{w.name} ({w.currency})</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Amounts */}
-        <div className="form-row">
-          <div className="form-group">
-            <label className="form-label">Montant Donné</label>
-            <input
-              type="number"
-              step="any"
-              className="form-control"
-              placeholder="Ex: 100"
-              value={sourceAmount}
-              onChange={(e) => setSourceAmount(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Montant Remis</label>
-            <input
-              type="number"
-              step="any"
-              className="form-control"
-              placeholder="Ex: 365000"
-              value={destAmount}
-              onChange={(e) => setDestAmount(e.target.value)}
-              required
-            />
-          </div>
-        </div>
-
-        {/* Rate indicator & Profit simulation */}
-        {calculatedRate > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', backgroundColor: '#0c1017', borderRadius: '8px', marginBottom: '16px', fontSize: '12px' }}>
-            <div>
-              <span style={{ color: 'var(--text-secondary)' }}>Taux pratiqué : </span>
-              <span style={{ fontWeight: '600' }}>
-                1 {sWallet?.currency} = {calculatedRate.toFixed(4)} {dWallet?.currency}
-              </span>
-            </div>
-            <div>
-              <span style={{ color: 'var(--text-secondary)' }}>Marge estimée : </span>
-              <span style={{ fontWeight: '600', color: calculatedProfitUSD >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
-                {calculatedProfitUSD.toFixed(2)} USD
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Transaction ID & Fee */}
-        <div className="form-row">
-          <div className="form-group">
-            <label className="form-label">Frais télécom (déduit)</label>
-            <input
-              type="number"
-              step="any"
-              className="form-control"
-              value={fee}
-              onChange={(e) => setFee(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">ID Réseau (Litiges)</label>
+            <label className="form-label">Note / Info Client</label>
             <input
               type="text"
               className="form-control"
-              placeholder="Ex: AP9841893"
-              value={transactionId}
-              onChange={(e) => setTransactionId(e.target.value)}
+              placeholder="Nom du client, WhatsApp..."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
             />
           </div>
-        </div>
 
-        {/* Note */}
-        <div className="form-group">
-          <label className="form-label">Note / Info Client</label>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Nom du client, WhatsApp..."
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-          />
-        </div>
+          {/* Receipt Image Preview */}
+          {receiptPreviewUrl && (
+            <div className="receipt-preview" style={{ marginBottom: '16px' }}>
+              <img src={receiptPreviewUrl} alt="Visualisation" />
+              <button 
+                type="button" 
+                className="receipt-remove-btn" 
+                onClick={() => {
+                  setReceiptPreviewUrl(null);
+                }}
+              >
+                ×
+              </button>
+            </div>
+          )}
 
-        {/* Receipt Image Preview */}
-        {receiptPreviewUrl && (
-          <div className="receipt-preview" style={{ marginBottom: '16px' }}>
-            <img src={receiptPreviewUrl} alt="Visualisation" />
+          <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+            {draftToEdit && (
+              <button 
+                type="button" 
+                className="btn btn-outline" 
+                onClick={() => {
+                  clearDraftToEdit();
+                  setMessage({ type: 'info', text: 'Édition du brouillon annulée.' });
+                }}
+                style={{ flex: 1 }}
+              >
+                Annuler
+              </button>
+            )}
             <button 
-              type="button" 
-              className="receipt-remove-btn" 
-              onClick={() => {
-                setReceiptPreviewUrl(null);
-              }}
+              type="submit" 
+              className="btn btn-primary" 
+              style={{ flex: 2, backgroundColor: draftToEdit ? 'var(--color-orange)' : 'var(--primary-blue)', boxShadow: draftToEdit ? '0 6px 20px var(--color-orange-glow)' : '0 6px 20px var(--primary-blue-glow)' }}
             >
-              ×
+              <ArrowLeftRight size={16} />
+              <span>{draftToEdit ? 'Valider le Brouillon' : 'Enregistrer'}</span>
             </button>
           </div>
-        )}
-
-        <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
-          {draftToEdit && (
-            <button 
-              type="button" 
-              className="btn btn-outline" 
-              onClick={() => {
-                clearDraftToEdit();
-                setMessage({ type: 'info', text: 'Édition du brouillon annulée.' });
-              }}
-              style={{ flex: 1 }}
-            >
-              Annuler
-            </button>
-          )}
-          <button 
-            type="submit" 
-            className="btn btn-primary" 
-            style={{ flex: 2, backgroundColor: draftToEdit ? 'var(--color-orange)' : 'var(--primary-blue)', boxShadow: draftToEdit ? '0 6px 20px var(--color-orange-glow)' : '0 6px 20px var(--primary-blue-glow)' }}
-          >
-            <ArrowLeftRight size={16} />
-            <span>{draftToEdit ? 'Valider le Brouillon' : 'Enregistrer la Transaction'}</span>
-          </button>
-        </div>
-      </form>
+        </form>
+      )}
     </div>
   );
 }

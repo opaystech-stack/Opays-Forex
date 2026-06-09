@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Landmark, Wallet, ArrowLeftRight, Search, FileCheck, Trash2, Clock, Edit } from 'lucide-react';
 
 export default function Dashboard({ onSelectDraft }) {
-  const { wallets, transactions, expenses, getNetWorthUSD, convertToUSD, getDrafts, confirmDraft, deleteDraft, loading } = useApp();
+  const { wallets, transactions, expenses, getNetWorthUSD, convertToUSD, getDrafts, confirmDraft, deleteDraft, loading, loans, getOutstandingLoansUSD } = useApp();
   const [selectedTxn, setSelectedTxn] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedWalletId, setSelectedWalletId] = useState(null);
@@ -135,39 +135,71 @@ export default function Dashboard({ onSelectDraft }) {
           </div>
         </div>
 
+        {/* Loans Metric Card */}
+        {loans.length > 0 && (
+          <div className="card glass-card" style={{ padding: '14px 18px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <span className="net-worth-label" style={{ fontSize: '12px', margin: 0 }}>Dette active (Prêts)</span>
+              <div className="net-worth-amount" style={{ fontSize: '20px', marginTop: '4px', marginBottom: 0 }}>
+                {new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(getOutstandingLoansUSD())}
+                <span className="net-worth-currency" style={{ fontSize: '12px', marginLeft: '4px' }}>USD</span>
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{
+                display: 'inline-block',
+                fontSize: '11px',
+                fontWeight: '700',
+                backgroundColor: 'rgba(255, 140, 0, 0.15)',
+                color: 'var(--color-orange)',
+                padding: '3px 8px',
+                borderRadius: '12px'
+              }}>
+                {loans.filter(l => l.status === 'pending').length} actifs
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* 3. Wallets Grid */}
         <div className="screen-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>Vos Caisses & Wallets</h3>
         </div>
-        <div className="wallet-grid">
-          {wallets.map(w => {
-            const isCash = w.type === 'cash';
-            const isActive = selectedWalletId === w.id;
-            return (
-              <div 
-                key={w.id} 
-                className={`wallet-card ${isActive ? 'active' : ''}`}
-                onClick={() => setSelectedWalletId(isActive ? null : w.id)}
-                style={{ cursor: 'pointer' }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div className="wallet-info">
-                    <span className="wallet-name" title={w.name}>{w.name}</span>
-                    <span className="wallet-type-badge">{isCash ? 'Espèces' : 'Mobile Money'}</span>
+        {wallets.length === 0 ? (
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic', padding: '10px 0' }}>
+            Aucun portefeuille créé. Rendez-vous dans l'onglet « Portefeuilles » pour configurer vos caisses.
+          </p>
+        ) : (
+          <div className="wallet-grid">
+            {wallets.map(w => {
+              const isCash = w.type === 'cash';
+              const isActive = selectedWalletId === w.id;
+              return (
+                <div 
+                  key={w.id} 
+                  className={`wallet-card ${isActive ? 'active' : ''}`}
+                  onClick={() => setSelectedWalletId(isActive ? null : w.id)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div className="wallet-info">
+                      <span className="wallet-name" title={w.name}>{w.name}</span>
+                      <span className="wallet-type-badge">{isCash ? 'Espèces' : 'Mobile Money'}</span>
+                    </div>
+                    {isCash ? (
+                      <Landmark size={14} color="var(--text-secondary)" />
+                    ) : (
+                      <Wallet size={14} color="var(--primary-blue)" />
+                    )}
                   </div>
-                  {isCash ? (
-                    <Landmark size={14} color="var(--text-secondary)" />
-                  ) : (
-                    <Wallet size={14} color="var(--primary-blue)" />
-                  )}
+                  <div className="wallet-balance">
+                    {formatValue(w.balance, w.currency)}
+                  </div>
                 </div>
-                <div className="wallet-balance">
-                  {formatValue(w.balance, w.currency)}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Right Column: Drafts & Search/Ledger */}
@@ -186,10 +218,10 @@ export default function Dashboard({ onSelectDraft }) {
                 <div key={d.id} className="draft-card">
                   <div className="draft-info" onClick={() => onSelectDraft?.(d)} title="Cliquer pour modifier/valider">
                     <span className="draft-route">
-                      {sWallet?.name?.split(' ')[0]} → {dWallet?.name?.split(' ')[0]}
+                      {sWallet ? sWallet.name.split(' ')[0] : 'Capital'} ➡️ {dWallet ? dWallet.name.split(' ')[0] : 'Capital'}
                     </span>
                     <span className="draft-amounts">
-                      {formatValue(d.source_amount, sWallet?.currency)} → {formatValue(d.dest_amount, dWallet?.currency)}
+                      {sWallet ? formatValue(d.source_amount, sWallet.currency) : 'N/A'} ➡️ {dWallet ? formatValue(d.dest_amount, dWallet.currency) : 'N/A'}
                     </span>
                     {d.note && <span className="draft-note">{d.note}</span>}
                   </div>
@@ -275,7 +307,7 @@ export default function Dashboard({ onSelectDraft }) {
                     </div>
                     <div className="ledger-details">
                       <span className="ledger-title">
-                        {sWallet?.name} ➡️ {dWallet?.name}
+                        {sWallet ? sWallet.name : 'Apport Capital'} ➡️ {dWallet ? dWallet.name : 'Retrait Capital'}
                       </span>
                       <span className="ledger-subtitle">
                         {dateStr} • {t.note || 'Pas de note'}
@@ -283,12 +315,16 @@ export default function Dashboard({ onSelectDraft }) {
                     </div>
                   </div>
                   <div className="ledger-right">
-                    <span className="ledger-value negative">
-                      -{formatValue(t.source_amount, sWallet?.currency)}
-                    </span>
-                    <span className="ledger-value positive" style={{ fontSize: '12px', marginTop: '2px', color: 'var(--color-green)' }}>
-                      +{formatValue(t.dest_amount, dWallet?.currency)}
-                    </span>
+                    {sWallet && (
+                      <span className="ledger-value negative">
+                        -{formatValue(t.source_amount, sWallet.currency)}
+                      </span>
+                    )}
+                    {dWallet && (
+                      <span className="ledger-value positive" style={{ fontSize: '12px', marginTop: '2px', color: 'var(--color-green)' }}>
+                        +{formatValue(t.dest_amount, dWallet.currency)}
+                      </span>
+                    )}
                     {t.transaction_id && (
                       <span className="ledger-txn-id">ID: {t.transaction_id}</span>
                     )}
@@ -313,32 +349,46 @@ export default function Dashboard({ onSelectDraft }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
                   <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Portefeuille Source</span>
-                  <p style={{ fontWeight: '600' }}>{wallets.find(w => w.id === selectedTxn.source_wallet_id)?.name}</p>
-                  <p style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--color-red)', marginTop: '2px' }}>
-                    -{formatValue(selectedTxn.source_amount, wallets.find(w => w.id === selectedTxn.source_wallet_id)?.currency)}
-                  </p>
+                  {selectedTxn.source_wallet_id ? (
+                    <>
+                      <p style={{ fontWeight: '600' }}>{wallets.find(w => w.id === selectedTxn.source_wallet_id)?.name}</p>
+                      <p style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--color-red)', marginTop: '2px' }}>
+                        -{formatValue(selectedTxn.source_amount, wallets.find(w => w.id === selectedTxn.source_wallet_id)?.currency)}
+                      </p>
+                    </>
+                  ) : (
+                    <p style={{ fontWeight: '500', color: 'var(--text-secondary)', marginTop: '2px' }}>Aucun (Dépôt Capital)</p>
+                  )}
                 </div>
                 <div>
                   <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Portefeuille Dest.</span>
-                  <p style={{ fontWeight: '600' }}>{wallets.find(w => w.id === selectedTxn.dest_wallet_id)?.name}</p>
-                  <p style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--color-green)', marginTop: '2px' }}>
-                    +{formatValue(selectedTxn.dest_amount, wallets.find(w => w.id === selectedTxn.dest_wallet_id)?.currency)}
-                  </p>
+                  {selectedTxn.dest_wallet_id ? (
+                    <>
+                      <p style={{ fontWeight: '600' }}>{wallets.find(w => w.id === selectedTxn.dest_wallet_id)?.name}</p>
+                      <p style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--color-green)', marginTop: '2px' }}>
+                        +{formatValue(selectedTxn.dest_amount, wallets.find(w => w.id === selectedTxn.dest_wallet_id)?.currency)}
+                      </p>
+                    </>
+                  ) : (
+                    <p style={{ fontWeight: '500', color: 'var(--text-secondary)', marginTop: '2px' }}>Aucun (Retrait Capital)</p>
+                  )}
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
-                <div>
-                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Taux Pratiqué</span>
-                  <p style={{ fontWeight: '600', fontSize: '14px' }}>{selectedTxn.exchange_rate}</p>
+              {selectedTxn.type === 'exchange' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
+                  <div>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Taux Pratiqué</span>
+                    <p style={{ fontWeight: '600', fontSize: '14px' }}>{selectedTxn.exchange_rate}</p>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Bénéfice Réalisé</span>
+                    <p style={{ fontWeight: '600', fontSize: '14px', color: 'var(--color-green)' }}>
+                      +{formatValue(selectedTxn.profit_usd, 'USD')}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Bénéfice Réalisé</span>
-                  <p style={{ fontWeight: '600', fontSize: '14px', color: 'var(--color-green)' }}>
-                    +{formatValue(selectedTxn.profit_usd, 'USD')}
-                  </p>
-                </div>
-              </div>
+              )}
 
               {selectedTxn.transaction_id && (
                 <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>

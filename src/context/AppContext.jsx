@@ -10,12 +10,53 @@ const MOCK_WALLETS = [
   { id: 'w3', name: 'Airtel Money RDC (USD)', currency: 'USD', type: 'mobile_money', balance: 800.00 },
   { id: 'w4', name: 'M-Pesa Kenya (KES)', currency: 'KES', type: 'mobile_money', balance: 35000.00 },
   { id: 'w5', name: 'MTN Uganda (UGX)', currency: 'UGX', type: 'mobile_money', balance: 1500000.00 },
+  { id: 'w6', name: 'Caisse Euro Cash', currency: 'EUR', type: 'cash', balance: 450.00 },
+  { id: 'w7', name: 'Orange Money Cameroun (FCFA)', currency: 'FCFA', type: 'mobile_money', balance: 250000.00 },
 ];
 
 const MOCK_RATES = [
   { currency: 'UGX', rate_to_usd: 3750.00 },
   { currency: 'KES', rate_to_usd: 130.00 },
   { currency: 'CDF', rate_to_usd: 2500.00 },
+  { currency: 'TZS', rate_to_usd: 2600.00 },
+  { currency: 'BIF', rate_to_usd: 2850.00 },
+  { currency: 'EUR', rate_to_usd: 0.92 },
+  { currency: 'FCFA', rate_to_usd: 600.00 },
+];
+
+const MOCK_CUSTOMERS = [
+  { id: 'c1', name: 'Jean Kabamba', phone: '+243999988271', created_at: new Date().toISOString() },
+  { id: 'c2', name: 'Mama Sarah', phone: '+256788291039', created_at: new Date().toISOString() },
+  { id: 'c3', name: 'Joseph Mwamba', phone: '+254711223344', created_at: new Date().toISOString() }
+];
+
+const MOCK_LOANS = [
+  {
+    id: 'l1',
+    customer_id: 'c1',
+    wallet_id: 'w1',
+    amount: 500.00,
+    currency: 'USD',
+    interest_rate: 10.00,
+    due_date: new Date(Date.now() + 3600000 * 24 * 7).toISOString().split('T')[0],
+    status: 'pending',
+    note: 'Prêt pour fonds de roulement magasin',
+    contract_image_url: null,
+    created_at: new Date(Date.now() - 3600000 * 24 * 2).toISOString()
+  },
+  {
+    id: 'l2',
+    customer_id: 'c2',
+    wallet_id: 'w2',
+    amount: 1000000.00,
+    currency: 'UGX',
+    interest_rate: 0.00,
+    due_date: new Date(Date.now() - 3600000 * 24).toISOString().split('T')[0],
+    status: 'pending',
+    note: 'Urgence familiale',
+    contract_image_url: null,
+    created_at: new Date(Date.now() - 3600000 * 24 * 5).toISOString()
+  }
 ];
 
 const MOCK_TRANSACTIONS = [
@@ -76,6 +117,8 @@ export const AppProvider = ({ children }) => {
   const [rates, setRates] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [expenses, setExpenses] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
   const [isUsingMock, setIsUsingMock] = useState(false);
@@ -104,11 +147,15 @@ export const AppProvider = ({ children }) => {
       const localRates = localStorage.getItem('forex_rates');
       const localTxns = localStorage.getItem('forex_txns');
       const localExp = localStorage.getItem('forex_expenses');
+      const localCust = localStorage.getItem('forex_customers');
+      const localLoans = localStorage.getItem('forex_loans');
 
       setWallets(localWallets ? JSON.parse(localWallets) : MOCK_WALLETS);
       setRates(localRates ? JSON.parse(localRates) : MOCK_RATES);
       setTransactions(localTxns ? JSON.parse(localTxns) : MOCK_TRANSACTIONS);
       setExpenses(localExp ? JSON.parse(localExp) : MOCK_EXPENSES);
+      setCustomers(localCust ? JSON.parse(localCust) : MOCK_CUSTOMERS);
+      setLoans(localLoans ? JSON.parse(localLoans) : MOCK_LOANS);
       setIsUsingMock(true);
       setLoading(false);
       return;
@@ -121,11 +168,13 @@ export const AppProvider = ({ children }) => {
 
     try {
       // Fetch from Supabase
-      const [wRes, rRes, tRes, eRes] = await Promise.all([
+      const [wRes, rRes, tRes, eRes, cRes, lRes] = await Promise.all([
         supabase.from('wallets').select('*').order('name'),
         supabase.from('exchange_rates').select('*').order('date', { ascending: false }),
         supabase.from('transactions').select('*').order('timestamp', { ascending: false }),
-        supabase.from('expenses').select('*').order('timestamp', { ascending: false })
+        supabase.from('expenses').select('*').order('timestamp', { ascending: false }),
+        supabase.from('customers').select('*').order('name'),
+        supabase.from('loans').select('*').order('created_at', { ascending: false })
       ]);
 
       if (wRes.error) throw wRes.error;
@@ -133,6 +182,8 @@ export const AppProvider = ({ children }) => {
       setRates(rRes.data || []);
       setTransactions(tRes.data || []);
       setExpenses(eRes.data || []);
+      setCustomers(cRes.data || []);
+      setLoans(lRes.data || []);
       setIsUsingMock(false);
     } catch (error) {
       console.error('Error fetching Supabase data, falling back to local mock data:', error);
@@ -142,6 +193,8 @@ export const AppProvider = ({ children }) => {
       setRates(MOCK_RATES);
       setTransactions(MOCK_TRANSACTIONS);
       setExpenses(MOCK_EXPENSES);
+      setCustomers(MOCK_CUSTOMERS);
+      setLoans(MOCK_LOANS);
     } finally {
       setLoading(false);
     }
@@ -261,16 +314,27 @@ export const AppProvider = ({ children }) => {
       // Only update wallet balances if this is a completed transaction
       if (newTxn.status === 'completed') {
         const updatedWallets = wallets.map(w => {
-          if (w.id === txn.source_wallet_id) {
-            return { ...w, balance: w.balance - parseFloat(txn.source_amount) };
+          let balance = w.balance;
+          const isSource = w.id === txn.source_wallet_id;
+          const isDest = w.id === txn.dest_wallet_id;
+          const isFee = txn.fee > 0 && w.id === txn.fee_wallet_id;
+
+          const txnType = txn.type || 'exchange';
+
+          if (txnType === 'exchange') {
+            if (isSource) balance -= parseFloat(txn.source_amount);
+            if (isDest) balance += parseFloat(txn.dest_amount);
+          } else if (txnType === 'deposit') {
+            if (isDest) balance += parseFloat(txn.dest_amount);
+          } else if (txnType === 'withdrawal') {
+            if (isSource) balance -= parseFloat(txn.source_amount);
           }
-          if (w.id === txn.dest_wallet_id) {
-            return { ...w, balance: w.balance + parseFloat(txn.dest_amount) };
+
+          if (isFee) {
+            balance -= parseFloat(txn.fee);
           }
-          if (txn.fee > 0 && w.id === txn.fee_wallet_id) {
-            return { ...w, balance: w.balance - parseFloat(txn.fee) };
-          }
-          return w;
+
+          return { ...w, balance };
         });
         setWallets(updatedWallets);
         updateLocalMock('forex_wallets', updatedWallets);
@@ -311,16 +375,27 @@ export const AppProvider = ({ children }) => {
 
       // Now apply wallet balance changes
       const updatedWallets = wallets.map(w => {
-        if (w.id === confirmedTxn.source_wallet_id) {
-          return { ...w, balance: w.balance - parseFloat(confirmedTxn.source_amount) };
+        let balance = w.balance;
+        const isSource = w.id === confirmedTxn.source_wallet_id;
+        const isDest = w.id === confirmedTxn.dest_wallet_id;
+        const isFee = confirmedTxn.fee > 0 && w.id === confirmedTxn.fee_wallet_id;
+
+        const txnType = confirmedTxn.type || 'exchange';
+
+        if (txnType === 'exchange') {
+          if (isSource) balance -= parseFloat(confirmedTxn.source_amount);
+          if (isDest) balance += parseFloat(confirmedTxn.dest_amount);
+        } else if (txnType === 'deposit') {
+          if (isDest) balance += parseFloat(confirmedTxn.dest_amount);
+        } else if (txnType === 'withdrawal') {
+          if (isSource) balance -= parseFloat(confirmedTxn.source_amount);
         }
-        if (w.id === confirmedTxn.dest_wallet_id) {
-          return { ...w, balance: w.balance + parseFloat(confirmedTxn.dest_amount) };
+
+        if (isFee) {
+          balance -= parseFloat(confirmedTxn.fee);
         }
-        if (confirmedTxn.fee > 0 && w.id === confirmedTxn.fee_wallet_id) {
-          return { ...w, balance: w.balance - parseFloat(confirmedTxn.fee) };
-        }
-        return w;
+
+        return { ...w, balance };
       });
       setWallets(updatedWallets);
       updateLocalMock('forex_wallets', updatedWallets);
@@ -338,6 +413,105 @@ export const AppProvider = ({ children }) => {
       return { success: true, data };
     } catch (err) {
       console.error('Error confirming draft:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Create a new wallet
+  const createWallet = async (wallet) => {
+    const formattedWallet = {
+      ...wallet,
+      balance: parseFloat(wallet.balance) || 0,
+      is_active: wallet.is_active !== undefined ? wallet.is_active : true
+    };
+
+    if (isUsingMock) {
+      const newWallet = {
+        id: 'w_' + Date.now(),
+        ...formattedWallet,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      const updatedWallets = [...wallets, newWallet];
+      setWallets(updatedWallets);
+      updateLocalMock('forex_wallets', updatedWallets);
+      return { success: true, data: newWallet };
+    }
+    try {
+      const { data, error } = await supabase.from('wallets').insert([formattedWallet]).select();
+      if (error) throw error;
+      await fetchData();
+      return { success: true, data: data[0] };
+    } catch (err) {
+      console.error('Error creating wallet:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Update an existing wallet
+  const updateWallet = async (id, updates) => {
+    if (isUsingMock) {
+      const updatedWallets = wallets.map(w => 
+        w.id === id ? { ...w, ...updates, updated_at: new Date().toISOString() } : w
+      );
+      setWallets(updatedWallets);
+      updateLocalMock('forex_wallets', updatedWallets);
+      return { success: true };
+    }
+    try {
+      const { data, error } = await supabase.from('wallets').update(updates).eq('id', id).select();
+      if (error) throw error;
+      await fetchData();
+      return { success: true, data };
+    } catch (err) {
+      console.error('Error updating wallet:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Delete a wallet
+  const deleteWallet = async (id) => {
+    if (isUsingMock) {
+      const updatedWallets = wallets.filter(w => w.id !== id);
+      setWallets(updatedWallets);
+      updateLocalMock('forex_wallets', updatedWallets);
+      return { success: true };
+    }
+    try {
+      const { error } = await supabase.from('wallets').delete().eq('id', id);
+      if (error) throw error;
+      await fetchData();
+      return { success: true };
+    } catch (err) {
+      console.error('Error deleting wallet:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Adjust wallet balance directly (Admin Stock adjustment)
+  const adjustWalletBalance = async (id, newBalance) => {
+    const balanceNum = parseFloat(newBalance);
+    if (isNaN(balanceNum)) return { success: false, error: 'Montant invalide' };
+
+    if (isUsingMock) {
+      const updatedWallets = wallets.map(w => 
+        w.id === id ? { ...w, balance: balanceNum, updated_at: new Date().toISOString() } : w
+      );
+      setWallets(updatedWallets);
+      updateLocalMock('forex_wallets', updatedWallets);
+      return { success: true };
+    }
+    try {
+      const { data, error } = await supabase
+        .from('wallets')
+        .update({ balance: balanceNum, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select();
+      if (error) throw error;
+      await fetchData();
+      return { success: true, data };
+    } catch (err) {
+      console.error('Error adjusting wallet balance:', err);
       return { success: false, error: err.message };
     }
   };
@@ -439,10 +613,170 @@ export const AppProvider = ({ children }) => {
       localStorage.removeItem('forex_rates');
       localStorage.removeItem('forex_txns');
       localStorage.removeItem('forex_expenses');
+      localStorage.removeItem('forex_customers');
+      localStorage.removeItem('forex_loans');
       setWallets(MOCK_WALLETS);
       setRates(MOCK_RATES);
       setTransactions(MOCK_TRANSACTIONS);
       setExpenses(MOCK_EXPENSES);
+      setCustomers(MOCK_CUSTOMERS);
+      setLoans(MOCK_LOANS);
+    }
+  };
+
+  // ==========================================
+  // CUSTOMERS CRUD
+  // ==========================================
+
+  // Create a new customer
+  const createCustomer = async (customer) => {
+    if (isUsingMock) {
+      const newCust = { id: 'c_' + Date.now(), ...customer, created_at: new Date().toISOString() };
+      const updated = [newCust, ...customers];
+      setCustomers(updated);
+      updateLocalMock('forex_customers', updated);
+      return { success: true, data: newCust };
+    }
+    try {
+      const { data, error } = await supabase.from('customers').insert([customer]).select();
+      if (error) throw error;
+      await fetchData();
+      return { success: true, data: data[0] };
+    } catch (err) {
+      console.error('Error creating customer:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Update an existing customer
+  const updateCustomer = async (id, updates) => {
+    if (isUsingMock) {
+      const updated = customers.map(c => c.id === id ? { ...c, ...updates } : c);
+      setCustomers(updated);
+      updateLocalMock('forex_customers', updated);
+      return { success: true };
+    }
+    try {
+      const { data, error } = await supabase.from('customers').update(updates).eq('id', id).select();
+      if (error) throw error;
+      await fetchData();
+      return { success: true, data };
+    } catch (err) {
+      console.error('Error updating customer:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Find or create customer by name/phone (auto-detect from OCR)
+  const findOrCreateCustomer = async ({ name, phone }) => {
+    if (!name && !phone) return { success: false, error: 'Nom ou téléphone requis' };
+
+    // Search existing customers
+    const existing = customers.find(c => {
+      if (phone && c.phone && c.phone.replace(/\s/g, '') === phone.replace(/\s/g, '')) return true;
+      if (name && c.name && c.name.toLowerCase().trim() === name.toLowerCase().trim()) return true;
+      return false;
+    });
+
+    if (existing) {
+      return { success: true, data: existing, isNew: false };
+    }
+
+    // Create new customer
+    const res = await createCustomer({ name: name || 'Client inconnu', phone: phone || null });
+    if (res.success) {
+      return { success: true, data: res.data, isNew: true };
+    }
+    return res;
+  };
+
+  // ==========================================
+  // LOANS CRUD
+  // ==========================================
+
+  // Create a new loan
+  const createLoan = async (loan) => {
+    if (isUsingMock) {
+      const newLoan = {
+        id: 'l_' + Date.now(),
+        ...loan,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      };
+      const updatedLoans = [newLoan, ...loans];
+      setLoans(updatedLoans);
+      updateLocalMock('forex_loans', updatedLoans);
+
+      // Debit wallet balance (simulate trigger)
+      const updatedWallets = wallets.map(w => {
+        if (w.id === loan.wallet_id) {
+          return { ...w, balance: w.balance - parseFloat(loan.amount) };
+        }
+        return w;
+      });
+      setWallets(updatedWallets);
+      updateLocalMock('forex_wallets', updatedWallets);
+
+      return { success: true, data: newLoan };
+    }
+    try {
+      const { data, error } = await supabase.from('loans').insert([{
+        ...loan,
+        status: 'pending'
+      }]).select();
+      if (error) throw error;
+      await fetchData();
+      return { success: true, data: data[0] };
+    } catch (err) {
+      console.error('Error creating loan:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Update loan status (mark as paid / overdue)
+  const updateLoanStatus = async (loanId, newStatus) => {
+    if (isUsingMock) {
+      let targetLoan = null;
+      const updatedLoans = loans.map(l => {
+        if (l.id === loanId) {
+          targetLoan = { ...l, status: newStatus };
+          return targetLoan;
+        }
+        return l;
+      });
+
+      if (!targetLoan) return { success: false, error: 'Prêt introuvable' };
+
+      setLoans(updatedLoans);
+      updateLocalMock('forex_loans', updatedLoans);
+
+      // If marked as paid, credit wallet with amount + interest (simulate trigger)
+      if (newStatus === 'paid') {
+        const repayAmount = parseFloat(targetLoan.amount) * (1 + parseFloat(targetLoan.interest_rate) / 100);
+        const updatedWallets = wallets.map(w => {
+          if (w.id === targetLoan.wallet_id) {
+            return { ...w, balance: w.balance + repayAmount };
+          }
+          return w;
+        });
+        setWallets(updatedWallets);
+        updateLocalMock('forex_wallets', updatedWallets);
+      }
+
+      return { success: true };
+    }
+    try {
+      const { data, error } = await supabase
+        .from('loans')
+        .update({ status: newStatus })
+        .eq('id', loanId)
+        .select();
+      if (error) throw error;
+      await fetchData();
+      return { success: true, data };
+    } catch (err) {
+      console.error('Error updating loan status:', err);
+      return { success: false, error: err.message };
     }
   };
 
@@ -454,9 +788,20 @@ export const AppProvider = ({ children }) => {
     return amount / rate.rate_to_usd;
   };
 
-  // Helper: Calculate total net worth in USD (only from wallets, not drafts)
+  // Helper: Calculate total net worth in USD (wallets + active loans as recoverable assets)
   const getNetWorthUSD = () => {
-    return wallets.reduce((acc, w) => acc + convertToUSD(w.balance, w.currency), 0);
+    const walletsTotal = wallets.reduce((acc, w) => acc + convertToUSD(w.balance, w.currency), 0);
+    const loansTotal = loans
+      .filter(l => l.status === 'pending' || l.status === 'overdue')
+      .reduce((acc, l) => acc + convertToUSD(parseFloat(l.amount) * (1 + parseFloat(l.interest_rate) / 100), l.currency), 0);
+    return walletsTotal + loansTotal;
+  };
+
+  // Helper: Get total outstanding loans in USD
+  const getOutstandingLoansUSD = () => {
+    return loans
+      .filter(l => l.status === 'pending' || l.status === 'overdue')
+      .reduce((acc, l) => acc + convertToUSD(parseFloat(l.amount) * (1 + parseFloat(l.interest_rate) / 100), l.currency), 0);
   };
 
   // Helper: Get pending draft transactions
@@ -475,6 +820,8 @@ export const AppProvider = ({ children }) => {
       rates,
       transactions,
       expenses,
+      customers,
+      loans,
       loading,
       isUsingMock,
       user,
@@ -488,10 +835,20 @@ export const AppProvider = ({ children }) => {
       updateRates,
       convertToUSD,
       getNetWorthUSD,
+      getOutstandingLoansUSD,
       getDrafts,
       getCompletedTransactions,
       confirmDraft,
       deleteDraft,
+      createWallet,
+      updateWallet,
+      deleteWallet,
+      adjustWalletBalance,
+      createCustomer,
+      updateCustomer,
+      findOrCreateCustomer,
+      createLoan,
+      updateLoanStatus,
       refreshData: fetchData,
       resetMockData
     }}>

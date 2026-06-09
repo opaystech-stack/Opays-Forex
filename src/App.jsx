@@ -3,7 +3,9 @@ import { AppProvider, useApp } from './context/AppContext';
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
+import WalletsPage from './pages/Wallets';
 import Expenses from './pages/Expenses';
+import LoansPage from './pages/Loans';
 import SettingsPage from './pages/Settings';
 import Auth from './pages/Auth';
 
@@ -53,8 +55,12 @@ function AppContent() {
             clearDraftToEdit={() => setDraftToEdit(null)} 
           />
         );
+      case 'wallets':
+        return <WalletsPage />;
       case 'expenses':
         return <Expenses />;
+      case 'loans':
+        return <LoansPage />;
       case 'settings':
         return <SettingsPage />;
       default:

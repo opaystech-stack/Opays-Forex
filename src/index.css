@@ -921,6 +921,12 @@ body {
   width: 100%;
   justify-content: space-around;
   align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.navbar-tabs-container::-webkit-scrollbar {
+  display: none;
 }
 
 @media (min-width: 441px) and (max-width: 767px) {
@@ -948,6 +954,12 @@ body {
     border-radius: 0 !important;
     border: none !important;
     background: #f1f5f9;
+  }
+
+  /* Hide background shapes on PC to avoid overlay bugs */
+  .app-container::before,
+  .app-container::after {
+    display: none !important;
   }
 
   /* Main Workspace Layout */
@@ -1069,6 +1081,7 @@ body {
     box-shadow: none !important;
     border-radius: 0 !important;
     padding: 10px 40px 40px !important;
+    overflow-y: visible !important; /* Fix double scrollbar on PC */
   }
 
   /* Dashboard Layout Grid */
@@ -1214,4 +1227,39 @@ body {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+/* Modal Header & UI styling */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title {
+  font-family: var(--font-title);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.modal-close:hover {
+  background-color: var(--bg-light);
+  color: var(--text-primary);
 }

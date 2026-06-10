@@ -1,4 +1,4 @@
-import { LayoutDashboard, ArrowLeftRight, TrendingDown, Landmark, Coins } from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, TrendingDown, Landmark, Coins, Settings } from 'lucide-react';
 import { useT } from '../i18n';
 
 export default function Navbar({ activeTab, setActiveTab, isUsingMock }) {
@@ -9,7 +9,8 @@ export default function Navbar({ activeTab, setActiveTab, isUsingMock }) {
     { id: 'transactions', label: t('nav.transactions'), icon: ArrowLeftRight },
     { id: 'wallets', label: t('nav.wallets'), icon: Landmark },
     { id: 'expenses', label: t('nav.expenses'), icon: TrendingDown },
-    { id: 'loans', label: t('nav.loans'), icon: Coins }
+    { id: 'loans', label: t('nav.loans'), icon: Coins },
+    { id: 'settings', label: t('nav.settings'), icon: Settings, className: 'settings-tab' }
   ];
 
   return (
@@ -31,7 +32,7 @@ export default function Navbar({ activeTab, setActiveTab, isUsingMock }) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`navbar-tab ${isActive ? 'active' : ''}`}
+              className={`navbar-tab ${isActive ? 'active' : ''} ${tab.className || ''}`}
               aria-label={tab.label}
             >
               <Icon className="navbar-icon" size={22} />

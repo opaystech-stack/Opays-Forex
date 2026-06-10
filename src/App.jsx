@@ -18,6 +18,10 @@ function AppContent() {
   const [draftToEdit, setDraftToEdit] = useState(null);
   const { isUsingMock, user, loading } = useApp();
   const t = useT();
+  
+  // Debug mode: allow demo access via ?debug_force_demo URL param for local testing
+  const params = new URLSearchParams(window.location.search);
+  const forceDemo = params.has('debug_force_demo');
 
   // Show a premium loading screen during initial session verification
   if (loading) {
@@ -35,8 +39,8 @@ function AppContent() {
     );
   }
 
-  // If not authenticated, show login page
-  if (!user) {
+  // If not authenticated and not in debug mode, show login page
+  if (!user && !forceDemo) {
     return (
       <Suspense fallback={<div className="auth-overlay"><div className="auth-card-container"><div className="card glass-card auth-card">{t('loading.skeleton')}</div></div></div>}>
         <Auth />

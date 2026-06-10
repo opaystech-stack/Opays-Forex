@@ -4,6 +4,13 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    host: '127.0.0.1',
+    hmr: {
+      host: 'localhost',
+      protocol: 'ws',
+    },
+  },
   build: {
     // Ensure consistent hashing for cache busting
     rollupOptions: {

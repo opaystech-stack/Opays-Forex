@@ -15,11 +15,65 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     <script>
+      // Version check and Service Worker management
+      let currentVersion = null;
+
+      async function checkVersion() {
+        try {
+          const res = await fetch('/version.json', { cache: 'no-store' });
+          const data = await res.json();
+          return data.version;
+        } catch (e) {
+          console.error('Version check failed:', e);
+          return null;
+        }
+      }
+
+      async function handleVersionChange(newVersion) {
+        if (currentVersion === null) {
+          currentVersion = newVersion;
+          return;
+        }
+        
+        if (newVersion && newVersion !== currentVersion) {
+          console.log('[App] New version detected, reloading...', { from: currentVersion, to: newVersion });
+          currentVersion = newVersion;
+          
+          // Unregister all SWs to ensure clean reload
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map(reg => reg.unregister()));
+          
+          // Clear all caches
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
+          
+          // Reload the page
+          window.location.reload(true);
+        }
+      }
+
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('Service Worker enregistré !', reg.scope))
-            .catch(err => console.error('Service Worker erreur:', err));
+        window.addEventListener('load', async () => {
+          try {
+            // Check initial version
+            const version = await checkVersion();
+            await handleVersionChange(version);
+            
+            // Register Service Worker with updateViaCache: none
+            const reg = await navigator.serviceWorker.register('/sw.js', { 
+              scope: '/',
+              updateViaCache: 'none' 
+            });
+            console.log('[SW] Registered successfully', reg.scope);
+            
+            // Check for updates every 30 seconds
+            setInterval(async () => {
+              const newVersion = await checkVersion();
+              await handleVersionChange(newVersion);
+            }, 30000);
+          } catch (err) {
+            console.error('[SW] Registration error:', err);
+          }
         });
       }
     </script>

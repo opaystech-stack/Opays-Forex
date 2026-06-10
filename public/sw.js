@@ -1,4 +1,4 @@
-const CACHE_NAME = 'opaysfox-v2';
+const CACHE_NAME = 'opaysfox-v4';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -34,18 +34,24 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Skip non-GET or external requests (Supabase, Gemini API, etc.)
+  // Skip non-GET or external requests
   if (e.request.method !== 'GET' || !e.request.url.startsWith(self.location.origin)) {
     return;
   }
 
-  // For HTML navigation requests: ALWAYS go network-first
-  // This ensures new deployments are always picked up immediately
-  if (e.request.mode === 'navigate') {
+  const url = new URL(e.request.url);
+
+  // For HTML navigation: ALWAYS network-first
+  // This ensures new versions are always picked up
+  if (e.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
     e.respondWith(
-      fetch(e.request)
-        .then((networkResponse) => {
-          return networkResponse;
+      fetch(e.request, { cache: 'no-store' })
+        .then((response) => {
+          // Don't cache 4xx/5xx responses
+          if (!response || response.status >= 400) {
+            return response;
+          }
+          return response;
         })
         .catch(() => {
           // Only use cache as offline fallback
@@ -55,14 +61,34 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // For JS/CSS bundles (hashed by Vite): network-first, no caching
-  // Vite already hashes filenames, so each deploy has unique URLs
-  if (e.request.url.match(/\/assets\/.*\.(js|css)$/)) {
-    e.respondWith(fetch(e.request));
+  // For version.json: ALWAYS network-first, never cache
+  if (url.pathname === '/version.json') {
+    e.respondWith(fetch(e.request, { cache: 'no-store' }));
     return;
   }
 
-  // For static assets (icons, manifest): cache-first is fine
+  // For JS/CSS bundles with hash: network-first with fallback to cache
+  if (url.pathname.match(/\/assets\/.*\.(js|css)$/) || url.pathname.match(/^\/(\w+)-[a-f0-9]+\.(js|css)$/)) {
+    e.respondWith(
+      fetch(e.request)
+        .then((response) => {
+          if (!response || response.status !== 200) {
+            return response;
+          }
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(e.request, responseToCache);
+          });
+          return response;
+        })
+        .catch(() => {
+          return caches.match(e.request);
+        })
+    );
+    return;
+  }
+
+  // For static assets (icons, fonts, images): cache-first
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
       if (cachedResponse) {

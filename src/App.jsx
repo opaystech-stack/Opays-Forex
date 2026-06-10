@@ -25,11 +25,11 @@ function AppContent() {
       <div className="auth-overlay" style={{ display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center', alignItems: 'center' }}>
         <div className="auth-header" style={{ marginBottom: '0' }}>
           <span className="auth-subtitle">OpaysFox</span>
-          <h1 className="auth-title" style={{ fontSize: '28px', marginTop: '4px' }}>Initialisation...</h1>
+          <h1 className="auth-title" style={{ fontSize: '28px', marginTop: '4px' }}>{t('loading.init_title')}</h1>
         </div>
         <div style={{ color: '#ffffff', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', fontWeight: '500', opacity: 0.8 }}>
           <Loader2 className="animate-spin" size={20} style={{ animation: 'spin 1s linear infinite' }} />
-          <span>Vérification de la session en cours</span>
+          <span>{t('loading.session_check')}</span>
         </div>
       </div>
     );
@@ -38,7 +38,7 @@ function AppContent() {
   // If not authenticated, show login page
   if (!user) {
     return (
-      <Suspense fallback={<div className="auth-overlay"><div className="auth-card-container"><div className="card glass-card auth-card">Chargement…</div></div></div>}>
+      <Suspense fallback={<div className="auth-overlay"><div className="auth-card-container"><div className="card glass-card auth-card">{t('loading.skeleton')}</div></div></div>}>
         <Auth />
       </Suspense>
     );
@@ -97,7 +97,7 @@ function AppContent() {
           </div>
           <div style={{ position: 'relative' }}>
             {isUsingMock && (
-              <span className="mock-badge">{t('settings.demo_badge') || 'Démo'}</span>
+              <span className="mock-badge">{t('app.demo')}</span>
             )}
             <button
               aria-label="Ouvrir les paramètres"
@@ -112,7 +112,7 @@ function AppContent() {
 
         {/* Dynamic Page Scrollable Body */}
         <main className="page-content">
-          <Suspense fallback={<div className="card glass-card" style={{ padding: '16px' }}>Chargement de la page…</div>}>
+          <Suspense fallback={<div className="card glass-card" style={{ padding: '16px' }}>{t('loading.page')}</div>}>
             {renderActiveTab()}
           </Suspense>
         </main>

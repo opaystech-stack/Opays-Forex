@@ -95,7 +95,7 @@ export default function LoansPage() {
   const handleLoanSubmit = async (e) => {
     e.preventDefault();
     if (!loanCustomerId || !loanWalletId || !loanAmount || !loanDueDate) {
-      setLoanMessage({ type: 'error', text: 'Veuillez remplir tous les champs obligatoires.' });
+      setLoanMessage({ type: 'error', text: t('loans.required_fields') });
       return;
     }
 
@@ -112,20 +112,20 @@ export default function LoansPage() {
 
     const res = await createLoan(payload);
     if (res.success) {
-      setLoanMessage({ type: 'success', text: 'Prêt créé avec succès ! Le solde de la caisse a été débité.' });
+      setLoanMessage({ type: 'success', text: t('loans.create_success') });
       resetLoanForm();
       setShowLoanForm(false);
     } else {
-      setLoanMessage({ type: 'error', text: `Erreur : ${res.error}` });
+      setLoanMessage({ type: 'error', text: t('settings.rates_update_error') + res.error });
     }
   };
 
   const handleMarkPaid = async (loanId) => {
     const res = await updateLoanStatus(loanId, 'paid');
     if (res.success) {
-      setLoanMessage({ type: 'success', text: 'Prêt marqué comme remboursé ! Solde crédité.' });
+      setLoanMessage({ type: 'success', text: t('loans.mark_paid_success') });
     } else {
-      setLoanMessage({ type: 'error', text: `Erreur : ${res.error}` });
+      setLoanMessage({ type: 'error', text: t('settings.rates_update_error') + res.error });
     }
   };
 
@@ -142,7 +142,7 @@ export default function LoansPage() {
   const handleCreateCustomer = async (e) => {
     e.preventDefault();
     if (!newCustName.trim()) {
-      setCustMessage({ type: 'error', text: 'Le nom du client est requis.' });
+      setCustMessage({ type: 'error', text: t('loans.client_name_required') });
       return;
     }
     const res = await createCustomer({
@@ -150,11 +150,11 @@ export default function LoansPage() {
       phone: newCustPhone.trim() || null
     });
     if (res.success) {
-      setCustMessage({ type: 'success', text: `Client "${newCustName}" créé avec succès.` });
+      setCustMessage({ type: 'success', text: t('loans.client_created_success') });
       setNewCustName('');
       setNewCustPhone('');
     } else {
-      setCustMessage({ type: 'error', text: `Erreur : ${res.error}` });
+      setCustMessage({ type: 'error', text: t('settings.rates_update_error') + res.error });
     }
   };
 
@@ -200,7 +200,7 @@ export default function LoansPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <User size={15} color="var(--text-secondary)" />
             <span style={{ fontWeight: '700', fontSize: '14px' }}>
-              {loan.customer?.name || 'Client inconnu'}
+              {loan.customer?.name || t('loans.client_unknown')}
             </span>
           </div>
           <span style={{
@@ -296,7 +296,7 @@ export default function LoansPage() {
       <div className="screen-header">
         <h2 className="screen-title">{t('loans.title')}</h2>
         <p className="screen-desc">{t('loans.desc')}</p>
-        <span className="mock-badge">{t('loans.demo_badge') || 'DÉMO'}</span>
+        <span className="mock-badge">{t('app.demo')}</span>
       </div>
 
       {/* Sub-tab toggle */}

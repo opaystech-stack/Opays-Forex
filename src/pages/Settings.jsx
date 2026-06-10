@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { Settings, Save, AlertTriangle, Key, RefreshCw, LogOut } from 'lucide-react';
+import { useT } from '../i18n';
 
 export default function SettingsPage() {
   const { rates, updateRates, isUsingMock, resetMockData, user, logOut, wallets, adjustWalletBalance, language, setLanguage } = useApp();
+  const t = useT();
   
   // Rates inputs
   const [ugxRate, setUgxRate] = useState('3750');
@@ -51,17 +53,17 @@ export default function SettingsPage() {
 
     const res = await updateRates(payload);
     if (res.success) {
-      setMessage({ type: 'success', text: 'Taux de change mis à jour pour aujourd\'hui !' });
+      setMessage({ type: 'success', text: t('settings.rates_update_success') });
       setTimeout(() => setMessage(null), 3000);
     } else {
-      setMessage({ type: 'error', text: `Erreur : ${res.error}` });
+      setMessage({ type: 'error', text: t('settings.rates_update_error') + res.error });
     }
   };
 
   const handleReset = () => {
-    if (window.confirm('Voulez-vous réinitialiser toutes les données de test locales ?')) {
+    if (window.confirm(t('settings.reset_mock_confirm'))) {
       resetMockData();
-      setMessage({ type: 'success', text: 'Données de test locales réinitialisées !' });
+      setMessage({ type: 'success', text: t('settings.mock_reset_success') });
       setTimeout(() => setMessage(null), 3000);
     }
   };
@@ -69,8 +71,8 @@ export default function SettingsPage() {
   return (
     <div>
       <div className="screen-header">
-        <h2 className="screen-title">Paramètres & Configuration</h2>
-        <p className="screen-desc">Mettre à jour les taux de change et configurer la base de données.</p>
+        <h2 className="screen-title">{t('settings.preferences')}</h2>
+        <p className="screen-desc">{t('settings.rates_desc')}</p>
       </div>
 
       {message && (
@@ -83,14 +85,14 @@ export default function SettingsPage() {
       <form onSubmit={handleSaveRates} className="card">
         <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Settings size={18} color="var(--color-primary)" />
-          <span>Taux de change du jour (Base USD)</span>
+          <span>{t('settings.rates_title')}</span>
         </h3>
         <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '14px' }}>
-          Combien d'unités de cette devise équivalent à **1 USD** ? Utilisé pour calculer le patrimoine global.
+          {t('settings.rates_desc')}
         </p>
 
         <div className="form-group">
-          <label className="form-label">Shilling Ougandais (UGX / 1 USD)</label>
+          <label className="form-label">{t('currency.UGX')}</label>
           <input
             type="number"
             step="any"
@@ -103,7 +105,7 @@ export default function SettingsPage() {
 
         <div className="form-row">
           <div className="form-group">
-            <label className="form-label">Shilling Kenyan (KES / 1 USD)</label>
+            <label className="form-label">{t('currency.KES')}</label>
             <input
               type="number"
               step="any"
@@ -115,7 +117,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Franc Congolais (CDF / 1 USD)</label>
+            <label className="form-label">{t('currency.CDF')}</label>
             <input
               type="number"
               step="any"
@@ -129,7 +131,7 @@ export default function SettingsPage() {
 
         <div className="form-row">
           <div className="form-group">
-            <label className="form-label">Shilling Tanzanien (TZS / 1 USD)</label>
+            <label className="form-label">{t('currency.TZS')}</label>
             <input
               type="number"
               step="any"
@@ -141,7 +143,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Franc Burundais (BIF / 1 USD)</label>
+            <label className="form-label">{t('currency.BIF')}</label>
             <input
               type="number"
               step="any"
@@ -155,7 +157,7 @@ export default function SettingsPage() {
 
         <div className="form-row">
           <div className="form-group">
-            <label className="form-label">Euro (EUR / 1 USD)</label>
+            <label className="form-label">{t('currency.EUR')}</label>
             <input
               type="number"
               step="any"
@@ -167,7 +169,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Franc CFA (FCFA / 1 USD)</label>
+            <label className="form-label">{t('currency.FCFA')}</label>
             <input
               type="number"
               step="any"
@@ -181,7 +183,7 @@ export default function SettingsPage() {
 
         <button type="submit" className="btn btn-primary" style={{ marginTop: '5px' }}>
           <Save size={16} />
-          <span>Enregistrer les Taux</span>
+          <span>{t('settings.save_rates')}</span>
         </button>
       </form>
 
@@ -189,14 +191,14 @@ export default function SettingsPage() {
       <div className="card">
         <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Settings size={18} color="var(--color-orange)" />
-          <span>Administration des Stocks & Caisses</span>
+          <span>{t('settings.admin_title')}</span>
         </h3>
         <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '14px' }}>
-          Ajuster directement et manuellement le solde de vos portefeuilles (utilisé pour corriger une erreur de stock physique).
+          {t('settings.admin_desc')}
         </p>
 
         {wallets.length === 0 ? (
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic', padding: '10px 0' }}>Aucune caisse à administrer.</p>
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic', padding: '10px 0' }}>{t('settings.admin_none')}</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
             {wallets.map(w => (
@@ -210,16 +212,16 @@ export default function SettingsPage() {
       <div className="card">
         <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Settings size={18} color="var(--primary-blue)" />
-          <span>Préférences d'affichage</span>
+          <span>{t('settings.preferences')}</span>
         </h3>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <label style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '700' }}>Langue de l'application</label>
+          <label style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '700' }}>{t('settings.language_label')}</label>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button type="button" className={`toggle-button ${language === 'fr' ? 'active' : ''}`} onClick={() => setLanguage('fr')} style={{ padding: '8px 10px' }}>FR</button>
             <button type="button" className={`toggle-button ${language === 'en' ? 'active' : ''}`} onClick={() => setLanguage('en')} style={{ padding: '8px 10px' }}>EN</button>
           </div>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>La langue choisie sera appliquée à l'ensemble de l'application.</p>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('settings.lang_note')}</p>
         </div>
       </div>
 
@@ -228,14 +230,14 @@ export default function SettingsPage() {
         <div className="card" style={{ border: '1px dashed var(--color-red)' }}>
           <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-red)' }}>
             <AlertTriangle size={18} />
-            <span>Zone de Danger</span>
+            <span>{t('settings.danger_title')}</span>
           </h3>
           <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-            Réinitialiser les données de test locales pour repartir d'un grand livre propre.
+            {t('settings.danger_desc')}
           </p>
           <button type="button" className="btn btn-outline" style={{ borderColor: 'var(--color-red)', color: 'var(--color-red)' }} onClick={handleReset}>
             <RefreshCw size={14} />
-            <span>Réinitialiser les Données Démo</span>
+            <span>{t('settings.reset_mock_button')}</span>
           </button>
         </div>
       )}
@@ -244,11 +246,11 @@ export default function SettingsPage() {
       <div className="card">
         <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <LogOut size={18} color="var(--color-red)" />
-          <span>Session Utilisateur</span>
+          <span>{t('settings.user_session')}</span>
         </h3>
-        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-          Connecté en tant que : <strong>{user?.email || 'Utilisateur démo'}</strong>
-        </p>
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+            {t('settings.connected_as')} <strong>{user?.email || t('app.demo')}</strong>
+          </p>
         <button 
           type="button" 
           className="btn btn-outline" 
@@ -256,12 +258,12 @@ export default function SettingsPage() {
           onClick={async () => {
             const res = await logOut();
             if (!res.success) {
-              alert('Erreur lors de la déconnexion : ' + res.error);
+              alert(t('settings.logout_error_prefix') + res.error);
             }
           }}
         >
           <LogOut size={14} />
-          <span>Se Déconnecter</span>
+          <span>{t('settings.logout_button')}</span>
         </button>
       </div>
     </div>
@@ -271,6 +273,7 @@ export default function SettingsPage() {
 // Sub-component for wallet stock/balance adjustment form
 function WalletStockAdjuster({ wallet, onAdjust }) {
   const [balance, setBalance] = useState(wallet.balance.toString());
+  const t = useT();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -291,7 +294,7 @@ function WalletStockAdjuster({ wallet, onAdjust }) {
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2000);
     } else {
-      alert("Erreur d'ajustement : " + res.error);
+      alert(t('settings.adjust_error_prefix') + res.error);
     }
   };
 
@@ -299,7 +302,7 @@ function WalletStockAdjuster({ wallet, onAdjust }) {
     <form onSubmit={handleSubmit} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
       <div style={{ flex: 1 }}>
         <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--deep-navy)' }}>{wallet.name}</span>
-        <span style={{ display: 'block', fontSize: '10px', color: 'var(--text-secondary)' }}>Devise: {wallet.currency} • Type: {wallet.type === 'cash' ? 'Cash' : 'M-Money'}</span>
+        <span style={{ display: 'block', fontSize: '10px', color: 'var(--text-secondary)' }}>{t('settings.currency_label')}: {wallet.currency} • {t('settings.type_label')}: {t(`wallet.type.${wallet.type === 'cash' ? 'cash' : 'mmoney'}`)}</span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input
@@ -317,7 +320,7 @@ function WalletStockAdjuster({ wallet, onAdjust }) {
           style={{ width: 'auto', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', borderColor: success ? 'var(--color-green)' : 'var(--border-color)', color: success ? 'var(--color-green)' : 'var(--primary-blue)', margin: 0 }}
           disabled={loading}
         >
-          {loading ? '...' : success ? 'Fait !' : 'Ajuster'}
+          {loading ? '...' : success ? t('settings.adjust_done') : t('settings.adjust_button')}
         </button>
       </div>
     </form>

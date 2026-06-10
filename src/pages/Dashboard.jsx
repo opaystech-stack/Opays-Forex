@@ -76,13 +76,13 @@ export default function Dashboard({ onSelectDraft }) {
   const handleConfirmDraft = async (draft) => {
     const res = await confirmDraft(draft.id);
     if (!res.success) {
-      alert('Erreur lors de la validation : ' + (res.error || 'Inconnue'));
+      alert(t('dashboard.drafts_confirm_error') + (res.error || 'Unknown'));
     }
   };
 
   // Handle draft rejection
   const handleDeleteDraft = async (draftId) => {
-    if (window.confirm('Supprimer ce brouillon ? Cette action est irréversible.')) {
+    if (window.confirm(t('common.confirm_delete'))) {
       await deleteDraft(draftId);
     }
   };
@@ -124,13 +124,13 @@ export default function Dashboard({ onSelectDraft }) {
 
         <div className="card" style={{ padding: '14px 18px', marginTop: '-10px', marginBottom: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px' }}>
-            <span style={{ color: 'var(--text-secondary)' }}>Bénéfice Net Kiosque :</span>
+            <span style={{ color: 'var(--text-secondary)' }}>{t('dashboard.net_kiosk')}</span>
             <span style={{ fontWeight: '600', color: stats.netProfitUSD >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
               {formatValue(stats.netProfitUSD, 'USD')}
             </span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', borderTop: '1px solid var(--border-color)', paddingTop: '6px' }}>
-            <span style={{ color: 'var(--text-secondary)' }}>Prélèvements Personnels :</span>
+            <span style={{ color: 'var(--text-secondary)' }}>{t('dashboard.personal_withdrawals')}</span>
             <span style={{ fontWeight: '600', color: 'var(--color-orange)' }}>
               {formatValue(stats.persExpenseUSD, 'USD')}
             </span>

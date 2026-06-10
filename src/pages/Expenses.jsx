@@ -3,12 +3,12 @@ import { useApp } from '../context/AppContext';
 import { TrendingDown, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useT } from '../i18n';
 
-const BUSINESS_CATEGORIES = ['Loyer Kiosque', 'Transport de fonds', 'Frais Retrait', 'Airtel Commission', 'MTN Commission', 'Internet/Forfait', 'Salaire Agent', 'Autre Business'];
-const PERSONAL_CATEGORIES = ['Famille', 'Nourriture', 'Transport Perso', 'Loyer Maison', 'Santé', 'Scolarité', 'Divertissement', 'Autre Perso'];
-
 export default function Expenses() {
   const { wallets, expenses, addExpense, loading } = useApp();
   const t = useT();
+
+  const BUSINESS_CATEGORIES = t('expenses.categories.business') || [];
+  const PERSONAL_CATEGORIES = t('expenses.categories.personal') || [];
 
   const [walletId, setWalletId] = useState('');
   const [amount, setAmount] = useState('');
@@ -23,7 +23,7 @@ export default function Expenses() {
     e.preventDefault();
     const finalWalletId = walletId || (wallets.length > 0 ? wallets[0].id : '');
     if (!finalWalletId || !amount || !category) {
-      setMessage({ type: 'error', text: 'Veuillez remplir tous les champs obligatoires.' });
+      setMessage({ type: 'error', text: t('expenses.required_fields') });
       return;
     }
 
@@ -37,16 +37,16 @@ export default function Expenses() {
 
     const res = await addExpense(payload);
     if (res.success) {
-      setMessage({ type: 'success', text: 'Dépense enregistrée et solde déduit !' });
+      setMessage({ type: 'success', text: t('expenses.created_success') });
       setAmount('');
       setNote('');
     } else {
-      setMessage({ type: 'error', text: `Erreur : ${res.error}` });
+      setMessage({ type: 'error', text: t('settings.rates_update_error') + res.error });
     }
   };
 
   const getWalletName = (wId) => {
-    return wallets.find(w => w.id === wId)?.name || 'Portefeuille inconnu';
+    return wallets.find(w => w.id === wId)?.name || t('expenses.wallet_unknown');
   };
 
   const getWalletCurrency = (wId) => {
@@ -58,7 +58,7 @@ export default function Expenses() {
   };
 
   if (loading) {
-    return <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '20px' }}>Chargement...</p>;
+    return <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '20px' }}>{t('loading.data')}</p>;
   }
 
   return (
@@ -105,7 +105,7 @@ export default function Expenses() {
           <AlertCircle size={40} color="var(--color-orange)" style={{ margin: '0 auto 12px' }} />
           <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>{t('expenses.no_wallets')}</h3>
           <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: '1.6' }}>
-            Veuillez d'abord créer vos caisses (ex: Caisse USD, MTN UGX) dans le menu dédié « Portefeuilles » pour pouvoir enregistrer des dépenses.
+            {t('expenses.no_wallets')} - {t('settings.rates_desc')}
           </p>
         </div>
       ) : (
@@ -128,11 +128,11 @@ export default function Expenses() {
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">{t('expenses.amount_label')}</label>
-              <input
+                <input
                 type="number"
                 step="any"
                 className="form-control"
-                placeholder="Ex: 5000"
+                  placeholder={t('expenses.amount_placeholder')}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
@@ -160,7 +160,7 @@ export default function Expenses() {
             <input
               type="text"
               className="form-control"
-              placeholder="Ex: Transport Kampala centre, Achat pain..."
+              placeholder={t('expenses.note_placeholder')}
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
@@ -175,7 +175,7 @@ export default function Expenses() {
 
       {/* 3. Recent Expenses List */}
       <div className="screen-header" style={{ marginTop: '25px' }}>
-        <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>Dépenses Récentes</h3>
+        <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>{t('expenses.recent_title')}</h3>
       </div>
 
       <div className="ledger-list" style={{ marginBottom: '15px' }}>
@@ -203,7 +203,7 @@ export default function Expenses() {
                     -{formatValue(e.amount, getWalletCurrency(e.wallet_id))}
                   </span>
                   <span style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                    {e.is_business ? 'PRO' : 'PERSO'}
+                    {e.is_business ? t('expenses.pro_label') : t('expenses.personal_label')}
                   </span>
                 </div>
               </div>

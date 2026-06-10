@@ -19,7 +19,7 @@ export default function Navbar({ activeTab, setActiveTab, isUsingMock }) {
         <span className="logo-subtitle">{t('app.subtitle')}</span>
         <h2 className="logo-title">{t('app.title')}</h2>
         {isUsingMock && (
-          <span className="mock-badge" style={{ marginTop: '8px', display: 'inline-block' }}>{t('settings.demo_badge') || 'Démo'}</span>
+          <span className="mock-badge" style={{ marginTop: '8px', display: 'inline-block' }}>{t('app.demo')}</span>
         )}
       </div>
 

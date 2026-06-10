@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { useT } from '../i18n';
 import { Landmark, Plus, Edit, Trash2, ArrowUpRight, ArrowDownLeft, CheckCircle2, AlertCircle, X } from 'lucide-react';
 
 export default function WalletsPage() {
   const { wallets, createWallet, updateWallet, deleteWallet, addTransaction } = useApp();
+  const t = useT();
   
   // Wallet CRUD state
   const [showAddForm, setShowAddForm] = useState(false);
@@ -41,7 +43,7 @@ export default function WalletsPage() {
       });
 
       if (res.success) {
-        setMessage({ type: 'success', text: `Caisse "${name}" créée avec succès !` });
+        setMessage({ type: 'success', text: t('wallets.create_success').replace('{name}', name) });
         setName('');
         setBalance('0');
         setShowAddForm(false);
@@ -66,8 +68,8 @@ export default function WalletsPage() {
         is_active: editActive
       });
 
-      if (res.success) {
-        setMessage({ type: 'success', text: 'Portefeuille mis à jour !' });
+        if (res.success) {
+        setMessage({ type: 'success', text: t('wallets.update_success') });
         setEditingWallet(null);
       } else {
         throw new Error(res.error);
@@ -80,19 +82,19 @@ export default function WalletsPage() {
   };
 
   const handleDeleteWallet = async (id, wName) => {
-    if (window.confirm(`Voulez-vous vraiment supprimer la caisse "${wName}" ?`)) {
+    if (window.confirm(t('wallets.delete_confirm').replace('{name}', wName))) {
       try {
         setLoading(true);
         const res = await deleteWallet(id);
         if (res.success) {
-          setMessage({ type: 'success', text: 'Caisse supprimée avec succès.' });
+          setMessage({ type: 'success', text: t('wallets.delete_success') });
         } else {
           throw new Error(res.error);
         }
       } catch (err) {
         setMessage({ 
           type: 'error', 
-          text: `Impossible de supprimer. La caisse contient probablement déjà des transactions. Désactivez-la plutôt. Erreur : ${err.message}` 
+          text: t('wallets.delete_error_prefix') + err.message
         });
       } finally {
         setLoading(false);
@@ -106,7 +108,7 @@ export default function WalletsPage() {
     const amount = parseFloat(movementAmount);
 
     if (!activeWalletId || isNaN(amount) || amount <= 0) {
-      setMessage({ type: 'error', text: 'Veuillez entrer des informations valides.' });
+      setMessage({ type: 'error', text: t('common.confirm_delete') });
       return;
     }
 
@@ -126,7 +128,7 @@ export default function WalletsPage() {
       fee: 0,
       fee_wallet_id: null,
       profit_usd: 0,
-      note: movementNote.trim() || (isDeposit ? 'Injection/Renforcement de Capital' : 'Prélèvement de Capital'),
+      note: movementNote.trim() || (isDeposit ? t('wallets.movement_inject') : t('wallets.movement_withdraw')),
       transaction_id: `CAP-${Date.now().toString().slice(-6)}`
     };
 
@@ -137,8 +139,8 @@ export default function WalletsPage() {
         setMessage({ 
           type: 'success', 
           text: isDeposit 
-            ? `Capital renforcé de +${amount} ${targetWallet.currency} avec succès !`
-            : `Capital prélevé de -${amount} ${targetWallet.currency} avec succès !`
+            ? `${t('wallets.movement_inject')} +${amount} ${targetWallet.currency}`
+            : `${t('wallets.movement_withdraw')} -${amount} ${targetWallet.currency}`
         });
         setMovementAmount('');
         setMovementNote('');
@@ -161,8 +163,8 @@ export default function WalletsPage() {
     <div>
       <div className="screen-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
         <div>
-          <h2 className="screen-title">Gestion des Caisses</h2>
-          <p className="screen-desc">Ajouter de nouvelles caisses et piloter les mouvements de fonds.</p>
+          <h2 className="screen-title">{t('wallets.page_title')}</h2>
+          <p className="screen-desc">{t('wallets.page_desc')}</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button 
@@ -176,7 +178,7 @@ export default function WalletsPage() {
             }}
           >
             <ArrowUpRight size={14} />
-            <span>Mouvement de Capital</span>
+            <span>{t('wallets.capital_movement')}</span>
           </button>
           <button 
             type="button" 
@@ -189,7 +191,7 @@ export default function WalletsPage() {
             }}
           >
             <Plus size={14} />
-            <span>Nouvelle Caisse</span>
+            <span>{t('wallets.new_wallet')}</span>
           </button>
         </div>
       </div>
@@ -205,16 +207,16 @@ export default function WalletsPage() {
       {showAddForm && (
         <form onSubmit={handleCreateWallet} className="card glass-card" style={{ border: '1px solid var(--primary-blue)', marginBottom: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '700' }}>Créer une Nouvelle Caisse</h3>
+            <h3 style={{ fontSize: '15px', fontWeight: '700' }}>{t('wallets.create_wallet_title')}</h3>
             <button type="button" onClick={() => setShowAddForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><X size={18} /></button>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Nom du portefeuille / Compte</label>
+            <label className="form-label">{t('wallets.create_wallet_title')}</label>
             <input 
               type="text" 
               className="form-control" 
-              placeholder="Ex: Caisse Airtel Rwanda" 
+              placeholder={t('wallets.create_wallet_title')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               required 
@@ -223,15 +225,15 @@ export default function WalletsPage() {
 
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Type</label>
+              <label className="form-label">{t('wallets.type_label')}</label>
               <select className="form-control" value={type} onChange={(e) => setType(e.target.value)}>
-                <option value="cash">Espèces (Cash)</option>
-                <option value="mobile_money">Mobile Money</option>
+                <option value="cash">{t('wallets.wallet_type_cash')}</option>
+                <option value="mobile_money">{t('wallets.wallet_type_mmoney')}</option>
               </select>
             </div>
 
             <div className="form-group">
-              <label className="form-label">Devise</label>
+              <label className="form-label">{t('wallets.currency_label')}</label>
               <select className="form-control" value={currency} onChange={(e) => setCurrency(e.target.value)}>
                 <option value="USD">USD ($)</option>
                 <option value="UGX">UGX (Ouganda)</option>
@@ -247,7 +249,7 @@ export default function WalletsPage() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Solde Initial</label>
+            <label className="form-label">{t('wallets.initial_balance')}</label>
             <input 
               type="number" 
               step="any"
@@ -258,7 +260,7 @@ export default function WalletsPage() {
           </div>
 
           <button type="submit" className="btn btn-primary" disabled={loading}>
-            <span>Créer la caisse</span>
+            <span>{t('wallets.create_wallet_button')}</span>
           </button>
         </form>
       )}
@@ -267,12 +269,12 @@ export default function WalletsPage() {
       {editingWallet && (
         <form onSubmit={handleUpdateWallet} className="card glass-card" style={{ border: '1px solid var(--color-orange)', marginBottom: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--color-orange)' }}>Modifier la Caisse</h3>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--color-orange)' }}>{t('wallets.create_wallet_title')}</h3>
             <button type="button" onClick={() => setEditingWallet(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><X size={18} /></button>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Nom de la Caisse</label>
+            <label className="form-label">{t('wallets.create_wallet_title')}</label>
             <input 
               type="text" 
               className="form-control" 
@@ -290,11 +292,11 @@ export default function WalletsPage() {
               onChange={(e) => setEditActive(e.target.checked)}
               style={{ width: '16px', height: '16px' }}
             />
-            <label htmlFor="wallet-active" style={{ fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Caisse Active (visible pour les transactions)</label>
+            <label htmlFor="wallet-active" style={{ fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>{t('wallets.wallet_active_label')}</label>
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ backgroundColor: 'var(--color-orange)' }} disabled={loading}>
-            <span>Enregistrer</span>
+            <span>{t('wallets.update_success')}</span>
           </button>
         </form>
       )}
@@ -303,7 +305,7 @@ export default function WalletsPage() {
       {showCapitalForm && (
         <form onSubmit={handleCapitalMovement} className="card glass-card" style={{ border: '1px solid var(--color-cyan)', marginBottom: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--color-cyan)' }}>Mouvement de Capital</h3>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--color-cyan)' }}>{t('wallets.capital_movement')}</h3>
             <button type="button" onClick={() => setShowCapitalForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><X size={18} /></button>
           </div>
 
@@ -315,7 +317,7 @@ export default function WalletsPage() {
               style={{ padding: '8px 12px' }}
             >
               <ArrowUpRight size={14} style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle' }} />
-              Injecter / Renforcer
+              {t('wallets.movement_inject')}
             </button>
             <button
               type="button"
@@ -324,12 +326,12 @@ export default function WalletsPage() {
               style={{ padding: '8px 12px' }}
             >
               <ArrowDownLeft size={14} style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle' }} />
-              Prélèvement
+              {t('wallets.movement_withdraw')}
             </button>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Sélectionner la Caisse</label>
+            <label className="form-label">{t('wallets.select_wallet')}</label>
             <select 
               className="form-control"
               value={selectedWalletId}
@@ -342,12 +344,12 @@ export default function WalletsPage() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Montant du mouvement</label>
+            <label className="form-label">{t('wallets.amount_placeholder')}</label>
             <input 
               type="number" 
               step="any"
               className="form-control" 
-              placeholder="Ex: 5000"
+              placeholder={t('wallets.amount_placeholder')}
               value={movementAmount}
               onChange={(e) => setMovementAmount(e.target.value)}
               required 
@@ -355,18 +357,18 @@ export default function WalletsPage() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Note explicative (Facultative)</label>
+            <label className="form-label">{t('wallets.note_placeholder')}</label>
             <input 
               type="text" 
               className="form-control" 
-              placeholder="Ex: Apport capital cash USD, Retrait dividendes..."
+              placeholder={t('wallets.note_placeholder')}
               value={movementNote}
               onChange={(e) => setMovementNote(e.target.value)}
             />
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ backgroundColor: 'var(--color-cyan)', color: '#090c10' }} disabled={loading}>
-            <span>Valider le Mouvement</span>
+            <span>{t('wallets.validate_movement')}</span>
           </button>
         </form>
       )}
@@ -375,13 +377,13 @@ export default function WalletsPage() {
       {wallets.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '40px 20px' }}>
           <Landmark size={48} color="var(--text-muted)" style={{ margin: '0 auto 16px', opacity: 0.5 }} />
-          <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>Aucune caisse enregistrée</h3>
+          <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>{t('wallets.wallet_none')}</h3>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: '1.6' }}>
-            Vous devez d'abord créer vos caisses (ex: Caisse Cash USD, Mobile Money Airtel UGX, etc.) pour enregistrer des transactions.
+            {t('wallets.create_first_wallet')}
           </p>
           <button type="button" className="btn btn-primary" style={{ display: 'inline-flex', width: 'auto' }} onClick={() => setShowAddForm(true)}>
             <Plus size={14} />
-            <span>Créer votre premier portefeuille</span>
+            <span>{t('wallets.create_first_wallet')}</span>
           </button>
         </div>
       ) : (
@@ -403,11 +405,11 @@ export default function WalletsPage() {
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--deep-navy)' }}>{w.name}</h3>
-                      {isInactive && <span className="mock-badge" style={{ backgroundColor: 'var(--border-color)', color: 'var(--text-secondary)', border: 'none', padding: '2px 6px', fontSize: '8px' }}>Inactif</span>}
+                          {isInactive && <span className="mock-badge" style={{ backgroundColor: 'var(--border-color)', color: 'var(--text-secondary)', border: 'none', padding: '2px 6px', fontSize: '8px' }}>{t('common.no')}</span>}
                     </div>
-                    <span className="wallet-type-badge" style={{ display: 'inline-block', marginTop: '2px' }}>
-                      {isCash ? 'Espèces' : 'Mobile Money'} • {w.currency}
-                    </span>
+                        <span className="wallet-type-badge" style={{ display: 'inline-block', marginTop: '2px' }}>
+                          {isCash ? t('wallets.wallet_type_cash') : t('wallets.wallet_type_mmoney')} • {w.currency}
+                        </span>
                   </div>
 
                   <div style={{ display: 'flex', gap: '6px' }}>

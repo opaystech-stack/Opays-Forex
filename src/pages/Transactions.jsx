@@ -3,8 +3,10 @@ import { useApp } from '../context/AppContext';
 import { supabase } from '../services/supabase';
 import { ArrowLeftRight, Image, Mic, Square, Sparkles, CheckCircle2, AlertCircle, Camera } from 'lucide-react';
 
+import { useT } from '../i18n';
 export default function Transactions({ draftToEdit, clearDraftToEdit }) {
   const { wallets, addTransaction, confirmDraft, convertToUSD, customers, findOrCreateCustomer } = useApp();
+  const t = useT();
   
   // Form state
   const [type, setType] = useState('exchange'); // 'exchange', 'deposit', 'withdrawal'
@@ -90,7 +92,7 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
 
   const callGeminiProxy = async ({ kind, prompt, mimeType, base64Data }) => {
     if (!supabase) {
-      throw new Error('Supabase non configuré');
+      throw new Error(t('transactions.supabase_not_configured'));
     }
 
     const { data, error } = await supabase.functions.invoke('gemini-proxy', {
@@ -102,7 +104,7 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
     }
 
     if (!data?.success) {
-      throw new Error(data?.error || 'Erreur Gemini proxy');
+      throw new Error(data?.error || t('transactions.gemini_error'));
     }
 
     return data.text;
@@ -151,8 +153,9 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
         if (custRes.isNew) {
           setMessage({
             type: 'success',
-            text: `Nouveau client "${custRes.data.name}" créé automatiquement à partir du reçu.`
+            text: t('transactions.client_auto_created').replace('{name}', custRes.data.name)
           });
+          setMessage({ type: 'success', text: t('transactions.receipt_ai_simulated') });
         }
       }
     } else {
@@ -266,9 +269,14 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
       const parsed = JSON.parse(cleanedText.trim());
       await applyGeminiResult(parsed);
       setMessage({ type: 'success', text: 'Reçu analysé par l\'IA Gemini avec succès ! Complétez les champs manquants.' });
+      setMessage({ type: 'success', text: t('transactions.receipt_ai_success') });
     } catch (error) {
       console.error("Erreur Gemini OCR:", error);
       setMessage({ type: 'error', text: `Erreur d'analyse réelle Gemini : ${error.message}. Bascule en simulation.` });
+        setMessage({ type: 'error', text: t('transactions.gemini_error') + ': ' + (error.message || '') });
+        setMessage({ type: 'success', text: t('transactions.receipt_ai_simulated') });
+        setMessage({ type: 'success', text: t('transactions.receipt_ai_success') });
+        setMessage({ type: 'error', text: t('transactions.gemini_error') + ': ' + (error.message || '') });
       await simulateOcrResult();
     } finally {
       setAiLoading(false);
@@ -390,6 +398,7 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
     if (type === 'exchange') {
       if (!sourceWalletId || !destWalletId || !sourceAmount || !destAmount) {
         setMessage({ type: 'error', text: 'Veuillez remplir tous les champs requis pour un échange.' });
+          setMessage({ type: 'error', text: t('transactions.required_exchange') });
         return;
       }
       if (sourceWalletId === destWalletId) {
@@ -399,11 +408,13 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
     } else if (type === 'deposit') {
       if (!destWalletId || !destAmount) {
         setMessage({ type: 'error', text: 'Veuillez renseigner le portefeuille à créditer et le montant.' });
+          setMessage({ type: 'error', text: t('transactions.required_deposit') });
         return;
       }
     } else if (type === 'withdrawal') {
       if (!sourceWalletId || !sourceAmount) {
         setMessage({ type: 'error', text: 'Veuillez renseigner le portefeuille à débiter et le montant.' });
+          setMessage({ type: 'error', text: t('transactions.required_withdrawal') });
         return;
       }
     }
@@ -433,9 +444,7 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
     if (res.success) {
       setMessage({ 
         type: 'success', 
-        text: draftToEdit 
-          ? 'Brouillon validé avec succès et soldes mis à jour !' 
-          : 'Transaction enregistrée et soldes mis à jour !' 
+        text: draftToEdit ? t('transactions.draft_validated') : t('transactions.transaction_saved')
       });
       // Reset form
       setSourceAmount('');
@@ -450,6 +459,7 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
       }
     } else {
       setMessage({ type: 'error', text: `Erreur : ${res.error}` });
+      setMessage({ type: 'error', text: t('settings.rates_update_error') + res.error });
     }
   };
 
@@ -457,12 +467,10 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
     <div>
       <div className="screen-header">
         <h2 className="screen-title" style={{ color: draftToEdit ? 'var(--color-orange)' : 'var(--deep-navy)' }}>
-          {draftToEdit ? 'Validation Brouillon' : 'Nouvelle Opération'}
+          {draftToEdit ? t('transactions.validate_draft') : t('transactions.new_operation')}
         </h2>
         <p className="screen-desc">
-          {draftToEdit 
-            ? 'Vérifier et compléter les détails du brouillon avant validation.' 
-            : 'Saisir un échange de devises, un renforcement de fonds ou un retrait.'}
+          {draftToEdit ? t('transactions.validate_draft') : t('transactions.new_operation')}
         </p>
       </div>
 
@@ -479,19 +487,19 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
         {!isRecording ? (
           <button type="button" className="btn btn-outline" style={{ padding: '10px 6px', fontSize: '11px' }} onClick={startRecording} disabled={aiLoading}>
             <Mic size={14} color="var(--color-red)" />
-            <span>Saisie Vocale</span>
+            <span>{t('transactions.voice_button')}</span>
           </button>
         ) : (
           <button type="button" className="btn btn-primary" style={{ backgroundColor: 'var(--color-red)', padding: '10px 6px', fontSize: '11px' }} onClick={stopRecording}>
             <Square size={14} />
-            <span>Fin écoute</span>
+            <span>{t('transactions.voice_stop')}</span>
           </button>
         )}
 
         {/* OCR Camera Photo button */}
         <label className="btn btn-outline" style={{ cursor: 'pointer', padding: '10px 6px', fontSize: '11px' }}>
           <Camera size={14} color="var(--color-green)" />
-          <span>Prendre Photo</span>
+          <span>{t('transactions.take_photo')}</span>
           <input
             type="file"
             accept="image/*"
@@ -505,7 +513,7 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
         {/* OCR File Upload button */}
         <label className="btn btn-outline" style={{ cursor: 'pointer', padding: '10px 6px', fontSize: '11px' }}>
           <Image size={14} color="var(--primary-blue)" />
-          <span>Choisir Fichier</span>
+          <span>{t('transactions.choose_file')}</span>
           <input
             type="file"
             accept="image/*"
@@ -520,7 +528,7 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
         <div className="card glass-card" style={{ textAlign: 'center', padding: '15px', marginBottom: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
             <Sparkles className="navbar-icon" size={16} style={{ color: 'var(--color-primary)', animation: 'pulse 1s infinite' }} />
-            <span style={{ fontSize: '13px', fontWeight: '500' }}>L'IA analyse le fichier...</span>
+            <span style={{ fontSize: '13px', fontWeight: '500' }}>{t('transactions.ai_parsing')}</span>
           </div>
         </div>
       )}
@@ -529,9 +537,9 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
       {wallets.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '30px 20px' }}>
           <AlertCircle size={40} color="var(--color-orange)" style={{ margin: '0 auto 12px' }} />
-          <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>Aucune caisse disponible</h3>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>{t('expenses.no_wallets')}</h3>
           <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: '1.6' }}>
-            Veuillez d'abord créer vos caisses (ex: Caisse USD, MTN UGX) dans le menu dédié « Portefeuilles » pour pouvoir enregistrer une transaction.
+            {t('expenses.no_wallets')}
           </p>
         </div>
       ) : (
@@ -545,7 +553,7 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
               onClick={() => setType('exchange')}
               style={{ fontSize: '12px', padding: '8px 6px' }}
             >
-              Échange Forex
+              {t('transactions.exchange_label')}
             </button>
             <button
               type="button"
@@ -553,7 +561,7 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
               onClick={() => setType('deposit')}
               style={{ fontSize: '12px', padding: '8px 6px' }}
             >
-              Renforcement (+)
+              {t('transactions.deposit_label')}
             </button>
             <button
               type="button"
@@ -561,7 +569,7 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
               onClick={() => setType('withdrawal')}
               style={{ fontSize: '12px', padding: '8px 6px' }}
             >
-              Prélèvement (-)
+              {t('transactions.withdrawal_label')}
             </button>
           </div>
 
@@ -569,7 +577,7 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
           <div className="form-row">
             {type !== 'deposit' && (
               <div className="form-group">
-                <label className="form-label">{type === 'withdrawal' ? 'Caisse Débitée' : 'Client Donne (Source)'}</label>
+                <label className="form-label">{type === 'withdrawal' ? t('transactions.withdrawal_label') : t('transactions.exchange_label')}</label>
                 <select
                   className="form-control"
                   value={sourceWalletId}
@@ -584,7 +592,7 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
 
             {type !== 'withdrawal' && (
               <div className="form-group">
-                <label className="form-label">{type === 'deposit' ? 'Caisse Créditée' : 'Client Reçoit (Dest)'}</label>
+                <label className="form-label">{type === 'deposit' ? t('transactions.deposit_label') : t('transactions.exchange_label')}</label>
                 <select
                   className="form-control"
                   value={destWalletId}
@@ -602,12 +610,12 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
           <div className="form-row">
             {type !== 'deposit' && (
               <div className="form-group">
-                <label className="form-label">{type === 'withdrawal' ? 'Montant Prélèvement' : 'Montant Donné'}</label>
+                <label className="form-label">{type === 'withdrawal' ? t('transactions.withdrawal_label') : t('transactions.exchange_label')}</label>
                 <input
                   type="number"
                   step="any"
                   className="form-control"
-                  placeholder="Ex: 100"
+                  placeholder={t('expenses.amount_placeholder')}
                   value={sourceAmount}
                   onChange={(e) => setSourceAmount(e.target.value)}
                   required
@@ -617,12 +625,12 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
 
             {type !== 'withdrawal' && (
               <div className="form-group">
-                <label className="form-label">{type === 'deposit' ? 'Montant Apporté' : 'Montant Remis'}</label>
+                <label className="form-label">{type === 'deposit' ? t('transactions.deposit_label') : t('transactions.exchange_label')}</label>
                 <input
                   type="number"
                   step="any"
                   className="form-control"
-                  placeholder="Ex: 365000"
+                  placeholder={t('expenses.amount_placeholder')}
                   value={destAmount}
                   onChange={(e) => setDestAmount(e.target.value)}
                   required
@@ -653,6 +661,7 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">Frais télécom (déduit)</label>
+                            <label className="form-label">Frais télécom (déduit)</label>
               <input
                 type="number"
                 step="any"
@@ -664,6 +673,7 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
 
             <div className="form-group">
               <label className="form-label">ID Réseau (Preuve/Litige)</label>
+                            <label className="form-label">{t('modal.txn_id_label')}</label>
               <input
                 type="text"
                 className="form-control"
@@ -677,12 +687,14 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
           {/* Customer Selection */}
           <div className="form-group">
             <label className="form-label">Client (optionnel)</label>
+                        <label className="form-label">{t('modal.source_wallet')}</label>
             <select
               className="form-control"
               value={customerId}
               onChange={(e) => setCustomerId(e.target.value)}
             >
               <option value="">— Aucun client —</option>
+                            <option value="">— {t('common.no')} —</option>
               {customers.map(c => (
                 <option key={c.id} value={c.id}>
                   {c.name} {c.phone ? ` (${c.phone})` : ''}
@@ -692,12 +704,13 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
           </div>
 
           <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-            Les images ne sont pas stockées dans la base ; seules les informations utiles extraites de la capture sont conservées pour la transaction.
+            {t('transactions.receipt_ai_simulated')}
           </p>
 
           {/* Note */}
           <div className="form-group">
             <label className="form-label">Note / Info Client</label>
+                        <label className="form-label">{t('transactions.payment_note_placeholder')}</label>
             <input
               type="text"
               className="form-control"
@@ -730,11 +743,11 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
                 className="btn btn-outline" 
                 onClick={() => {
                   clearDraftToEdit();
-                  setMessage({ type: 'info', text: 'Édition du brouillon annulée.' });
+                  setMessage({ type: 'info', text: t('common.confirm_delete') });
                 }}
                 style={{ flex: 1 }}
               >
-                Annuler
+                {t('common.no')}
               </button>
             )}
             <button 
@@ -743,7 +756,7 @@ Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'int
               style={{ flex: 2, backgroundColor: draftToEdit ? 'var(--color-orange)' : 'var(--primary-blue)', boxShadow: draftToEdit ? '0 6px 20px var(--color-orange-glow)' : '0 6px 20px var(--primary-blue-glow)' }}
             >
               <ArrowLeftRight size={16} />
-              <span>{draftToEdit ? 'Valider le Brouillon' : 'Enregistrer'}</span>
+              <span>{draftToEdit ? t('transactions.validate_draft') : t('common.save')}</span>
             </button>
           </div>
         </form>

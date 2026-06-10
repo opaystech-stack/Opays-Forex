@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import translations from '../i18n';
 import { supabase } from '../services/supabase';
 import { calculateLoanRepaymentUSD, convertToUSD } from '../utils/finance';
 
@@ -794,7 +795,7 @@ export const AppProvider = ({ children }) => {
         return l;
       });
 
-      if (!targetLoan) return { success: false, error: 'Prêt introuvable' };
+      if (!targetLoan) return { success: false, error: (translations[language] && translations[language].loans && translations[language].loans.loan_not_found) || 'Loan not found' };
 
       setLoans(updatedLoans);
       updateLocalMock('forex_loans', updatedLoans);

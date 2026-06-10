@@ -383,19 +383,19 @@ export default function LoansPage() {
             <form onSubmit={handleLoanSubmit} className="card" style={{ marginBottom: '18px' }}>
               <h3 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '14px', color: 'var(--deep-navy)' }}>
                 <Coins size={15} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                Créer un prêt
+                {t('loans.add_loan')}
               </h3>
 
               {/* Customer select */}
               <div className="form-group">
-                <label className="form-label">Client emprunteur</label>
+                <label className="form-label">{t('loans.client_name_required')}</label>
                 <select
                   className="form-control"
                   value={loanCustomerId}
                   onChange={(e) => setLoanCustomerId(e.target.value)}
                   required
                 >
-                  <option value="">— Sélectionner un client —</option>
+                  <option value="">— {t('common.no')} —</option>
                   {customers.map(c => (
                     <option key={c.id} value={c.id}>{c.name}{c.phone ? ` (${c.phone})` : ''}</option>
                   ))}
@@ -404,14 +404,14 @@ export default function LoansPage() {
 
               {/* Wallet select */}
               <div className="form-group">
-                <label className="form-label">Caisse de sortie</label>
+                <label className="form-label">{t('modal.source_wallet')}</label>
                 <select
                   className="form-control"
                   value={loanWalletId}
                   onChange={(e) => setLoanWalletId(e.target.value)}
                   required
                 >
-                  <option value="">— Sélectionner une caisse —</option>
+                  <option value="">— {t('common.no')} —</option>
                   {wallets.map(w => (
                     <option key={w.id} value={w.id}>{w.name} ({w.currency})</option>
                   ))}
@@ -489,7 +489,7 @@ export default function LoansPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                   <label className="btn btn-outline" style={{ cursor: 'pointer', fontSize: '12px', padding: '9px 6px' }}>
                     <Camera size={14} color="var(--color-green)" />
-                    <span>Prendre Photo</span>
+                    <span>{t('transactions.take_photo')}</span>
                     <input
                       type="file"
                       accept="image/*,.pdf"
@@ -500,7 +500,7 @@ export default function LoansPage() {
                   </label>
                   <label className="btn btn-outline" style={{ cursor: 'pointer', fontSize: '12px', padding: '9px 6px' }}>
                     <ImageIcon size={14} color="var(--primary-blue)" />
-                    <span>Choisir Fichier</span>
+                    <span>{t('transactions.choose_file')}</span>
                     <input
                       type="file"
                       accept="image/*,.pdf"
@@ -551,7 +551,7 @@ export default function LoansPage() {
                 }}
               >
                 <Coins size={16} />
-                <span>Créer le Prêt</span>
+                <span>{t('loans.add_loan')}</span>
               </button>
             </form>
           )}
@@ -566,7 +566,7 @@ export default function LoansPage() {
                 textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px',
                 display: 'flex', alignItems: 'center', gap: '6px'
               }}>
-                <AlertCircle size={14} /> En retard ({overdueLoans.length})
+                <AlertCircle size={14} /> {t('loans.status.overdue')} ({overdueLoans.length})
               </h4>
               {overdueLoans.map(renderLoanCard)}
             </div>
@@ -580,7 +580,7 @@ export default function LoansPage() {
                 textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px',
                 display: 'flex', alignItems: 'center', gap: '6px'
               }}>
-                <Clock size={14} /> En cours ({pendingLoans.length})
+                <Clock size={14} /> {t('loans.status.pending')} ({pendingLoans.length})
               </h4>
               {pendingLoans.map(renderLoanCard)}
             </div>
@@ -601,7 +601,7 @@ export default function LoansPage() {
                 }}
               >
                 <CheckCircle2 size={14} />
-                Remboursés ({paidLoans.length})
+                {t('loans.status.paid')} ({paidLoans.length})
                 {showPaidLoans ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
               </button>
               {showPaidLoans && paidLoans.map(renderLoanCard)}
@@ -612,9 +612,9 @@ export default function LoansPage() {
           {enrichedLoans.length === 0 && (
             <div className="card" style={{ textAlign: 'center', padding: '30px 20px' }}>
               <Coins size={40} color="var(--text-muted)" style={{ margin: '0 auto 12px' }} />
-              <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>Aucun prêt</h3>
+              <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>{t('loans.none')}</h3>
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-                Créez votre premier prêt en appuyant sur le bouton « Nouveau Prêt » ci-dessus.
+                {t('loans.create_first')}
               </p>
             </div>
           )}
@@ -638,7 +638,7 @@ export default function LoansPage() {
           <form onSubmit={handleCreateCustomer} className="card" style={{ marginBottom: '18px' }}>
             <h3 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '14px', color: 'var(--deep-navy)' }}>
               <Plus size={15} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-              Ajouter un client
+              {t('loans.add_client')}
             </h3>
             <div className="form-row">
               <div className="form-group" style={{ flex: 2 }}>
@@ -663,7 +663,7 @@ export default function LoansPage() {
                 />
               </div>
             </div>
-            <button
+              <button
               type="submit"
               className="btn btn-primary"
               style={{
@@ -673,7 +673,7 @@ export default function LoansPage() {
               }}
             >
               <User size={16} />
-              <span>Enregistrer Client</span>
+              <span>{t('loans.save_client')}</span>
             </button>
           </form>
 

@@ -81,6 +81,63 @@ const translations = {
         pending: 'En cours',
         paid: 'Remboursé'
       }
+      ,loan_not_found: 'Prêt introuvable',
+      none: 'Aucun prêt',
+      create_first: 'Créez votre premier prêt en appuyant sur "Nouveau Prêt".',
+      add_client: 'Ajouter un client',
+      save_client: 'Enregistrer Client'
+    },
+    transactions: {
+      supabase_not_configured: 'Supabase non configuré',
+      gemini_error: 'Erreur Gemini proxy',
+      ai_parsing: "L'IA analyse le fichier...",
+      ai_parse_success: 'Reçu analysé par l\'IA avec succès.',
+      client_auto_created: 'Nouveau client "{name}" créé automatiquement à partir du reçu.',
+      required_exchange: 'Veuillez remplir tous les champs requis pour un échange.',
+      required_deposit: 'Veuillez renseigner le portefeuille à créditer et le montant.',
+      required_withdrawal: 'Veuillez renseigner le portefeuille à débiter et le montant.',
+      same_wallet_error: 'Le portefeuille de départ doit être différent de celui d\'arrivée.',
+      draft_validated: 'Brouillon validé avec succès et soldes mis à jour !',
+      transaction_saved: 'Transaction enregistrée et soldes mis à jour !',
+      voice_button: 'Saisie Vocale',
+      voice_stop: 'Fin écoute',
+      take_photo: 'Prendre Photo',
+      choose_file: 'Choisir Fichier',
+      new_operation: 'Nouvelle Opération',
+      validate_draft: 'Validation Brouillon',
+      exchange_label: 'Échange Forex',
+      deposit_label: 'Renforcement (+)',
+      withdrawal_label: 'Prélèvement (-)',
+      payment_note_placeholder: 'Nom du client, WhatsApp...',
+      receipt_ai_simulated: 'Simulé : Reçu analysé (configuration Supabase absente).',
+      receipt_ai_success: 'Reçu analysé par l\'IA Gemini avec succès ! Complétez les champs manquants.'
+    },
+    wallets: {
+      page_title: 'Gestion des Caisses',
+      page_desc: 'Ajouter de nouvelles caisses et piloter les mouvements de fonds.',
+      capital_movement: 'Mouvement de Capital',
+      new_wallet: 'Nouvelle Caisse',
+      create_wallet_title: 'Créer une Nouvelle Caisse',
+      create_wallet_button: 'Créer la caisse',
+      type_label: 'Type',
+      currency_label: 'Devise',
+      initial_balance: 'Solde Initial',
+      create_success: 'Caisse "{name}" créée avec succès !',
+      update_success: 'Portefeuille mis à jour !',
+      delete_confirm: 'Voulez-vous vraiment supprimer la caisse "{name}" ?',
+      delete_success: 'Caisse supprimée avec succès.',
+      delete_error_prefix: 'Impossible de supprimer. ',
+      movement_inject: 'Injecter / Renforcer',
+      movement_withdraw: 'Prélèvement',
+      select_wallet: 'Sélectionner la Caisse',
+      amount_placeholder: 'Ex: 5000',
+      note_placeholder: 'Ex: Apport capital cash USD, Retrait dividendes...',
+      validate_movement: 'Valider le Mouvement',
+      wallet_none: 'Aucune caisse enregistrée',
+      create_first_wallet: 'Créer votre premier portefeuille',
+      wallet_type_cash: 'Espèces',
+      wallet_type_mmoney: 'Mobile Money',
+      wallet_active_label: 'Caisse Active (visible pour les transactions)'
     },
     settings: {
       preferences: "Préférences d'affichage",
@@ -127,6 +184,7 @@ const translations = {
     common: {
       yes: 'Oui',
       no: 'Non',
+      save: 'Enregistrer',
       confirm_delete: 'Supprimer ce brouillon ? Cette action est irréversible.'
     }
   },
@@ -210,6 +268,63 @@ const translations = {
         pending: 'Pending',
         paid: 'Paid'
       }
+      ,loan_not_found: 'Loan not found',
+      none: 'No loans',
+      create_first: 'Create your first loan by clicking "New Loan" above.',
+      add_client: 'Add client',
+      save_client: 'Save client'
+    },
+    transactions: {
+      supabase_not_configured: 'Supabase not configured',
+      gemini_error: 'Gemini proxy error',
+      ai_parsing: 'AI is analysing the file...',
+      ai_parse_success: 'Receipt analysed by AI successfully.',
+      client_auto_created: 'New customer "{name}" automatically created from receipt.',
+      required_exchange: 'Please fill required fields for an exchange.',
+      required_deposit: 'Please provide the wallet to credit and the amount.',
+      required_withdrawal: 'Please provide the wallet to debit and the amount.',
+      same_wallet_error: 'Source wallet must be different from destination wallet.',
+      draft_validated: 'Draft validated successfully and balances updated!',
+      transaction_saved: 'Transaction saved and balances updated!',
+      voice_button: 'Voice Input',
+      voice_stop: 'Stop Listening',
+      take_photo: 'Take Photo',
+      choose_file: 'Choose File',
+      new_operation: 'New Operation',
+      validate_draft: 'Validate Draft',
+      exchange_label: 'Forex Exchange',
+      deposit_label: 'Top-up (+)',
+      withdrawal_label: 'Withdrawal (-)',
+      payment_note_placeholder: 'Customer name, WhatsApp...',
+      receipt_ai_simulated: 'Simulated: Receipt analysed (Supabase missing).',
+      receipt_ai_success: 'Receipt analysed by Gemini AI successfully! Complete missing fields.'
+    },
+    wallets: {
+      page_title: 'Wallet Management',
+      page_desc: 'Add new wallets and manage capital movements.',
+      capital_movement: 'Capital Movement',
+      new_wallet: 'New Wallet',
+      create_wallet_title: 'Create a New Wallet',
+      create_wallet_button: 'Create Wallet',
+      type_label: 'Type',
+      currency_label: 'Currency',
+      initial_balance: 'Initial Balance',
+      create_success: 'Wallet "{name}" created successfully!',
+      update_success: 'Wallet updated!',
+      delete_confirm: 'Are you sure you want to delete wallet "{name}"?',
+      delete_success: 'Wallet deleted successfully.',
+      delete_error_prefix: 'Unable to delete. ',
+      movement_inject: 'Inject / Top-up',
+      movement_withdraw: 'Withdrawal',
+      select_wallet: 'Select Wallet',
+      amount_placeholder: 'Ex: 5000',
+      note_placeholder: 'Ex: Cash USD capital injection, Dividend withdrawal...',
+      validate_movement: 'Validate Movement',
+      wallet_none: 'No wallets registered',
+      create_first_wallet: 'Create your first wallet',
+      wallet_type_cash: 'Cash',
+      wallet_type_mmoney: 'Mobile Money',
+      wallet_active_label: 'Active Wallet (visible for transactions)'
     },
     settings: {
       preferences: 'Display Preferences',
@@ -253,7 +368,7 @@ const translations = {
         mmoney: 'M-Money'
       }
     },
-    common: { yes: 'Yes', no: 'No', confirm_delete: 'Delete this draft? This action is irreversible.' }
+    common: { yes: 'Yes', no: 'No', save: 'Save', confirm_delete: 'Delete this draft? This action is irreversible.' }
   }
 };
 

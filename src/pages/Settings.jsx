@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Settings, Save, AlertTriangle, Key, RefreshCw, LogOut } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { rates, updateRates, isUsingMock, resetMockData, user, logOut, wallets, adjustWalletBalance } = useApp();
+  const { rates, updateRates, isUsingMock, resetMockData, user, logOut, wallets, adjustWalletBalance, language, setLanguage } = useApp();
   
   // Rates inputs
   const [ugxRate, setUgxRate] = useState('3750');
@@ -206,36 +206,21 @@ export default function SettingsPage() {
         )}
       </div>
 
-      {/* 2. Supabase Connection details */}
+      {/* 2. Language selector (global) */}
       <div className="card">
         <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Key size={18} color="var(--color-cyan)" />
-          <span>Connexion Supabase</span>
+          <Settings size={18} color="var(--primary-blue)" />
+          <span>Préférences d'affichage</span>
         </h3>
-        
-        {isUsingMock ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <span className="mock-badge" style={{ alignSelf: 'flex-start' }}>Mode Démo Locale</span>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-              L'application utilise actuellement des données fictives stockées dans votre navigateur. 
-              Pour connecter votre base de données réelle Supabase :
-            </p>
-            <div style={{ backgroundColor: '#0c1017', padding: '10px', borderRadius: '8px', fontSize: '11px', fontFamily: 'monospace', color: 'var(--text-secondary)', marginTop: '5px' }}>
-              VITE_SUPABASE_URL=votre_url_supabase<br />
-              VITE_SUPABASE_ANON_KEY=votre_cle_anonyme
-            </div>
-            <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-              Configurez ces variables dans un fichier `.env` à la racine de votre projet puis rechargez la page.
-            </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <label style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '700' }}>Langue de l'application</label>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button type="button" className={`toggle-button ${language === 'fr' ? 'active' : ''}`} onClick={() => setLanguage('fr')} style={{ padding: '8px 10px' }}>FR</button>
+            <button type="button" className={`toggle-button ${language === 'en' ? 'active' : ''}`} onClick={() => setLanguage('en')} style={{ padding: '8px 10px' }}>EN</button>
           </div>
-        ) : (
-          <div>
-            <span className="mock-badge" style={{ backgroundColor: 'rgba(63, 185, 80, 0.1)', border: '1px solid rgba(63, 185, 80, 0.2)', color: 'var(--color-green)', alignSelf: 'flex-start' }}>Connecté à Supabase</span>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>
-              Vos transactions et soldes de caisses sont sauvegardés de manière sécurisée en temps réel dans votre base PostgreSQL Supabase.
-            </p>
-          </div>
-        )}
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>La langue choisie sera appliquée à l'ensemble de l'application.</p>
+        </div>
       </div>
 
       {/* 3. Reset local mock database (only when running mock data) */}

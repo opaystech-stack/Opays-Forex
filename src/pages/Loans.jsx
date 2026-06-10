@@ -5,10 +5,12 @@ import {
   Percent, FileText, Phone, User, X, ChevronDown, ChevronUp,
   Image as ImageIcon, Camera
 } from 'lucide-react';
+import { useT } from '../i18n';
 
 const fmt = new Intl.NumberFormat('fr-FR');
 
 export default function LoansPage() {
+  const t = useT();
   const {
     wallets, customers, loans, transactions,
     createCustomer, createLoan, updateLoanStatus
@@ -278,7 +280,7 @@ export default function LoansPage() {
             }}
           >
             <CheckCircle2 size={15} />
-            <span>Marquer Payé</span>
+            <span>{t('loans.mark_paid')}</span>
           </button>
         )}
       </div>
@@ -292,9 +294,9 @@ export default function LoansPage() {
     <div>
       {/* Screen header */}
       <div className="screen-header">
-        <h2 className="screen-title">Prêts & Clients</h2>
-        <p className="screen-desc">Gérer vos prêts et votre base de clients.</p>
-        <span className="mock-badge">DÉMO</span>
+        <h2 className="screen-title">{t('loans.title')}</h2>
+        <p className="screen-desc">{t('loans.desc')}</p>
+        <span className="mock-badge">{t('loans.demo_badge') || 'DÉMO'}</span>
       </div>
 
       {/* Sub-tab toggle */}
@@ -306,7 +308,7 @@ export default function LoansPage() {
           style={{ fontSize: '13px', padding: '9px 6px' }}
         >
           <Coins size={15} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
-          Prêts
+          {t('loans.loans_tab')}
         </button>
         <button
           type="button"
@@ -315,7 +317,7 @@ export default function LoansPage() {
           style={{ fontSize: '13px', padding: '9px 6px' }}
         >
           <Users size={15} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
-          Clients
+          {t('loans.clients_tab')}
         </button>
       </div>
 
@@ -373,7 +375,7 @@ export default function LoansPage() {
             }}
           >
             {showLoanForm ? <X size={16} /> : <Plus size={16} />}
-            <span>{showLoanForm ? 'Annuler' : 'Nouveau Prêt'}</span>
+            <span>{showLoanForm ? t('loans.cancel') : t('loans.add_loan')}</span>
           </button>
 
           {/* Loan creation form (collapsible) */}

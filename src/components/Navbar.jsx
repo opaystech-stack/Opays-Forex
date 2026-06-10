@@ -1,23 +1,25 @@
-import { LayoutDashboard, ArrowLeftRight, TrendingDown, Settings, Landmark, Coins } from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, TrendingDown, Landmark, Coins } from 'lucide-react';
+import { useT } from '../i18n';
 
 export default function Navbar({ activeTab, setActiveTab, isUsingMock }) {
+  const t = useT();
+
   const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'transactions', label: 'Transactions', icon: ArrowLeftRight },
-    { id: 'wallets', label: 'Portefeuilles', icon: Landmark },
-    { id: 'expenses', label: 'Dépenses', icon: TrendingDown },
-    { id: 'loans', label: 'Prêts', icon: Coins },
-    { id: 'settings', label: 'Paramètres', icon: Settings },
+    { id: 'dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
+    { id: 'transactions', label: t('nav.transactions'), icon: ArrowLeftRight },
+    { id: 'wallets', label: t('nav.wallets'), icon: Landmark },
+    { id: 'expenses', label: t('nav.expenses'), icon: TrendingDown },
+    { id: 'loans', label: t('nav.loans'), icon: Coins }
   ];
 
   return (
     <nav className="mobile-navbar">
       {/* Sidebar header (visible only on desktop via CSS) */}
       <div className="sidebar-logo">
-        <span className="logo-subtitle">Gestion Forex</span>
-        <h2 className="logo-title">OpaysFox</h2>
+        <span className="logo-subtitle">{t('app.subtitle')}</span>
+        <h2 className="logo-title">{t('app.title')}</h2>
         {isUsingMock && (
-          <span className="mock-badge" style={{ marginTop: '8px', display: 'inline-block' }}>Démo</span>
+          <span className="mock-badge" style={{ marginTop: '8px', display: 'inline-block' }}>{t('settings.demo_badge') || 'Démo'}</span>
         )}
       </div>
 

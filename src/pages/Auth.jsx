@@ -43,7 +43,7 @@ export default function Auth() {
     }
   };
 
-  const [language, setLanguage] = useState('fr');
+  const { language, setLanguage } = useApp();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -108,7 +108,7 @@ export default function Auth() {
   };
 
   const isSupabaseConfigured = supabase !== null;
-  const t = translations[language];
+  const t = translations[language || 'fr'];
 
   return (
     <div className="auth-overlay">

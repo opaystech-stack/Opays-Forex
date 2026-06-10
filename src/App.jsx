@@ -10,12 +10,14 @@ const LoansPage = lazy(() => import('./pages/Loans'));
 const SettingsPage = lazy(() => import('./pages/Settings'));
 const Auth = lazy(() => import('./pages/Auth'));
 
-import { Loader2 } from 'lucide-react';
+import { Loader2, Settings } from 'lucide-react';
+import { useT } from './i18n';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [draftToEdit, setDraftToEdit] = useState(null);
   const { isUsingMock, user, loading } = useApp();
+  const t = useT();
 
   // Show a premium loading screen during initial session verification
   if (loading) {
@@ -90,12 +92,22 @@ function AppContent() {
         {/* App Header */}
         <header className="app-header">
           <div>
-            <span className="app-subtitle">Gestion Forex</span>
-            <h1 className="app-title">OpaysFox</h1>
+            <span className="app-subtitle">{t('app.subtitle')}</span>
+            <h1 className="app-title">{t('app.title')}</h1>
           </div>
-          {isUsingMock && (
-            <span className="mock-badge">Démo</span>
-          )}
+          <div style={{ position: 'relative' }}>
+            {isUsingMock && (
+              <span className="mock-badge">{t('settings.demo_badge') || 'Démo'}</span>
+            )}
+            <button
+              aria-label="Ouvrir les paramètres"
+              className="settings-fab"
+              onClick={() => setActiveTab('settings')}
+              style={{ marginLeft: '12px' }}
+            >
+              <Settings size={18} />
+            </button>
+          </div>
         </header>
 
         {/* Dynamic Page Scrollable Body */}

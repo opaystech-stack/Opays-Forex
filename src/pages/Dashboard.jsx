@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Landmark, Wallet, ArrowLeftRight, Search, FileCheck, Trash2, Clock, Edit } from 'lucide-react';
+import { useT } from '../i18n';
 
 export default function Dashboard({ onSelectDraft }) {
   const { wallets, transactions, expenses, getNetWorthUSD, convertToUSD, getDrafts, confirmDraft, deleteDraft, loading, loans, getOutstandingLoansUSD } = useApp();
+  const t = useT();
   const [selectedTxn, setSelectedTxn] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedWalletId, setSelectedWalletId] = useState(null);
@@ -12,7 +14,7 @@ export default function Dashboard({ onSelectDraft }) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60%' }}>
         <div className="recording-dot" style={{ width: '20px', height: '20px', backgroundColor: 'var(--primary-blue)' }}></div>
-        <span style={{ marginLeft: '12px', color: 'var(--text-secondary)' }}>Chargement des données...</span>
+        <span style={{ marginLeft: '12px', color: 'var(--text-secondary)' }}>{t('loading.data')}</span>
       </div>
     );
   }
@@ -91,29 +93,29 @@ export default function Dashboard({ onSelectDraft }) {
       <div className="dashboard-col-left">
         {/* 1. Net Worth Card */}
         <div className="card glass-card" style={{ marginBottom: '20px' }}>
-          <span className="net-worth-label">Patrimoine Global</span>
+          <span className="net-worth-label">{t('dashboard.patrimoine')}</span>
           <div className="net-worth-amount">
             {new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(getNetWorthUSD())}
             <span className="net-worth-currency">USD</span>
           </div>
           <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-            Consolidation automatique en temps réel de toutes vos caisses et wallets.
+            {t('dashboard.consolidation')}
           </p>
         </div>
 
         {/* 2. Daily Summary */}
         <div className="screen-header" style={{ marginBottom: '10px' }}>
-          <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>Résumé d'aujourd'hui</h3>
+          <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>{t('dashboard.summary_today')}</h3>
         </div>
         <div className="stats-strip">
           <div className="stat-box">
-            <span className="stat-label">Bénéfice de Change</span>
+            <span className="stat-label">{t('dashboard.profit')}</span>
             <div className="stat-value income" style={{ color: 'var(--color-green)' }}>
               +{formatValue(stats.profitUSD, 'USD')}
             </div>
           </div>
           <div className="stat-box">
-            <span className="stat-label">Dépenses Agence</span>
+            <span className="stat-label">{t('dashboard.biz_expense')}</span>
             <div className="stat-value expense" style={{ color: 'var(--color-red)' }}>
               -{formatValue(stats.bizExpenseUSD, 'USD')}
             </div>
@@ -163,11 +165,11 @@ export default function Dashboard({ onSelectDraft }) {
 
         {/* 3. Wallets Grid */}
         <div className="screen-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>Vos Caisses & Wallets</h3>
+          <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>{t('dashboard.wallets_title')}</h3>
         </div>
         {wallets.length === 0 ? (
           <p style={{ fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic', padding: '10px 0' }}>
-            Aucun portefeuille créé. Rendez-vous dans l'onglet « Portefeuilles » pour configurer vos caisses.
+            {t('dashboard.wallets_none')}
           </p>
         ) : (
           <div className="wallet-grid">
@@ -209,7 +211,7 @@ export default function Dashboard({ onSelectDraft }) {
           <div className="drafts-panel">
             <div className="drafts-header">
               <Clock size={14} />
-              <span>{drafts.length} brouillon{drafts.length > 1 ? 's' : ''} en attente</span>
+              <span>{drafts.length} {t('dashboard.drafts_pending')}</span>
             </div>
             {drafts.map(d => {
               const sWallet = wallets.find(w => w.id === d.source_wallet_id);
@@ -257,7 +259,7 @@ export default function Dashboard({ onSelectDraft }) {
 
         {/* 4. Quick Search / Recent transactions */}
         <div className="screen-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>Recherche & Litiges</h3>
+          <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>{t('dashboard.search_title')}</h3>
         </div>
         
         {/* Active Filter Badge */}
@@ -277,7 +279,7 @@ export default function Dashboard({ onSelectDraft }) {
             <input
               type="text"
               className="form-control input-with-icon"
-              placeholder="Rechercher par ID Transaction, Note..."
+              placeholder={t('dashboard.search_placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -287,7 +289,7 @@ export default function Dashboard({ onSelectDraft }) {
         <div className="ledger-list">
           {filteredTransactions.length === 0 ? (
             <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', padding: '15px' }}>
-              Aucune transaction trouvée.
+              {t('dashboard.no_txns')}
             </p>
           ) : (
             filteredTransactions.map(t => {
@@ -341,14 +343,14 @@ export default function Dashboard({ onSelectDraft }) {
         <div className="modal-overlay" onClick={() => setSelectedTxn(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h4 className="modal-title">Détails de la Transaction</h4>
-              <button className="modal-close" onClick={() => setSelectedTxn(null)}>Fermer</button>
+              <h4 className="modal-title">{t('modal.txn_details')}</h4>
+              <button className="modal-close" onClick={() => setSelectedTxn(null)}>{t('modal.close')}</button>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Portefeuille Source</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{t('modal.source_wallet')}</span>
                   {selectedTxn.source_wallet_id ? (
                     <>
                       <p style={{ fontWeight: '600' }}>{wallets.find(w => w.id === selectedTxn.source_wallet_id)?.name}</p>
@@ -357,11 +359,11 @@ export default function Dashboard({ onSelectDraft }) {
                       </p>
                     </>
                   ) : (
-                    <p style={{ fontWeight: '500', color: 'var(--text-secondary)', marginTop: '2px' }}>Aucun (Dépôt Capital)</p>
+                    <p style={{ fontWeight: '500', color: 'var(--text-secondary)', marginTop: '2px' }}>{t('modal.none_deposit')}</p>
                   )}
                 </div>
                 <div>
-                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Portefeuille Dest.</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{t('modal.dest_wallet')}</span>
                   {selectedTxn.dest_wallet_id ? (
                     <>
                       <p style={{ fontWeight: '600' }}>{wallets.find(w => w.id === selectedTxn.dest_wallet_id)?.name}</p>
@@ -370,7 +372,7 @@ export default function Dashboard({ onSelectDraft }) {
                       </p>
                     </>
                   ) : (
-                    <p style={{ fontWeight: '500', color: 'var(--text-secondary)', marginTop: '2px' }}>Aucun (Retrait Capital)</p>
+                    <p style={{ fontWeight: '500', color: 'var(--text-secondary)', marginTop: '2px' }}>{t('modal.none_withdraw')}</p>
                   )}
                 </div>
               </div>
@@ -378,11 +380,11 @@ export default function Dashboard({ onSelectDraft }) {
               {selectedTxn.type === 'exchange' && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
                   <div>
-                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Taux Pratiqué</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{t('modal.rate')}</span>
                     <p style={{ fontWeight: '600', fontSize: '14px' }}>{selectedTxn.exchange_rate}</p>
                   </div>
                   <div>
-                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Bénéfice Réalisé</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{t('modal.profit')}</span>
                     <p style={{ fontWeight: '600', fontSize: '14px', color: 'var(--color-green)' }}>
                       +{formatValue(selectedTxn.profit_usd, 'USD')}
                     </p>
@@ -392,7 +394,7 @@ export default function Dashboard({ onSelectDraft }) {
 
               {selectedTxn.transaction_id && (
                 <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>ID Unique de Réseau (Preuve Litige)</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{t('modal.txn_id_label')}</span>
                   <p style={{ fontFamily: 'monospace', fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)', marginTop: '2px' }}>
                     {selectedTxn.transaction_id}
                   </p>
@@ -407,8 +409,7 @@ export default function Dashboard({ onSelectDraft }) {
               )}
 
               <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Date & Heure</span>
-                <p style={{ fontSize: '13px' }}>{new Date(selectedTxn.timestamp).toLocaleString('fr-FR')}</p>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{t('modal.date_time')}</span>
               </div>
 
             </div>

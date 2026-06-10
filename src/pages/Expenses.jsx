@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { TrendingDown, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useT } from '../i18n';
 
 const BUSINESS_CATEGORIES = ['Loyer Kiosque', 'Transport de fonds', 'Frais Retrait', 'Airtel Commission', 'MTN Commission', 'Internet/Forfait', 'Salaire Agent', 'Autre Business'];
 const PERSONAL_CATEGORIES = ['Famille', 'Nourriture', 'Transport Perso', 'Loyer Maison', 'Santé', 'Scolarité', 'Divertissement', 'Autre Perso'];
 
 export default function Expenses() {
   const { wallets, expenses, addExpense, loading } = useApp();
+  const t = useT();
 
   const [walletId, setWalletId] = useState('');
   const [amount, setAmount] = useState('');
@@ -62,8 +64,8 @@ export default function Expenses() {
   return (
     <div>
       <div className="screen-header">
-        <h2 className="screen-title">Nouvelle Dépense</h2>
-        <p className="screen-desc">Enregistrer un retrait pour le business ou vos besoins personnels.</p>
+        <h2 className="screen-title">{t('expenses.title')}</h2>
+        <p className="screen-desc">{t('expenses.desc')}</p>
       </div>
 
       {message && (
@@ -83,7 +85,7 @@ export default function Expenses() {
             setCategory(BUSINESS_CATEGORIES[0]);
           }}
         >
-          Dépense Kiosque (Pro)
+          {t('expenses.pro')}
         </button>
         <button
           type="button"
@@ -93,7 +95,7 @@ export default function Expenses() {
             setCategory(PERSONAL_CATEGORIES[0]);
           }}
         >
-          Retrait Perso
+          {t('expenses.personal')}
         </button>
       </div>
 
@@ -101,7 +103,7 @@ export default function Expenses() {
       {wallets.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '30px 20px' }}>
           <AlertCircle size={40} color="var(--color-orange)" style={{ margin: '0 auto 12px' }} />
-          <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>Aucune caisse disponible</h3>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>{t('expenses.no_wallets')}</h3>
           <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: '1.6' }}>
             Veuillez d'abord créer vos caisses (ex: Caisse USD, MTN UGX) dans le menu dédié « Portefeuilles » pour pouvoir enregistrer des dépenses.
           </p>
@@ -110,7 +112,7 @@ export default function Expenses() {
         <form onSubmit={handleSubmit} className="card">
           {/* Wallet debited */}
           <div className="form-group">
-            <label className="form-label">Caisse / Portefeuille débité</label>
+            <label className="form-label">{t('expenses.wallet_label')}</label>
             <select
               className="form-control"
               value={activeWalletId}
@@ -125,7 +127,7 @@ export default function Expenses() {
           {/* Amount & Category */}
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Montant dépensé</label>
+              <label className="form-label">{t('expenses.amount_label')}</label>
               <input
                 type="number"
                 step="any"
@@ -138,7 +140,7 @@ export default function Expenses() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Catégorie</label>
+              <label className="form-label">{t('expenses.category_label')}</label>
               <select
                 className="form-control"
                 value={category}
@@ -154,7 +156,7 @@ export default function Expenses() {
 
           {/* Note */}
           <div className="form-group">
-            <label className="form-label">Détail / Note explicative</label>
+            <label className="form-label">{t('expenses.note_label')}</label>
             <input
               type="text"
               className="form-control"
@@ -166,7 +168,7 @@ export default function Expenses() {
 
           <button type="submit" className="btn btn-primary" style={{ backgroundColor: isBusiness ? 'var(--color-cyan)' : 'var(--color-orange)', color: '#090c10', boxShadow: isBusiness ? '0 4px 14px var(--color-cyan-glow)' : '0 4px 14px var(--color-orange-glow)' }}>
             <TrendingDown size={16} />
-            <span>Enregistrer le Retrait</span>
+            <span>{t('expenses.save')}</span>
           </button>
         </form>
       )}
@@ -179,7 +181,7 @@ export default function Expenses() {
       <div className="ledger-list" style={{ marginBottom: '15px' }}>
         {expenses.length === 0 ? (
           <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', padding: '15px' }}>
-            Aucune dépense enregistrée.
+            {t('expenses.recent_none') }
           </p>
         ) : (
           expenses.slice(0, 5).map(e => {

@@ -114,6 +114,22 @@ const MOCK_EXPENSES = [
 ];
 
 export const AppProvider = ({ children }) => {
+  // Language (global) - persisted in localStorage
+  const [language, setLanguage] = useState(() => {
+    try {
+      return localStorage.getItem('forex_lang') || 'fr';
+    } catch (e) {
+      return 'fr';
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('forex_lang', language);
+    } catch (e) {
+      // ignore
+    }
+  }, [language]);
   const [wallets, setWallets] = useState([]);
   const [rates, setRates] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -878,7 +894,9 @@ export const AppProvider = ({ children }) => {
       createLoan,
       updateLoanStatus,
       refreshData: fetchData,
-      resetMockData
+      resetMockData,
+      language,
+      setLanguage
     }}>
       {children}
     </AppContext.Provider>

@@ -131,6 +131,32 @@ export const AppProvider = ({ children }) => {
     import.meta.env.VITE_SUPABASE_ANON_KEY &&
     supabase !== null;
 
+  const getAppBaseUrl = useCallback(() => {
+    const candidates = [
+      import.meta.env.VITE_APP_URL,
+      import.meta.env.VITE_PUBLIC_SITE_URL,
+      import.meta.env.VITE_SITE_URL,
+      import.meta.env.VITE_DOMAIN,
+    ];
+
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+
+      const normalized = candidate.trim().replace(/\/+$/, '');
+      if (/^https?:\/\//i.test(normalized)) {
+        return normalized;
+      }
+
+      return `https://${normalized}`;
+    }
+
+    if (typeof window !== 'undefined' && window.location?.origin) {
+      return window.location.origin;
+    }
+
+    return 'https://fox.opays.io';
+  }, []);
+
   const fetchData = useCallback(async (showLoading = false) => {
     if (showLoading) {
       setLoading(true);
@@ -236,7 +262,7 @@ export const AppProvider = ({ children }) => {
         email, 
         password,
         options: {
-          emailRedirectTo: window.location.origin
+          emailRedirectTo: getAppBaseUrl()
         }
       });
       if (error) throw error;
@@ -265,7 +291,7 @@ export const AppProvider = ({ children }) => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: getAppBaseUrl()
         }
       });
       if (error) throw error;

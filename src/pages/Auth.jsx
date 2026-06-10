@@ -122,7 +122,7 @@ export default function Auth() {
 
       <div className="auth-card-container">
         <div className="auth-header">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+          <div className="auth-header-row" style={{ marginBottom: '6px' }}>
             <span className="auth-subtitle">{t.subtitle}</span>
             <div className="toggle-group" style={{ padding: '2px', borderRadius: '999px' }}>
               <button type="button" className={`toggle-button ${language === 'fr' ? 'active' : ''}`} onClick={() => setLanguage('fr')} style={{ padding: '6px 8px', fontSize: '11px' }}>FR</button>

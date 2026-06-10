@@ -501,31 +501,34 @@ body {
 
 /* Switch & Toggle Buttons */
 .toggle-group {
-  display: flex;
-  background-color: var(--bg-light);
-  border: 1px solid var(--border-color);
-  padding: 5px;
-  border-radius: 15px;
-  margin-bottom: 20px;
+  display: inline-flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  padding: 4px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  margin-bottom: 0;
 }
 
 .toggle-button {
   flex: 1;
+  min-width: 38px;
   border: none;
-  background: none;
-  color: var(--text-secondary);
-  padding: 10px 14px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 700;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.88);
+  padding: 8px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .toggle-button.active {
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.98);
   color: var(--deep-navy);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
 }
 
 .toggle-button.active.business {
@@ -534,6 +537,20 @@ body {
 
 .toggle-button.active.personal {
   color: var(--color-orange);
+}
+
+@media (max-width: 480px) {
+  .auth-header-row {
+    justify-content: center;
+  }
+
+  .auth-subtitle {
+    width: 100%;
+  }
+
+  .toggle-group {
+    margin: 0 auto;
+  }
 }
 
 /* Screen titles inside white container */
@@ -1219,6 +1236,14 @@ body {
 .auth-header {
   text-align: center;
   margin-bottom: 30px;
+}
+
+.auth-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .auth-subtitle {

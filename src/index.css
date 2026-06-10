@@ -54,12 +54,8 @@ body {
   font-size: 15px;
   line-height: 1.5;
   overflow-x: hidden;
-  height: 100vh;
-  position: fixed;
+  min-height: 100vh;
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 #root {
@@ -74,13 +70,13 @@ body {
 .app-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
   width: 100%;
   max-width: 440px; /* Standard premium mobile view width */
   margin: 0 auto;
   background: linear-gradient(180deg, #4d6ec5 0%, #2f50a3 100%); /* Organic gradient behind waves */
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   padding-bottom: calc(75px + var(--safe-bottom)); 
   box-shadow: var(--shadow-lg);
 }

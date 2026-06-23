@@ -7,6 +7,5 @@ dist
 .env.*
 !.env.example
 docs
-scripts
 whatsapp-gateway
 .obsidian

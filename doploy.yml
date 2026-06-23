@@ -1,0 +1,36 @@
+# Doploy Configuration for OpaysFox
+# https://github.com/opaystech-stack/Opays-Forex
+
+app: opaysfox
+domain: fox.opays.io
+port: 80
+
+build:
+  method: docker
+  dockerfile: Dockerfile
+  context: .
+  args:
+    - VITE_SUPABASE_URL
+    - VITE_SUPABASE_ANON_KEY
+
+env:
+  - VITE_SUPABASE_URL
+  - VITE_SUPABASE_ANON_KEY
+
+health:
+  path: /
+  interval: 30s
+  timeout: 3s
+  retries: 3
+
+resources:
+  memory: 256M
+  cpu: 0.5
+
+replicas: 1
+
+hooks:
+  pre-deploy:
+    - echo "Building OpaysFox..."
+  post-deploy:
+    - echo "OpaysFox deployed successfully!"

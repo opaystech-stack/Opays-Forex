@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Settings, Save, AlertTriangle, Key, RefreshCw, LogOut } from 'lucide-react';
+import { Settings, Save, AlertTriangle, RefreshCw, LogOut } from 'lucide-react';
 import { useT } from '../i18n';
 
 export default function SettingsPage() {

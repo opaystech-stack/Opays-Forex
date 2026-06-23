@@ -3,14 +3,14 @@ import path from 'path';
 import { execSync } from 'child_process';
 
 // Get current git commit hash or CI-provided commit SHA
-let commit = process.env.VERCEL_GIT_COMMIT_SHA || process.env.GITHUB_SHA || process.env.CI_COMMIT_SHA || process.env.COMMIT_SHA || 'unknown';
+let commit = process.env.GITHUB_SHA || process.env.CI_COMMIT_SHA || process.env.COMMIT_SHA || process.env.SOURCE_VERSION || 'unknown';
 
 if (commit && commit !== 'unknown') {
   commit = commit.trim().slice(0, 7);
 } else {
   try {
     commit = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
-  } catch (e) {
+  } catch {
     console.warn('Could not get git commit from git and no CI commit SHA is available');
   }
 }

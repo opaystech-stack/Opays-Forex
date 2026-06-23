@@ -119,7 +119,7 @@ export const AppProvider = ({ children }) => {
   const [language, setLanguage] = useState(() => {
     try {
       return localStorage.getItem('forex_lang') || 'fr';
-    } catch (e) {
+    } catch (_) {
       return 'fr';
     }
   });
@@ -127,7 +127,7 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     try {
       localStorage.setItem('forex_lang', language);
-    } catch (e) {
+    } catch (_) {
       // ignore
     }
   }, [language]);

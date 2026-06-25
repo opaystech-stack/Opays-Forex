@@ -42,7 +42,6 @@ export default function Auth() {
     }
   };
 
-  const { language, setLanguage } = useApp();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -106,7 +105,7 @@ export default function Auth() {
     }
   };
 
-  const isSupabaseConfigured = supabase !== null;
+  const isSupabaseConfigured = false;
   const t = translations[language || 'fr'];
 
   return (

@@ -22,6 +22,7 @@ const MOCK_RATES = [
   { currency: 'CDF', rate_to_usd: 2500.00 },
   { currency: 'TZS', rate_to_usd: 2600.00 },
   { currency: 'BIF', rate_to_usd: 2850.00 },
+  { currency: 'RWF', rate_to_usd: 1380.00 },
   { currency: 'EUR', rate_to_usd: 0.92 },
   { currency: 'FCFA', rate_to_usd: 600.00 },
 ];
@@ -119,7 +120,7 @@ export const AppProvider = ({ children }) => {
   const [language, setLanguage] = useState(() => {
     try {
       return localStorage.getItem('forex_lang') || 'fr';
-    } catch (e) {
+    } catch {
       return 'fr';
     }
   });
@@ -127,7 +128,7 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     try {
       localStorage.setItem('forex_lang', language);
-    } catch (e) {
+    } catch {
       // ignore
     }
   }, [language]);

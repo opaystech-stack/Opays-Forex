@@ -1,3 +1,4 @@
+/* global process */
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
@@ -10,7 +11,7 @@ if (commit && commit !== 'unknown') {
 } else {
   try {
     commit = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
-  } catch (e) {
+  } catch {
     console.warn('Could not get git commit from git and no CI commit SHA is available');
   }
 }

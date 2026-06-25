@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Settings, Save, AlertTriangle, Key, RefreshCw, LogOut } from 'lucide-react';
+import { Settings, Save, AlertTriangle, RefreshCw, LogOut } from 'lucide-react';
 import { useT } from '../i18n';
 
 export default function SettingsPage() {
@@ -13,6 +13,7 @@ export default function SettingsPage() {
   const [cdfRate, setCdfRate] = useState('2500');
   const [tzsRate, setTzsRate] = useState('2600');
   const [bifRate, setBifRate] = useState('2850');
+  const [rwfRate, setRwfRate] = useState('1380');
   const [eurRate, setEurRate] = useState('0.92');
   const [fcfaRate, setFcfaRate] = useState('600');
 
@@ -26,6 +27,7 @@ export default function SettingsPage() {
     const cdf = rates.find(r => r.currency === 'CDF');
     const tzs = rates.find(r => r.currency === 'TZS');
     const bif = rates.find(r => r.currency === 'BIF');
+    const rwf = rates.find(r => r.currency === 'RWF');
     const eur = rates.find(r => r.currency === 'EUR');
     const fcfa = rates.find(r => r.currency === 'FCFA');
 
@@ -34,6 +36,7 @@ export default function SettingsPage() {
     if (cdf) setCdfRate(cdf.rate_to_usd.toString());
     if (tzs) setTzsRate(tzs.rate_to_usd.toString());
     if (bif) setBifRate(bif.rate_to_usd.toString());
+    if (rwf) setRwfRate(rwf.rate_to_usd.toString());
     if (eur) setEurRate(eur.rate_to_usd.toString());
     if (fcfa) setFcfaRate(fcfa.rate_to_usd.toString());
   }, [rates]);
@@ -47,6 +50,7 @@ export default function SettingsPage() {
       { currency: 'CDF', rate_to_usd: parseFloat(cdfRate) },
       { currency: 'TZS', rate_to_usd: parseFloat(tzsRate) },
       { currency: 'BIF', rate_to_usd: parseFloat(bifRate) },
+      { currency: 'RWF', rate_to_usd: parseFloat(rwfRate) },
       { currency: 'EUR', rate_to_usd: parseFloat(eurRate) },
       { currency: 'FCFA', rate_to_usd: parseFloat(fcfaRate) }
     ];
@@ -157,6 +161,18 @@ export default function SettingsPage() {
 
         <div className="form-row">
           <div className="form-group">
+            <label className="form-label">{t('currency.RWF')}</label>
+            <input
+              type="number"
+              step="any"
+              className="form-control"
+              value={rwfRate}
+              onChange={(e) => setRwfRate(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="form-group">
             <label className="form-label">{t('currency.EUR')}</label>
             <input
               type="number"
@@ -167,7 +183,9 @@ export default function SettingsPage() {
               required
             />
           </div>
+        </div>
 
+        <div className="form-row">
           <div className="form-group">
             <label className="form-label">{t('currency.FCFA')}</label>
             <input

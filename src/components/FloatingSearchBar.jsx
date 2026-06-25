@@ -1,9 +1,11 @@
 import { Search, Mic } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 import { useT } from '../i18n';
 
-export default function FloatingSearchBar({ query, onQueryChange, onAvatarClick }) {
+export default function FloatingSearchBar({ value, onChange, onVoice }) {
   const t = useT();
-  const initials = t('ui.initials') || 'OP';
+  const { user } = useApp();
+  const initials = `${user?.firstName?.[0] || 'O'}${user?.lastName?.[0] || 'P'}`;
 
   return (
     <div className="ofx-search-bar">
@@ -11,15 +13,15 @@ export default function FloatingSearchBar({ query, onQueryChange, onAvatarClick 
       <input
         type="text"
         placeholder={t('ui.searchPlaceholder') || 'Rechercher caisses, transactions...'}
-        value={query}
-        onChange={(e) => onQueryChange(e.target.value)}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
       />
-      <button className="ofx-mic-btn" aria-label={t('ui.voice')} title={t('ui.voice')}>
+      <button className="ofx-mic-btn" onClick={onVoice} aria-label={t('ui.voice')} title={t('ui.voice')}>
         <Mic size={18} />
       </button>
-      <button className="ofx-avatar" onClick={onAvatarClick} aria-label={t('ui.profile')}>
+      <div className="ofx-avatar-mini" aria-label={t('ui.profile')}>
         {initials}
-      </button>
+      </div>
     </div>
   );
 }

@@ -62,7 +62,7 @@ export default function Expenses() {
   }
 
   return (
-    <div>
+    <div className="ofx-scrollable-page">
       <div className="screen-header">
         <h2 className="screen-title">{t('expenses.title')}</h2>
         <p className="screen-desc">{t('expenses.desc')}</p>

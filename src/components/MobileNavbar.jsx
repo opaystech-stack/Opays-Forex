@@ -1,34 +1,44 @@
-import { Map, BookOpen, Plus } from 'lucide-react';
-import { useT } from '../i18n';
+import { LayoutDashboard, Wallet, Receipt, Menu, Plus } from 'lucide-react';
 
-export default function MobileNavbar({ activeTab, onChange }) {
-  const t = useT();
+const tabs = [
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'wallets', label: 'Caisse', icon: Wallet },
+  { id: 'expenses', label: 'Depense', icon: Receipt },
+  { id: 'menu', label: 'Menu', icon: Menu },
+];
 
+export default function MobileNavbar({ activeTab, onChange, onAdd }) {
   return (
     <nav className="ofx-nav">
-      <button
-        className={`ofx-nav-item ${activeTab === 'treasury' ? 'active' : ''}`}
-        onClick={() => onChange('treasury')}
-      >
-        <Map size={22} />
-        <span>{t('ui.tabTreasury') || 'Trésorerie'}</span>
-      </button>
+      {tabs.slice(0, 2).map(tab => (
+        <button
+          key={tab.id}
+          className={`ofx-nav-item ${activeTab === tab.id ? 'active' : ''}`}
+          onClick={() => onChange(tab.id)}
+        >
+          <tab.icon size={22} />
+          <span>{tab.label}</span>
+        </button>
+      ))}
 
       <button
         className="ofx-nav-add"
-        onClick={() => onChange('add')}
-        aria-label={t('ui.tabAdd') || 'Ajouter'}
+        onClick={onAdd}
+        aria-label="Ajouter"
       >
         <Plus size={28} />
       </button>
 
-      <button
-        className={`ofx-nav-item ${activeTab === 'ledger' ? 'active' : ''}`}
-        onClick={() => onChange('ledger')}
-      >
-        <BookOpen size={22} />
-        <span>{t('ui.tabLedger') || 'Dettes & Créances'}</span>
-      </button>
+      {tabs.slice(2).map(tab => (
+        <button
+          key={tab.id}
+          className={`ofx-nav-item ${activeTab === tab.id ? 'active' : ''}`}
+          onClick={() => onChange(tab.id)}
+        >
+          <tab.icon size={22} />
+          <span>{tab.label}</span>
+        </button>
+      ))}
     </nav>
   );
 }

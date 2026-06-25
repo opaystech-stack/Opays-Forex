@@ -1,240 +1,167 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { useT } from '../i18n';
 import FloatingSearchBar from '../components/FloatingSearchBar';
-import FilterPills from '../components/FilterPills';
+import SuggestionChips from '../components/SuggestionChips';
 import TreasuryCanvas from '../components/TreasuryCanvas';
 import BottomSheet from '../components/BottomSheet';
 import MobileNavbar from '../components/MobileNavbar';
 import WhatsAppFab from '../components/WhatsAppFab';
+import WhatsAppCatalog from '../components/WhatsAppCatalog';
 import ProfileDrawer from '../components/ProfileDrawer';
-import Transactions from './Transactions';
+import WalletsPage from './Wallets';
 import Expenses from './Expenses';
-import LoansPage from './Loans';
-import Employees from './Employees';
-import Transfers from './Transfers';
-import Subscriptions from './Subscriptions';
-import Tickets from './Tickets';
-import RemoteOrders from './RemoteOrders';
-import AgencyAdmin from './AgencyAdmin';
-import SuperAdmin from './SuperAdmin';
-import { useT } from '../i18n';
 
-function TreasuryView({ searchQuery, selectedWallet, onSelectWallet }) {
-  const t = useT();
+const menuItems = [
+  { id: 'transactions', label: 'Transactions', icon: 'ArrowRightLeft' },
+  { id: 'customers', label: 'Clients', icon: 'Users' },
+  { id: 'loans', label: 'Prets & Creances', icon: 'Landmark' },
+  { id: 'employees', label: 'Employes', icon: 'Users' },
+  { id: 'transfers', label: 'Transferts', icon: 'Repeat' },
+  { id: 'subscriptions', label: 'Abonnements', icon: 'CalendarCheck' },
+  { id: 'tickets', label: 'Tickets', icon: 'MessageSquare' },
+  { id: 'remote-orders', label: 'Commandes', icon: 'Smartphone' },
+  { id: 'admin', label: 'Admin agence', icon: 'Building2' },
+  { id: 'settings', label: 'Parametres', icon: 'Settings' },
+];
+
+function MenuView() {
+  const navigate = useNavigate();
+  const { user } = useApp();
   return (
-    <>
-      <TreasuryCanvas
-        searchQuery={searchQuery}
-        selectedWalletId={selectedWallet}
-        onSelectWallet={onSelectWallet}
-      />
-      <div style={{
-        position: 'absolute',
-        bottom: 'calc(152px + var(--safe-bottom))',
-        left: '16px',
-        zIndex: 120,
-        color: 'var(--text-muted)',
-        fontSize: '12px'
-      }}>
-        {t('ui.tapNode') || 'Tapez un nœud pour filtrer'}
+    <div className="ofx-scrollable-page">
+      <div className="screen-header">
+        <h2 className="screen-title">Menu</h2>
+        <p className="screen-desc">Accedez a tous les modules OpaysFox</p>
       </div>
-    </>
-  );
-}
-
-function LedgerView({ selectedWallet }) {
-  const t = useT();
-  const { transactions, loans, wallets } = useApp();
-
-  const filteredTransactions = transactions.filter(t => {
-    if (!selectedWallet) return true;
-    return t.source_wallet_id === selectedWallet || t.dest_wallet_id === selectedWallet;
-  });
-
-  const formatValue = (value, currency) => {
-    if (currency === 'USD') return `$${Number(value).toLocaleString('fr-FR', { maximumFractionDigits: 0 })}`;
-    return `${Number(value).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} ${currency}`;
-  };
-
-  return (
-    <div className="ofx-sheet-content" style={{ paddingTop: '20px' }}>
-      <div className="ofx-section-title">{t('ui.ledgerTitle') || 'Dettes & Créances'}</div>
-
-      {loans.length > 0 && (
-        <>
-          <div className="ofx-section-title" style={{ marginTop: '8px' }}>{t('nav.loans')}</div>
-          {loans.map(l => (
-            <div key={l.id} className="ofx-card" style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ fontSize: '14px', fontWeight: 600 }}>{l.note || 'Prêt'}</div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                  {l.status === 'pending' ? 'En cours' : l.status}
-                </div>
-              </div>
-              <div style={{ fontWeight: 700, color: 'var(--color-orange)' }}>
-                {formatValue(l.amount, l.currency || l.currency_code)}
-              </div>
-            </div>
-          ))}
-        </>
-      )}
-
-      <div className="ofx-section-title" style={{ marginTop: '8px' }}>{t('nav.transactions')}</div>
-      {filteredTransactions.length === 0 ? (
-        <p style={{ color: 'var(--text-muted)', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>{t('dashboard.no_txns')}</p>
-      ) : (
-        filteredTransactions.slice(0, 8).map(t => {
-          const sWallet = wallets.find(w => w.id === t.source_wallet_id);
-          const dWallet = wallets.find(w => w.id === t.dest_wallet_id);
-          return (
-            <div key={t.id} className="ofx-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 600 }}>{sWallet?.name || 'Capital'} → {dWallet?.name || 'Retrait'}</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t.note || ''}</div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-green)' }}>+${(t.profit_usd || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 })}</div>
-              </div>
-            </div>
-          );
-        })
-      )}
-    </div>
-  );
-}
-
-function AddView({ onClose }) {
-  const t = useT();
-  const [subTab, setSubTab] = useState('transaction');
-
-  return (
-    <div className="ofx-sheet-content" style={{ paddingTop: '20px' }}>
-      <div className="ofx-section-title">{t('ui.addTitle') || 'Nouvelle opération'}</div>
-      <div className="ofx-quick-actions" style={{ marginBottom: '20px' }}>
-        {[
-          { id: 'transaction', label: t('nav.transactions'), icon: '↔️' },
-          { id: 'expense', label: t('nav.expenses'), icon: '🧾' },
-          { id: 'loan', label: t('nav.loans'), icon: '🏦' },
-        ].map(tab => (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+        {menuItems.map(item => (
           <button
-            key={tab.id}
-            className="ofx-quick-btn"
-            style={subTab === tab.id ? { borderColor: 'var(--opays-blue)', color: 'white', background: 'rgba(59, 98, 212, 0.2)' } : {}}
-            onClick={() => setSubTab(tab.id)}
+            key={item.id}
+            className="ofx-service-card"
+            onClick={() => navigate(`/app/${item.id}`)}
           >
-            <span style={{ fontSize: '20px' }}>{tab.icon}</span>
-            <span>{tab.label}</span>
+            <div className="title">{item.label}</div>
           </button>
         ))}
+        {user?.role === 'superadmin' && (
+          <button className="ofx-service-card" onClick={() => navigate('/admin-plateforme')} style={{ gridColumn: 'span 2', background: 'rgba(239,68,68,0.12)', borderColor: 'rgba(239,68,68,0.3)' }}>
+            <div className="title" style={{ color: 'var(--color-red)' }}>Super Admin</div>
+          </button>
+        )}
       </div>
-
-      {subTab === 'transaction' && <Transactions compact onClose={onClose} />}
-      {subTab === 'expense' && <Expenses compact onClose={onClose} />}
-      {subTab === 'loan' && <LoansPage compact onClose={onClose} />}
     </div>
   );
 }
 
-function AppContent() {
-  const [activeTab, setActiveTab] = useState('treasury');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedWallet, setSelectedWallet] = useState(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState('all');
-  const [secondaryRoute, setSecondaryRoute] = useState(null);
-  const { isUsingMock } = useApp();
+function DashboardView({ searchQuery, onOpenTransaction }) {
+  const { getTodayStats } = useApp();
+  getTodayStats();
+  return (
+    <div className="ofx-scrollable-page">
+      <TreasuryCanvas searchQuery={searchQuery} />
+      <BottomSheet
+        onOpenTransaction={onOpenTransaction}
+        onOpenExpense={() => {}}
+        onOpenLoan={() => {}}
+        onOpenTransfer={() => {}}
+        onOpenSubscription={() => {}}
+        onOpenTicket={() => {}}
+      />
+    </div>
+  );
+}
+
+export default function AppShell() {
+  const navigate = useNavigate();
   const t = useT();
+  const { user, logOut, userAgencies } = useApp();
 
-  const filterOptions = [
-    { id: 'all', label: t('ui.filterAll') || 'Toutes les caisses' },
-    { id: 'receivables', label: t('ui.filterReceivables') || 'Créances' },
-    { id: 'debts', label: t('ui.filterDebts') || 'Dettes' },
-  ];
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [catalogOpen, setCatalogOpen] = useState(false);
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
 
-  const handleNavigate = (route) => {
-    setSecondaryRoute(route);
+  const handleNavigate = (id) => {
+    if (id === 'logout') { logOut(); return; }
+    if (['dashboard','wallets','expenses'].includes(id)) { setActiveTab(id); }
+    else { navigate(`/app/${id}`); }
   };
 
-  if (secondaryRoute) {
-    const routes = {
-      employees: <Employees />,
-      transfers: <Transfers />,
-      subscriptions: <Subscriptions />,
-      tickets: <Tickets />,
-      'remote-orders': <RemoteOrders />,
-      admin: <AgencyAdmin />,
-      superadmin: <SuperAdmin />,
-      settings: <div className="ofx-card" style={{ margin: '80px 20px' }}></div>,
-    };
-    return (
-      <div className="ofx-app">
-        <div style={{ padding: 'calc(60px + var(--safe-top)) 16px 16px' }}>
-          <button onClick={() => setSecondaryRoute(null)} className="ofx-btn ofx-btn-secondary" style={{ marginBottom: '12px' }}>
-            ← {t('common.back') || 'Retour'}
-          </button>
-          {routes[secondaryRoute] || <div>Route inconnue</div>}
-        </div>
-      </div>
-    );
-  }
+  const handleSuggestion = (action) => {
+    if (action === 'transaction' || action === 'topup' || action === 'new-wallet' || action === 'biz-expense') {
+      navigate(`/app/transactions`);
+      return;
+    }
+    if (action === 'employees' || action === 'transfers' || action === 'tickets') {
+      navigate(`/app/${action}`);
+      return;
+    }
+    if (action === 'low-balance') {
+      setActiveTab('wallets');
+    }
+  };
+
+  const activeAgency = userAgencies.find(a => a.id === user?.agencyId) || { name: 'OpaysFox' };
 
   return (
     <div className="ofx-app">
-      {isUsingMock && (
-        <div style={{
-          position: 'absolute',
-          top: 'calc(8px + var(--safe-top))',
-          right: '16px',
-          zIndex: 200,
-          background: 'rgba(234, 179, 8, 0.2)',
-          color: 'var(--color-yellow)',
-          padding: '4px 10px',
-          borderRadius: '12px',
-          fontSize: '11px',
-          fontWeight: 700,
-          border: '1px solid rgba(234, 179, 8, 0.3)'
-        }}>
-          DÉMO
+      <header className="ofx-top-bar">
+        <div className="ofx-top-bar-left">
+          <div className="ofx-brand-mini">OpaysFox</div>
+          <span className="ofx-agency-pill">{activeAgency.name}</span>
+        </div>
+        <button className="ofx-avatar-btn" onClick={() => setDrawerOpen(true)}>
+          {(user?.firstName?.[0] || 'O') + (user?.lastName?.[0] || 'P')}
+        </button>
+      </header>
+
+      <FloatingSearchBar
+        value={searchQuery}
+        onChange={setSearchQuery}
+        onVoice={() => setCatalogOpen(true)}
+        placeholder={t('ui.searchPlaceholder')}
+      />
+
+      <SuggestionChips activeTab={activeTab} onAction={handleSuggestion} />
+
+      <main className="ofx-main">
+        {activeTab === 'dashboard' && <DashboardView searchQuery={searchQuery} onOpenTransaction={() => navigate('/app/transactions')} />}
+        {activeTab === 'wallets' && <WalletsPage />}
+        {activeTab === 'expenses' && <Expenses />}
+        {activeTab === 'menu' && <MenuView />}
+      </main>
+
+      {addMenuOpen && (
+        <div className="ofx-add-overlay">
+          <div className="ofx-add-menu">
+            <button onClick={() => { setAddMenuOpen(false); navigate('/app/transactions'); }}>Transaction</button>
+            <button onClick={() => { setAddMenuOpen(false); navigate('/app/expenses'); }}>Depense</button>
+            <button onClick={() => { setAddMenuOpen(false); navigate('/app/loans'); }}>Pret / Creance</button>
+            <button onClick={() => setAddMenuOpen(false)}>Annuler</button>
+          </div>
         </div>
       )}
 
-      <FloatingSearchBar
-        query={searchQuery}
-        onQueryChange={setSearchQuery}
-        onAvatarClick={() => setDrawerOpen(true)}
+      <MobileNavbar
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        onAdd={() => navigate('/app/transactions')}
       />
 
-      <FilterPills
-        active={activeFilter}
-        onChange={setActiveFilter}
-        options={filterOptions}
+      <WhatsAppFab onClick={() => setCatalogOpen(true)} />
+
+      <WhatsAppCatalog
+        isOpen={catalogOpen}
+        onClose={() => setCatalogOpen(false)}
+        onService={(id) => {
+          const phone = '+243999999999';
+          const text = encodeURIComponent(`Bonjour OpaysFox, je souhaite utiliser le service: ${id}`);
+          window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
+        }}
       />
-
-      {activeTab === 'treasury' && (
-        <TreasuryView
-          searchQuery={searchQuery}
-          selectedWallet={selectedWallet}
-          onSelectWallet={setSelectedWallet}
-        />
-      )}
-
-      {activeTab === 'ledger' && <LedgerView selectedWallet={selectedWallet} />}
-
-      {activeTab === 'add' && <AddView onClose={() => setActiveTab('treasury')} />}
-
-      <WhatsAppFab onClick={() => handleNavigate('remote-orders')} />
-
-      <BottomSheet
-        onOpenTransaction={() => setActiveTab('add')}
-        onOpenExpense={() => { setActiveTab('add'); }}
-        onOpenLoan={() => { setActiveTab('add'); }}
-        onOpenTransfer={() => handleNavigate('transfers')}
-        onOpenSubscription={() => handleNavigate('subscriptions')}
-        onOpenTicket={() => handleNavigate('tickets')}
-      />
-
-      <MobileNavbar activeTab={activeTab} onChange={setActiveTab} />
 
       <ProfileDrawer
         isOpen={drawerOpen}
@@ -242,14 +169,5 @@ function AppContent() {
         onNavigate={handleNavigate}
       />
     </div>
-  );
-}
-
-export default function AppShell() {
-  return (
-    <Routes>
-      <Route path="/" element={<AppContent />} />
-      <Route path="*" element={<Navigate to="/app" replace />} />
-    </Routes>
   );
 }

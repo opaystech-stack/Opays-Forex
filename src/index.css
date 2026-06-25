@@ -1088,3 +1088,454 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--bg-primary);
   overflow: hidden;
 }
+
+/* === Agency selector in drawer === */
+.ofx-agency-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+.ofx-agency-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ofx-agency-item:hover:not(:disabled) {
+  background: rgba(59, 98, 212, 0.15);
+  border-color: rgba(59, 98, 212, 0.3);
+}
+
+.ofx-agency-item.active {
+  background: rgba(59, 98, 212, 0.2);
+  border-color: var(--opays-blue);
+}
+
+.ofx-agency-item:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.ofx-agency-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ofx-agency-name {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ofx-agency-meta {
+  font-size: 11px;
+  color: var(--color-green);
+  margin-top: 2px;
+}
+
+.ofx-agency-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--color-green);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ofx-agency-loading {
+  color: var(--opays-blue-light);
+  font-weight: 700;
+}
+
+.ofx-agency-add {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 16px 0;
+  padding: 12px 14px;
+  width: calc(100% - 32px);
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ofx-agency-add:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.ofx-agency-create {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px 0;
+}
+
+.ofx-agency-create input {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.ofx-agency-create button {
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--opays-blue);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ofx-agency-create button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ofx-drawer-section {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* === Suggestion chips === */
+.ofx-suggestion-chips {
+  position: fixed;
+  top: calc(72px + var(--safe-top));
+  left: 16px;
+  right: 16px;
+  z-index: 110;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+
+.ofx-suggestion-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.ofx-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.2s ease;
+}
+
+.ofx-chip:hover {
+  background: rgba(59, 98, 212, 0.2);
+  border-color: rgba(59, 98, 212, 0.4);
+  color: var(--text-primary);
+}
+
+.ofx-chip svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* === WhatsApp Catalog Modal === */
+.ofx-whatsapp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.ofx-whatsapp-modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--bg-secondary);
+  border-top-left-radius: var(--radius-xl);
+  border-top-right-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  padding: 24px 20px calc(24px + var(--safe-bottom));
+  animation: slideUp 0.3s ease;
+}
+
+.ofx-whatsapp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.ofx-whatsapp-header h3 {
+  font-family: var(--font-title);
+  font-size: 20px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ofx-whatsapp-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.ofx-whatsapp-hero {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, rgba(37, 211, 102, 0.2) 0%, rgba(18, 140, 126, 0.3) 100%);
+  border: 1px solid rgba(37, 211, 102, 0.25);
+  padding: 20px;
+}
+
+.ofx-whatsapp-hero img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  margin-bottom: 12px;
+}
+
+.ofx-whatsapp-hero h4 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.ofx-whatsapp-hero p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.ofx-service-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.ofx-service-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ofx-service-card:hover {
+  background: rgba(59, 98, 212, 0.15);
+  border-color: rgba(59, 98, 212, 0.3);
+  transform: translateY(-2px);
+}
+
+.ofx-service-card .icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: rgba(59, 98, 212, 0.15);
+  color: var(--opays-blue-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ofx-service-card .title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ofx-service-card .desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.ofx-scrollable-page {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 76px 16px 100px;
+  padding-top: calc(110px + var(--safe-top));
+  padding-bottom: calc(96px + var(--safe-bottom));
+}
+
+.ofx-scrollable-page::-webkit-scrollbar {
+  display: none;
+}
+
+.ofx-app {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-primary);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.ofx-top-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 120;
+  height: 56px;
+  padding: 8px 16px calc(8px + var(--safe-top));
+  padding-top: calc(12px + var(--safe-top));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(to bottom, rgba(8,14,26,0.95), rgba(8,14,26,0.75));
+  backdrop-filter: blur(12px);
+}
+
+.ofx-top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ofx-brand-mini {
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.ofx-agency-pill {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--opays-blue-light);
+  background: rgba(59, 98, 212, 0.15);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(59, 98, 212, 0.25);
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ofx-avatar-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  background: linear-gradient(135deg, var(--opays-blue), var(--opays-blue-light));
+  color: white;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.ofx-main {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+.ofx-add-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.ofx-add-menu {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-secondary);
+  border-top-left-radius: var(--radius-xl);
+  border-top-right-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ofx-add-menu button {
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ofx-add-menu button:last-child {
+  background: transparent;
+  color: var(--text-muted);
+}

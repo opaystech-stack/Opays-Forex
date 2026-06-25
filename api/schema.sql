@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS agencies (
   email TEXT,
   phone TEXT,
   address TEXT,
+  owner_id UUID REFERENCES users(id) ON DELETE SET NULL,
   currency_code VARCHAR(3) DEFAULT 'USD',
   is_active BOOLEAN DEFAULT true,
   settings JSONB DEFAULT '{}',

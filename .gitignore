@@ -29,3 +29,8 @@ dist-ssr
 !.env.example
 
 .vercel
+
+test-results/
+playwright-report/
+tests/screenshots/
+playwright/.cache/

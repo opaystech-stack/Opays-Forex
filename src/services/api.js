@@ -117,4 +117,10 @@ export const agencyApi = {
   list: () => apiClient.get('/agencies'),
   mine: () => apiClient.get('/agencies/mine'),
   updateMine: (body) => apiClient.put('/agencies/mine', body),
+  myList: () => apiClient.get('/agencies/my-list'),
+};
+
+export const userApi = {
+  switchAgency: (agencyId) => apiClient.put('/auth/switch-agency', { agencyId }),
+  createAgency: (name) => apiClient.post('/auth/create-agency', { name }),
 };

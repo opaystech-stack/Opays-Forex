@@ -160,7 +160,7 @@ export default function WalletsPage() {
   };
 
   return (
-    <div>
+    <div className="ofx-scrollable-page">
       <div className="screen-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
         <div>
           <h2 className="screen-title">{t('wallets.page_title')}</h2>

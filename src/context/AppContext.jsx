@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authApi, walletApi, transactionApi, customerApi, loanApi, expenseApi, employeeApi, transferApi, subscriptionApi, ticketApi, remoteOrderApi } from '../services/api';
+import { authApi, walletApi, transactionApi, customerApi, loanApi, expenseApi, employeeApi, transferApi, subscriptionApi, ticketApi, remoteOrderApi, agencyApi, userApi } from '../services/api';
 import { calculateLoanRepaymentUSD, convertToUSD } from '../utils/finance';
 
 const AppContext = createContext();
@@ -98,15 +98,24 @@ export const AppProvider = ({ children }) => {
   const [authChecked, setAuthChecked] = useState(false);
   const [isUsingMock, setIsUsingMock] = useState(false);
   const [user, setUser] = useState(null);
+  const [userAgencies, setUserAgencies] = useState([]);
 
   // Check session on load
   useEffect(() => {
     let cancelled = false;
     authApi.me()
-      .then(res => {
+      .then(async res => {
         if (cancelled) return;
         if (res.success && res.user) {
           setUser({ ...res.user, agencyId: res.user.agencyId });
+          if (!res.user.isDemo) {
+            try {
+              const agenciesRes = await agencyApi.myList();
+              setUserAgencies(agenciesRes.data || []);
+            } catch (e) {
+              console.error('Failed to load user agencies:', e);
+            }
+          }
         }
         setAuthChecked(true);
       })
@@ -191,6 +200,14 @@ export const AppProvider = ({ children }) => {
       const res = await authApi.register({ email, password, firstName: extra.firstName, lastName: extra.lastName, agencyName: extra.agencyName });
       if (!res.success) return { success: false, error: res.error };
       setUser({ ...res.user, agencyId: res.user.agencyId });
+      if (!res.user.isDemo) {
+        try {
+          const agenciesRes = await agencyApi.myList();
+          setUserAgencies(agenciesRes.data || []);
+        } catch (e) {
+          console.error('Failed to load user agencies:', e);
+        }
+      }
       await fetchData(true);
       return { success: true, data: res };
     } catch (err) {
@@ -203,6 +220,14 @@ export const AppProvider = ({ children }) => {
       const res = await authApi.login({ email, password });
       if (!res.success) return { success: false, error: res.error };
       setUser({ ...res.user, agencyId: res.user.agencyId });
+      if (!res.user.isDemo) {
+        try {
+          const agenciesRes = await agencyApi.myList();
+          setUserAgencies(agenciesRes.data || []);
+        } catch (e) {
+          console.error('Failed to load user agencies:', e);
+        }
+      }
       await fetchData(true);
       return { success: true, data: res };
     } catch (err) {
@@ -212,6 +237,40 @@ export const AppProvider = ({ children }) => {
 
   const signInWithGoogle = async () => {
     return { success: false, error: 'Google OAuth non configuré. Utilisez email/mot de passe.' };
+  };
+
+  const switchAgency = async (agencyId) => {
+    if (isUsingMock || user?.isDemo) {
+      return { success: false, error: 'Switch agency not available in demo mode' };
+    }
+    try {
+      await userApi.switchAgency(agencyId);
+      const agenciesRes = await agencyApi.myList();
+      setUserAgencies(agenciesRes.data || []);
+      const meRes = await authApi.me();
+      if (meRes.success) setUser({ ...meRes.user, agencyId: meRes.user.agencyId });
+      await fetchData(true);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  };
+
+  const createAgency = async (name) => {
+    if (isUsingMock || user?.isDemo) {
+      return { success: false, error: 'Create agency not available in demo mode' };
+    }
+    try {
+      await userApi.createAgency(name);
+      const agenciesRes = await agencyApi.myList();
+      setUserAgencies(agenciesRes.data || []);
+      const meRes = await authApi.me();
+      if (meRes.success) setUser({ ...meRes.user, agencyId: meRes.user.agencyId });
+      await fetchData(true);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
   };
 
   const logOut = async () => {
@@ -596,6 +655,7 @@ export const AppProvider = ({ children }) => {
       createCustomer, updateCustomer, findOrCreateCustomer,
       createLoan, updateLoanStatus,
       refreshData: fetchData, resetMockData, getTodayStats,
+      switchAgency, createAgency, userAgencies, setUserAgencies,
       language, setLanguage
     }}>
       {children}

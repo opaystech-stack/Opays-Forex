@@ -49,9 +49,13 @@ export default async function authRoutes(app, opts) {
         [email, passwordHash, firstName || '', lastName || '', agencyId ? 'agency_admin' : 'agent', agencyId]
       );
 
+      const user = userRes.rows[0];
+      if (agencyId) {
+        await client.query('UPDATE agencies SET owner_id = $1 WHERE id = $2', [user.id, agencyId]);
+      }
+
       await client.query('COMMIT');
 
-      const user = userRes.rows[0];
       const token = app.jwt.sign({
         id: user.id,
         email: user.email,
@@ -115,6 +119,40 @@ export default async function authRoutes(app, opts) {
       return { success: false, error: 'User not found' };
     }
     return { success: true, user: mapUser(result.rows[0]) };
+  });
+
+  // Switch active agency
+  app.put('/switch-agency', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { agencyId } = request.body;
+    const { rows } = await app.pg.query('SELECT id FROM agencies WHERE id = $1 AND (owner_id = $2 OR id = $3) LIMIT 1', [agencyId, request.user.id, request.user.agency_id]);
+    if (rows.length === 0) return reply.status(403).send({ success: false, error: 'Agency not accessible' });
+    await app.pg.query('UPDATE users SET agency_id = $1 WHERE id = $2', [agencyId, request.user.id]);
+    const token = app.jwt.sign({
+      id: request.user.id,
+      email: request.user.email,
+      role: request.user.role,
+      agency_id: agencyId,
+    });
+    reply.setCookie('token', token, { path: '/', httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 86400 });
+    return { success: true };
+  });
+
+  // Create new agency for current user
+  app.post('/create-agency', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { name } = request.body || {};
+    if (!name || name.length < 2) return reply.status(400).send({ success: false, error: 'Invalid agency name' });
+    const slug = `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${Date.now().toString(36)}`;
+    const { rows } = await app.pg.query('INSERT INTO agencies (name, slug, email, owner_id, is_active) VALUES ($1, $2, $3, $4, true) RETURNING id', [name, slug, request.user.email, request.user.id]);
+    const newAgencyId = rows[0].id;
+    await app.pg.query('UPDATE users SET agency_id = $1 WHERE id = $2', [newAgencyId, request.user.id]);
+    const token = app.jwt.sign({
+      id: request.user.id,
+      email: request.user.email,
+      role: request.user.role,
+      agency_id: newAgencyId,
+    });
+    reply.setCookie('token', token, { path: '/', httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 86400 });
+    return { success: true, agencyId: newAgencyId };
   });
 
   // Logout

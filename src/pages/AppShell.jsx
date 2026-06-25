@@ -9,6 +9,11 @@ import Expenses from './Expenses';
 import LoansPage from './Loans';
 import SettingsPage from './Settings';
 import AgencyAdmin from './AgencyAdmin';
+import Employees from './Employees';
+import Transfers from './Transfers';
+import Subscriptions from './Subscriptions';
+import Tickets from './Tickets';
+import RemoteOrders from './RemoteOrders';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -41,6 +46,16 @@ function AppContent() {
         return <LoansPage />;
       case 'settings':
         return <SettingsPage />;
+      case 'employees':
+        return <Employees />;
+      case 'transfers':
+        return <Transfers />;
+      case 'subscriptions':
+        return <Subscriptions />;
+      case 'tickets':
+        return <Tickets />;
+      case 'remote-orders':
+        return <RemoteOrders />;
       default:
         return <Dashboard />;
     }

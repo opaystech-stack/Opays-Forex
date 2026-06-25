@@ -89,6 +89,11 @@ export const AppProvider = ({ children }) => {
   const [expenses, setExpenses] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loans, setLoans] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [transfers, setTransfers] = useState([]);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [tickets, setTickets] = useState([]);
+  const [remoteOrders, setRemoteOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
   const [isUsingMock, setIsUsingMock] = useState(false);
@@ -546,6 +551,8 @@ export const AppProvider = ({ children }) => {
   return (
     <AppContext.Provider value={{
       wallets, rates, transactions, expenses, customers, loans,
+      employees, setEmployees, transfers, setTransfers, subscriptions, setSubscriptions,
+      tickets, setTickets, remoteOrders, setRemoteOrders,
       loading, isUsingMock, user, authChecked,
       signUp, signIn, signInWithGoogle, logOut, loginAsDemo,
       addTransaction, addExpense, updateRates,

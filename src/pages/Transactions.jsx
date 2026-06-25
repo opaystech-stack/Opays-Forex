@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { supabase } from '../services/supabase';
 import { ArrowLeftRight, Image, Mic, Square, Sparkles, CheckCircle2, AlertCircle, Camera } from 'lucide-react';
 
 import { useT } from '../i18n';
@@ -78,6 +77,7 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
   const [mediaRecorder, setMediaRecorder] = useState(null);
 
   // Convert files/blobs to base64 helper
+  // eslint-disable-next-line no-unused-vars
   const fileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -90,24 +90,10 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
     });
   };
 
+  // eslint-disable-next-line no-unused-vars
   const callGeminiProxy = async ({ kind, prompt, mimeType, base64Data }) => {
-    if (!supabase) {
-      throw new Error(t('transactions.supabase_not_configured'));
-    }
-
-    const { data, error } = await supabase.functions.invoke('gemini-proxy', {
-      body: { kind, prompt, mimeType, base64Data }
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    if (!data?.success) {
-      throw new Error(data?.error || t('transactions.gemini_error'));
-    }
-
-    return data.text;
+    // Gemini/Supabase functions no longer available; throw to trigger simulation fallback
+    throw new Error(t('transactions.gemini_unavailable'));
   };
 
   const applyGeminiResult = async (parsed) => {
@@ -205,143 +191,26 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
     });
   };
 
+  // eslint-disable-next-line no-unused-vars
   const processImageWithGemini = async (file) => {
-    if (!supabase) {
-      console.log('Supabase non configuré. Simulation OCR activée.');
-      setAiLoading(true);
-      setTimeout(async () => {
-        await simulateOcrResult();
-        setAiLoading(false);
-        setMessage({ type: 'success', text: 'Simulé : Reçu analysé (configuration Supabase absente).' });
-      }, 1500);
-      return;
-    }
-
-    try {
-      setAiLoading(true);
-      const base64Data = await fileToBase64(file);
-      const prompt = `Tu es un assistant comptable expert pour un bureau de change Forex et Mobile Money.
-Analyse cette capture d'écran de reçu ou message de transaction. Extrais les informations requises et renvoie-les sous la forme d'un objet JSON brut. Le JSON doit suivre exactement ce format :
-{
-  "type": "exchange", // Mettre "exchange" par défaut
-  "sourceWalletName": "Nom exact du portefeuille de départ si l'opérateur a ENVOYÉ des fonds",
-  "destWalletName": "Nom exact du portefeuille d'arrivée si l'opérateur a REÇU des fonds",
-  "sourceAmount": "Montant débité/envoyé (nombre ou null)",
-  "destAmount": "Montant crédité/reçu (nombre ou null)",
-  "fee": "Frais réseau s'ils sont indiqués, sinon 0",
-  "transactionId": "ID unique de la transaction (réseau)",
-  "customerName": "Nom complet du client s'il est mentionné dans le reçu/SMS ou si l'on peut l'identifier",
-  "customerPhone": "Numéro de téléphone du client s'il est mentionné dans le reçu/SMS",
-  "note": "Note courte décrivant la transaction (ex: 'Transféré à ZAMWANA')"
-}
-
-Les portefeuilles disponibles dans l'application sont :
-${wallets.map(w => `- ${w.name}`).join('\n')}
-
-INSTRUCTIONS CRITIQUES POUR LES CAPTURES MOBILE MONEY A SENS UNIQUE :
-Les captures d'écran SMS de Mobile Money ne contiennent généralement que les détails de l'envoi réseau (ex: "transferred to [Name] at [Date]" ou "You have received [Amount] from [Name] [Phone]").
-- Si le SMS indique que l'opérateur a ENVOYÉ/TRANSFÉRÉ de l'argent :
-  * Définis "sourceWalletName" comme le portefeuille Mobile Money correspondant (ex: MTN Uganda, Airtel Money).
-  * Définis "sourceAmount" comme le montant transféré.
-  * Laisse "destWalletName" et "destAmount" à null (l'opérateur complétera manuellement la devise/montant cash qu'il a reçue du client).
-  * Extrais le nom et téléphone du destinataire dans "customerName" et "customerPhone".
-- Si le SMS indique que l'opérateur a REÇU/DÉPOSÉ de l'argent :
-  * Définis "destWalletName" comme le portefeuille Mobile Money correspondant.
-  * Définis "destAmount" comme le montant reçu.
-  * Laisse "sourceWalletName" et "sourceAmount" à null.
-  * Extrais le nom et téléphone de l'expéditeur dans "customerName" et "customerPhone".
-
-Associe la transaction aux portefeuilles correspondants en faisant une recherche floue.
-Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'introduction ni de conclusion.`;
-
-      const textResponse = await callGeminiProxy({
-        kind: 'ocr',
-        prompt,
-        mimeType: file.type || 'image/jpeg',
-        base64Data
-      });
-
-      let cleanedText = textResponse.trim();
-      if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```json\s*/i, '').replace(/```$/, '');
-      }
-
-      const parsed = JSON.parse(cleanedText.trim());
-      await applyGeminiResult(parsed);
-      setMessage({ type: 'success', text: 'Reçu analysé par l\'IA Gemini avec succès ! Complétez les champs manquants.' });
-      setMessage({ type: 'success', text: t('transactions.receipt_ai_success') });
-    } catch (error) {
-      console.error("Erreur Gemini OCR:", error);
-      setMessage({ type: 'error', text: `Erreur d'analyse réelle Gemini : ${error.message}. Bascule en simulation.` });
-        setMessage({ type: 'error', text: t('transactions.gemini_error') + ': ' + (error.message || '') });
-        setMessage({ type: 'success', text: t('transactions.receipt_ai_simulated') });
-        setMessage({ type: 'success', text: t('transactions.receipt_ai_success') });
-        setMessage({ type: 'error', text: t('transactions.gemini_error') + ': ' + (error.message || '') });
+    // Real Gemini proxy removed; always use local simulation
+    setAiLoading(true);
+    setTimeout(async () => {
       await simulateOcrResult();
-    } finally {
       setAiLoading(false);
-    }
+      setMessage({ type: 'success', text: 'Simulé : Reçu analysé (IA distante non configurée).' });
+    }, 1500);
   };
 
+  // eslint-disable-next-line no-unused-vars
   const processAudioWithGemini = async (audioBlob) => {
-    if (!supabase) {
-      console.log('Supabase non configuré. Simulation vocale activée.');
-      setAiLoading(true);
-      setTimeout(async () => {
-        await simulateVoiceResult();
-        setAiLoading(false);
-        setMessage({ type: 'success', text: 'Simulé : Audio transcrit (configuration Supabase absente).' });
-      }, 1500);
-      return;
-    }
-
-    try {
-      setAiLoading(true);
-      const base64Data = await fileToBase64(audioBlob);
-      const prompt = `Tu es un assistant de saisie vocale pour l'application OpaysFox.
-Écoute cet enregistrement audio décrivant une transaction financière (ex: "échange de 100 dollars contre 365 000 shillings" ou "j'ai reçu 10 dollars cash" ou "retrait de 5000 shillings sur MTN").
-Extrais les informations requises et renvoie-les sous la forme d'un objet JSON brut. Le JSON doit suivre exactement ce format :
-{
-  "type": "exchange", // Ou "deposit" ou "withdrawal" en fonction du contexte
-  "sourceWalletName": "Nom du portefeuille de départ si l'opérateur paye/donne/débite",
-  "destWalletName": "Nom du portefeuille d'arrivée si l'opérateur reçoit/crédite",
-  "sourceAmount": "Montant donné (nombre ou null)",
-  "destAmount": "Montant reçu/remis (nombre ou null)",
-  "fee": "Frais s'ils sont indiqués, sinon 0",
-  "transactionId": "ID unique s'il est mentionné, sinon null",
-  "customerName": "Nom du client s'il est mentionné dans l'audio, sinon null",
-  "customerPhone": "Téléphone du client s'il est mentionné dans l'audio, sinon null",
-  "note": "Note ou transcription résumée de l'audio"
-}
-
-Les portefeuilles disponibles dans l'application sont :
-${wallets.map(w => `- ${w.name}`).join('\n')}
-
-Associe les montants aux portefeuilles les plus proches de la liste.
-Réponds uniquement avec le JSON valide, sans balises markdown, sans texte d'introduction ni de conclusion.`;
-
-      const textResponse = await callGeminiProxy({
-        kind: 'audio',
-        prompt,
-        mimeType: 'audio/webm',
-        base64Data
-      });
-
-      let cleanedText = textResponse.trim();
-      if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```json\s*/i, '').replace(/```$/, '');
-      }
-
-      const parsed = JSON.parse(cleanedText.trim());
-      await applyGeminiResult(parsed);
-      setMessage({ type: 'success', text: 'Commande vocale analysée par l\'IA Gemini avec succès !' });
-    } catch (error) {
-      console.error("Erreur Gemini Audio:", error);
-      setMessage({ type: 'error', text: `Erreur vocale réelle Gemini : ${error.message}. Bascule en simulation.` });
+    // Real Gemini proxy removed; always use local simulation
+    setAiLoading(true);
+    setTimeout(async () => {
       await simulateVoiceResult();
-    } finally {
       setAiLoading(false);
-    }
+      setMessage({ type: 'success', text: 'Simulé : Audio transcrit (IA distante non configurée).' });
+    }, 1500);
   };
 
   const handleReceiptUpload = (e) => {

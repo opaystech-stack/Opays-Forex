@@ -5,6 +5,11 @@ import Auth from './pages/Auth';
 import AppShell from './pages/AppShell';
 import AgencyAdmin from './pages/AgencyAdmin';
 import SuperAdmin from './pages/SuperAdmin';
+import Employees from './pages/Employees';
+import Transfers from './pages/Transfers';
+import Subscriptions from './pages/Subscriptions';
+import Tickets from './pages/Tickets';
+import RemoteOrders from './pages/RemoteOrders';
 
 function RootRedirect() {
   const { user, authChecked } = useApp();
@@ -76,6 +81,11 @@ function AppRoutes() {
       {<Route path="/app/*" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />}
       {<Route path="/app/admin" element={<ProtectedRoute><AgencyAdmin /></ProtectedRoute>} />}
       {<Route path="/admin-plateforme" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />}
+      {<Route path="/app/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />}
+      {<Route path="/app/transfers" element={<ProtectedRoute><Transfers /></ProtectedRoute>} />}
+      {<Route path="/app/subscriptions" element={<ProtectedRoute><Subscriptions /></ProtectedRoute>} />}
+      {<Route path="/app/tickets" element={<ProtectedRoute><Tickets /></ProtectedRoute>} />}
+      {<Route path="/app/remote-orders" element={<ProtectedRoute><RemoteOrders /></ProtectedRoute>} />}
       {<Route path="*" element={<Navigate to="/" replace />} />}
     </Routes>
   );

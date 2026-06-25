@@ -1,4 +1,4 @@
-import { LayoutDashboard, ArrowLeftRight, TrendingDown, Landmark, Coins, Settings } from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, TrendingDown, Landmark, Coins, Settings, Users, Repeat, CalendarCheck, MessageSquare, Smartphone } from 'lucide-react';
 import { useT } from '../i18n';
 
 export default function Navbar({ activeTab, setActiveTab, isUsingMock }) {
@@ -8,6 +8,11 @@ export default function Navbar({ activeTab, setActiveTab, isUsingMock }) {
     { id: 'dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
     { id: 'transactions', label: t('nav.transactions'), icon: ArrowLeftRight },
     { id: 'wallets', label: t('nav.wallets'), icon: Landmark },
+    { id: 'transfers', label: t('nav.transfers'), icon: Repeat },
+    { id: 'remote-orders', label: t('nav.remoteOrders'), icon: Smartphone },
+    { id: 'subscriptions', label: t('nav.subscriptions'), icon: CalendarCheck },
+    { id: 'employees', label: t('nav.employees'), icon: Users },
+    { id: 'tickets', label: t('nav.tickets'), icon: MessageSquare },
     { id: 'expenses', label: t('nav.expenses'), icon: TrendingDown },
     { id: 'loans', label: t('nav.loans'), icon: Coins },
     { id: 'settings', label: t('nav.settings'), icon: Settings, className: 'settings-tab' }

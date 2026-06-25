@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Mail, Lock, LogIn, UserPlus, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
-import { supabase } from '../services/supabase';
 
 export default function Auth() {
-  const { signIn, signUp, signInWithGoogle, loginAsDemo } = useApp();
+  const { signIn, signUp, signInWithGoogle, loginAsDemo, language, setLanguage } = useApp();
 
   const translations = {
     fr: {

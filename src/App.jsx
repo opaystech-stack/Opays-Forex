@@ -1,135 +1,90 @@
-import { lazy, Suspense, useState } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
-import Navbar from './components/Navbar';
+import LandingPage from './pages/LandingPage';
+import Auth from './pages/Auth';
+import AppShell from './pages/AppShell';
+import AgencyAdmin from './pages/AgencyAdmin';
+import SuperAdmin from './pages/SuperAdmin';
 
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Transactions = lazy(() => import('./pages/Transactions'));
-const WalletsPage = lazy(() => import('./pages/Wallets'));
-const Expenses = lazy(() => import('./pages/Expenses'));
-const LoansPage = lazy(() => import('./pages/Loans'));
-const SettingsPage = lazy(() => import('./pages/Settings'));
-const Auth = lazy(() => import('./pages/Auth'));
+function RootRedirect() {
+  const { user, authChecked } = useApp();
+  const location = useLocation();
 
-import { Loader2, Settings } from 'lucide-react';
-import { useT } from './i18n';
-
-function AppContent() {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [draftToEdit, setDraftToEdit] = useState(null);
-  const { isUsingMock, user, loading } = useApp();
-  const t = useT();
-  
-  // Debug mode: allow demo access via ?debug_force_demo URL param for local testing
-  const params = new URLSearchParams(window.location.search);
-  const forceDemo = params.has('debug_force_demo');
-
-  // Show a premium loading screen during initial session verification
-  if (loading) {
+  // Don't redirect until auth check is complete
+  if (!authChecked) {
     return (
-      <div className="auth-overlay" style={{ display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center', alignItems: 'center' }}>
-        <div className="auth-header" style={{ marginBottom: '0' }}>
-          <span className="auth-subtitle">OpaysFox</span>
-          <h1 className="auth-title" style={{ fontSize: '28px', marginTop: '4px' }}>{t('loading.init_title')}</h1>
-        </div>
-        <div style={{ color: '#ffffff', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', fontWeight: '500', opacity: 0.8 }}>
-          <Loader2 className="animate-spin" size={20} style={{ animation: 'spin 1s linear infinite' }} />
-          <span>{t('loading.session_check')}</span>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div className="recording-dot" style={{ width: '20px', height: '20px', backgroundColor: 'var(--primary-blue)' }} />
+        <span style={{ marginLeft: '12px', color: 'var(--text-secondary)' }}>Chargement…</span>
       </div>
     );
   }
 
-  // If not authenticated and not in debug mode, show login page
-  if (!user && !forceDemo) {
+  // If user is authenticated (including demo), redirect to dashboard
+  if (user) {
+    return <Navigate to="/app" replace state={{ from: location }} />;
+  }
+
+  // Otherwise show landing page
+  return <LandingPage />;
+}
+
+function ProtectedRoute({ children }) {
+  const { user, authChecked } = useApp();
+
+  if (!authChecked) {
     return (
-      <Suspense fallback={<div className="auth-overlay"><div className="auth-card-container"><div className="card glass-card auth-card">{t('loading.skeleton')}</div></div></div>}>
-        <Auth />
-      </Suspense>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div className="recording-dot" style={{ width: '20px', height: '20px', backgroundColor: 'var(--primary-blue)' }} />
+        <span style={{ marginLeft: '12px', color: 'var(--text-secondary)' }}>Chargement…</span>
+      </div>
     );
   }
 
-  const renderActiveTab = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return (
-          <Dashboard 
-            onSelectDraft={(draft) => {
-              setDraftToEdit(draft);
-              setActiveTab('transactions');
-            }} 
-          />
-        );
-      case 'transactions':
-        return (
-          <Transactions 
-            draftToEdit={draftToEdit} 
-            clearDraftToEdit={() => setDraftToEdit(null)} 
-          />
-        );
-      case 'wallets':
-        return <WalletsPage />;
-      case 'expenses':
-        return <Expenses />;
-      case 'loans':
-        return <LoansPage />;
-      case 'settings':
-        return <SettingsPage />;
-      default:
-        return <Dashboard />;
-    }
-  };
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
+  return children;
+}
+
+function AuthRoute({ children }) {
+  const { user, authChecked } = useApp();
+
+  if (!authChecked) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div className="recording-dot" style={{ width: '20px', height: '20px', backgroundColor: 'var(--primary-blue)' }} />
+        <span style={{ marginLeft: '12px', color: 'var(--text-secondary)' }}>Chargement…</span>
+      </div>
+    );
+  }
+
+  if (user) {
+    return <Navigate to="/app" replace />;
+  }
+
+  return children;
+}
+
+function AppRoutes() {
   return (
-    <div className="app-container">
-      {/* Navigation (Sidebar on PC, Bottom tabbar on Mobile) */}
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} isUsingMock={isUsingMock} />
-
-      <div className="main-layout">
-        {/* 3D spheres background from design */}
-        <div className="floating-spheres">
-          <div className="sphere sphere-1"></div>
-          <div className="sphere sphere-2"></div>
-          <div className="sphere sphere-3"></div>
-          <div className="sphere sphere-4"></div>
-        </div>
-
-        {/* App Header */}
-        <header className="app-header">
-          <div>
-            <span className="app-subtitle">{t('app.subtitle')}</span>
-            <h1 className="app-title">{t('app.title')}</h1>
-          </div>
-          <div style={{ position: 'relative' }}>
-            {isUsingMock && (
-              <span className="mock-badge">{t('app.demo')}</span>
-            )}
-            <button
-              aria-label="Ouvrir les paramètres"
-              className="settings-fab"
-              onClick={() => setActiveTab('settings')}
-              style={{ marginLeft: '12px' }}
-            >
-              <Settings size={18} />
-            </button>
-          </div>
-        </header>
-
-        {/* Dynamic Page Scrollable Body */}
-        <main className="page-content">
-          <Suspense fallback={<div className="card glass-card" style={{ padding: '16px' }}>{t('loading.page')}</div>}>
-            {renderActiveTab()}
-          </Suspense>
-        </main>
-      </div>
-    </div>
+    <Routes>
+      {<Route path="/" element={<RootRedirect />} />}
+      {<Route path="/login" element={<AuthRoute><Auth /></AuthRoute>} />}
+      {<Route path="/register" element={<AuthRoute><Auth /></AuthRoute>} />}
+      {<Route path="/app/*" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />}
+      {<Route path="/app/admin" element={<ProtectedRoute><AgencyAdmin /></ProtectedRoute>} />}
+      {<Route path="/admin-plateforme" element={<ProtectedRoute><SuperAdmin /></ProtectedRoute>} />}
+      {<Route path="*" element={<Navigate to="/" replace />} />}
+    </Routes>
   );
 }
 
 export default function App() {
   return (
     <AppProvider>
-      <AppContent />
+      <AppRoutes />
     </AppProvider>
   );
 }
-

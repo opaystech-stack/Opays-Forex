@@ -172,6 +172,7 @@ const translations = {
       CDF: 'Franc Congolais (CDF / 1 USD)',
       TZS: 'Shilling Tanzanien (TZS / 1 USD)',
       BIF: 'Franc Burundais (BIF / 1 USD)',
+      RWF: 'Franc Rwandais (RWF / 1 USD)',
       EUR: 'Euro (EUR / 1 USD)',
       FCFA: 'Franc CFA (FCFA / 1 USD)'
     },
@@ -359,6 +360,7 @@ const translations = {
       CDF: 'Congolese Franc (CDF / 1 USD)',
       TZS: 'Tanzanian Shilling (TZS / 1 USD)',
       BIF: 'Burundian Franc (BIF / 1 USD)',
+      RWF: 'Rwandan Franc (RWF / 1 USD)',
       EUR: 'Euro (EUR / 1 USD)',
       FCFA: 'CFA Franc (FCFA / 1 USD)'
     },

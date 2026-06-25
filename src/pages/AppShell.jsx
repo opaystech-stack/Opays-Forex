@@ -46,7 +46,7 @@ function MenuView() {
           </button>
         ))}
         {user?.role === 'superadmin' && (
-          <button className="ofx-service-card" onClick={() => navigate('/admin-plateforme')} style={{ gridColumn: 'span 2', background: 'rgba(239,68,68,0.12)', borderColor: 'rgba(239,68,68,0.3)' }}>
+          <button className="ofx-service-card" onClick={() => navigate('/admin-plateforme')} style={{ gridColumn: 'span 2', background: 'rgba(220,38,38,0.08)', borderColor: 'rgba(220,38,38,0.25)' }}>
             <div className="title" style={{ color: 'var(--color-red)' }}>Super Admin</div>
           </button>
         )}
@@ -55,20 +55,11 @@ function MenuView() {
   );
 }
 
-function DashboardView({ searchQuery, onOpenTransaction }) {
-  const { getTodayStats } = useApp();
-  getTodayStats();
+function DashboardView({ searchQuery }) {
   return (
-    <div className="ofx-scrollable-page">
+    <div className="ofx-scrollable-page" style={{ paddingTop: 'calc(118px + var(--safe-top))', paddingBottom: 'calc(96px + var(--safe-bottom))' }}>
       <TreasuryCanvas searchQuery={searchQuery} />
-      <BottomSheet
-        onOpenTransaction={onOpenTransaction}
-        onOpenExpense={() => {}}
-        onOpenLoan={() => {}}
-        onOpenTransfer={() => {}}
-        onOpenSubscription={() => {}}
-        onOpenTicket={() => {}}
-      />
+      <BottomSheet />
     </div>
   );
 }
@@ -82,7 +73,6 @@ export default function AppShell() {
   const [searchQuery, setSearchQuery] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [catalogOpen, setCatalogOpen] = useState(false);
-  const [addMenuOpen, setAddMenuOpen] = useState(false);
 
   const handleNavigate = (id) => {
     if (id === 'logout') { logOut(); return; }
@@ -105,6 +95,7 @@ export default function AppShell() {
   };
 
   const activeAgency = userAgencies.find(a => a.id === user?.agencyId) || { name: 'OpaysFox' };
+  const initials = (user?.firstName?.[0] || 'O') + (user?.lastName?.[0] || 'P');
 
   return (
     <div className="ofx-app">
@@ -113,8 +104,8 @@ export default function AppShell() {
           <div className="ofx-brand-mini">OpaysFox</div>
           <span className="ofx-agency-pill">{activeAgency.name}</span>
         </div>
-        <button className="ofx-avatar-btn" onClick={() => setDrawerOpen(true)}>
-          {(user?.firstName?.[0] || 'O') + (user?.lastName?.[0] || 'P')}
+        <button className="ofx-avatar-btn" onClick={() => setDrawerOpen(true)} aria-label={t('ui.profile')}>
+          {initials}
         </button>
       </header>
 
@@ -128,22 +119,11 @@ export default function AppShell() {
       <SuggestionChips activeTab={activeTab} onAction={handleSuggestion} />
 
       <main className="ofx-main">
-        {activeTab === 'dashboard' && <DashboardView searchQuery={searchQuery} onOpenTransaction={() => navigate('/app/transactions')} />}
+        {activeTab === 'dashboard' && <DashboardView searchQuery={searchQuery} />}
         {activeTab === 'wallets' && <WalletsPage />}
         {activeTab === 'expenses' && <Expenses />}
         {activeTab === 'menu' && <MenuView />}
       </main>
-
-      {addMenuOpen && (
-        <div className="ofx-add-overlay">
-          <div className="ofx-add-menu">
-            <button onClick={() => { setAddMenuOpen(false); navigate('/app/transactions'); }}>Transaction</button>
-            <button onClick={() => { setAddMenuOpen(false); navigate('/app/expenses'); }}>Depense</button>
-            <button onClick={() => { setAddMenuOpen(false); navigate('/app/loans'); }}>Pret / Creance</button>
-            <button onClick={() => setAddMenuOpen(false)}>Annuler</button>
-          </div>
-        </div>
-      )}
 
       <MobileNavbar
         activeTab={activeTab}
@@ -157,7 +137,7 @@ export default function AppShell() {
         isOpen={catalogOpen}
         onClose={() => setCatalogOpen(false)}
         onService={(id) => {
-          const phone = '+243999999999';
+          const phone = '+243000000000';
           const text = encodeURIComponent(`Bonjour OpaysFox, je souhaite utiliser le service: ${id}`);
           window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
         }}

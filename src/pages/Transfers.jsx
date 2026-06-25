@@ -1,129 +1,107 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { ArrowRightLeft, Send, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Send, CheckCircle2, AlertCircle, Landmark, ArrowRight, Wallet } from 'lucide-react';
 import { useT } from '../i18n';
-import { transferApi } from '../services/api';
 
 export default function Transfers() {
-  const { user, wallets, transfers, setTransfers, addTransaction, isUsingMock } = useApp();
+  const { wallets, addTransaction } = useApp();
   const t = useT();
-  const [form, setForm] = useState({ sourceWalletId: '', destWalletId: '', amount: '', note: '' });
+  const [fromId, setFromId] = useState('');
+  const [toId, setToId] = useState('');
+  const [amount, setAmount] = useState('');
+  const [note, setNote] = useState('');
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const fromWallet = wallets.find(w => w.id === fromId);
+  const toWallet = wallets.find(w => w.id === toId);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage(null);
+    if (!fromId || !toId || !amount) {
+      setMessage({ type: 'error', text: 'Veuillez remplir tous les champs.' });
+      return;
+    }
     setLoading(true);
     try {
-      const source = wallets.find(w => w.id === form.sourceWalletId);
-      const dest = wallets.find(w => w.id === form.destWalletId);
-      if (!source || !dest) throw new Error(t('transfers.walletsRequired'));
-      if (Number(form.amount) <= 0) throw new Error(t('transfers.amountRequired'));
-      if (source.id === dest.id) throw new Error(t('transfers.sameWallet'));
-
-      let transfer;
-      if (isUsingMock) {
-        transfer = {
-          id: crypto.randomUUID(),
-          sourceWalletId: source.id,
-          destWalletId: dest.id,
-          sourceCurrency: source.currencyCode,
-          destCurrency: dest.currencyCode,
-          amount: Number(form.amount),
-          note: form.note,
-          status: 'completed',
-          createdAt: new Date().toISOString()
-        };
-      } else {
-        const res = await transferApi.create({
-          sourceWalletId: source.id,
-          destAgencyId: user?.agencyId,
-          destWalletId: dest.id,
-          amount: Number(form.amount),
-          currencyCode: source.currencyCode,
-          note: form.note
-        });
-        const completed = await transferApi.complete(res.data.id);
-        transfer = completed.data;
-      }
-
-      setTransfers([transfer, ...transfers]);
-      await addTransaction({
-        sourceWalletId: source.id,
-        destWalletId: dest.id,
-        sourceAmount: Number(form.amount),
-        destAmount: Number(form.amount),
+      const res = await addTransaction({
+        type: 'internal',
+        sourceWalletId: fromId,
+        destWalletId: toId,
+        sourceAmount: parseFloat(amount),
+        destAmount: parseFloat(amount),
         exchangeRate: 1,
         fee: 0,
-        type: 'transfer',
-        note: form.note || t('transfers.internalTransfer')
+        transactionId: `TRF-${Date.now().toString().slice(-6)}`,
+        note: note || 'Transfert interne',
       });
-
-      setMessage({ type: 'success', text: t('transfers.created') });
-      setForm({ sourceWalletId: '', destWalletId: '', amount: '', note: '' });
-    } catch (err) {
-      setMessage({ type: 'error', text: err.message || t('common.error') });
+      if (res.success) {
+        setMessage({ type: 'success', text: t('transfers.success') });
+        setAmount('');
+        setNote('');
+      } else {
+        setMessage({ type: 'error', text: res.error || 'Erreur' });
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="page-card">
-      <div className="page-header">
-        <ArrowRightLeft className="page-icon" size={28} />
+    <div className="ofx-scrollable-page">
+      <div className="ofx-screen-header">
+        <div className="ofx-screen-icon"><Send size={28} /></div>
         <div>
-          <h2 className="page-title">{t('transfers.title')}</h2>
-          <p className="page-subtitle">{t('transfers.subtitle')}</p>
+          <h2 className="ofx-screen-title">{t('transfers.title')}</h2>
+          <p className="ofx-screen-desc">{t('transfers.desc')}</p>
         </div>
       </div>
 
       {message && (
-        <div className={`alert alert-${message.type}`}>
-          {message.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+        <div className={`ofx-alert ${message.type === 'success' ? 'ofx-alert-success' : 'ofx-alert-error'}`}>
+          {message.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
           <span>{message.text}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="form-grid" style={{ marginBottom: '24px' }}>
-        <select value={form.sourceWalletId} onChange={e => setForm({ ...form, sourceWalletId: e.target.value })} required className="form-input">
-          <option value="">{t('transfers.sourceWallet')}</option>
-          {wallets.map(w => <option key={w.id} value={w.id}>{w.name} ({w.currencyCode})</option>)}
-        </select>
-        <select value={form.destWalletId} onChange={e => setForm({ ...form, destWalletId: e.target.value })} required className="form-input">
-          <option value="">{t('transfers.destWallet')}</option>
-          {wallets.map(w => <option key={w.id} value={w.id}>{w.name} ({w.currencyCode})</option>)}
-        </select>
-        <input type="number" min="0" step="0.01" placeholder={t('transfers.amount')} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} required className="form-input" />
-        <input placeholder={t('transfers.note')} value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} className="form-input" />
-        <button type="submit" disabled={loading} className="btn btn-primary">
-          <Send size={18} /> {loading ? t('common.sending') : t('transfers.send')}
-        </button>
-      </form>
-
-      <div className="table-container">
-        {transfers.length === 0 ? (
-          <p className="empty-state">{t('transfers.empty')}</p>
-        ) : (
-          <table className="data-table">
-            <thead>
-              <tr><th>{t('transfers.date')}</th><th>{t('transfers.from')}</th><th>{t('transfers.to')}</th><th>{t('transfers.amount')}</th><th>{t('transfers.status')}</th></tr>
-            </thead>
-            <tbody>
-              {transfers.map(tx => (
-                <tr key={tx.id}>
-                  <td>{new Date(tx.createdAt || tx.created_at).toLocaleDateString()}</td>
-                  <td>{tx.sourceCurrency || tx.source_currency_code || tx.sourceWalletId}</td>
-                  <td>{tx.destCurrency || tx.dest_currency_code || tx.destWalletId}</td>
-                  <td>{Number(tx.amount).toLocaleString()}</td>
-                  <td><span className={`status-badge ${tx.status}`}>{tx.status}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      {wallets.length < 2 ? (
+        <div className="ofx-empty-card"><Landmark size={40} /><h3>{t('transfers.two_wallets_required')}</h3></div>
+      ) : (
+        <form onSubmit={handleSubmit} className="ofx-card">
+          <div className="ofx-form-group">
+            <label><Wallet size={14} /> {t('transfers.from')}</label>
+            <select className="ofx-input" value={fromId} onChange={(e) => setFromId(e.target.value)} required>
+              <option value="">— Selectionner —</option>
+              {wallets.map(w => <option key={w.id} value={w.id}>{w.name} ({w.currency}: {w.balance})</option>)}
+            </select>
+          </div>
+          <div className="ofx-arrow-center"><ArrowRight size={20} /></div>
+          <div className="ofx-form-group">
+            <label><Landmark size={14} /> {t('transfers.to')}</label>
+            <select className="ofx-input" value={toId} onChange={(e) => setToId(e.target.value)} required>
+              <option value="">— Selectionner —</option>
+              {wallets.map(w => <option key={w.id} value={w.id}>{w.name} ({w.currency}: {w.balance})</option>)}
+            </select>
+          </div>
+          <div className="ofx-form-group">
+            <label>Montant</label>
+            <input type="number" step="any" className="ofx-input" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+          </div>
+          <div className="ofx-form-group">
+            <label>Note</label>
+            <input type="text" className="ofx-input" value={note} onChange={(e) => setNote(e.target.value)} />
+          </div>
+          {fromWallet && toWallet && (
+            <div className="ofx-rate-bar">
+              <div><span>De :</span> <strong>{fromWallet.name}</strong></div>
+              <div><span>Vers :</span> <strong>{toWallet.name}</strong></div>
+            </div>
+          )}
+          <button type="submit" className="ofx-btn ofx-btn-primary" disabled={loading}>
+            <Send size={16} /> {loading ? 'Envoi...' : t('transfers.submit')}
+          </button>
+        </form>
+      )}
     </div>
   );
 }

@@ -1,26 +1,24 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useT } from '../i18n';
-import { Landmark, Plus, Edit, Trash2, ArrowUpRight, ArrowDownLeft, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { Landmark, Plus, Edit, Trash2, ArrowUpRight, ArrowDownLeft, CheckCircle2, AlertCircle, X, Wallet } from 'lucide-react';
 
 export default function WalletsPage() {
   const { wallets, createWallet, updateWallet, deleteWallet, addTransaction } = useApp();
   const t = useT();
-  
-  // Wallet CRUD state
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [name, setName] = useState('');
   const [type, setType] = useState('cash');
   const [currency, setCurrency] = useState('USD');
   const [balance, setBalance] = useState('0');
-  
+
   const [editingWallet, setEditingWallet] = useState(null);
   const [editName, setEditName] = useState('');
   const [editActive, setEditActive] = useState(true);
 
-  // Capital movement state
   const [showCapitalForm, setShowCapitalForm] = useState(false);
-  const [movementType, setMovementType] = useState('deposit'); // deposit or withdrawal
+  const [movementType, setMovementType] = useState('deposit');
   const [selectedWalletId, setSelectedWalletId] = useState('');
   const [movementAmount, setMovementAmount] = useState('');
   const [movementNote, setMovementNote] = useState('');
@@ -28,10 +26,21 @@ export default function WalletsPage() {
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const CURRENCIES = [
+    { code: 'USD', label: 'USD ($)' },
+    { code: 'UGX', label: 'UGX (Ouganda)' },
+    { code: 'KES', label: 'KES (Kenya)' },
+    { code: 'RWF', label: 'RWF (Rwanda)' },
+    { code: 'CDF', label: 'CDF (Congo)' },
+    { code: 'TZS', label: 'TZS (Tanzanie)' },
+    { code: 'BIF', label: 'BIF (Burundi)' },
+    { code: 'EUR', label: 'EUR (Euro)' },
+    { code: 'FCFA', label: 'FCFA (Afrique CFA)' },
+  ];
+
   const handleCreateWallet = async (e) => {
     e.preventDefault();
     if (!name.trim()) return;
-
     try {
       setLoading(true);
       const res = await createWallet({
@@ -41,7 +50,6 @@ export default function WalletsPage() {
         balance: parseFloat(balance) || 0,
         is_active: true
       });
-
       if (res.success) {
         setMessage({ type: 'success', text: t('wallets.create_success').replace('{name}', name) });
         setName('');
@@ -60,15 +68,10 @@ export default function WalletsPage() {
   const handleUpdateWallet = async (e) => {
     e.preventDefault();
     if (!editingWallet || !editName.trim()) return;
-
     try {
       setLoading(true);
-      const res = await updateWallet(editingWallet.id, {
-        name: editName.trim(),
-        is_active: editActive
-      });
-
-        if (res.success) {
+      const res = await updateWallet(editingWallet.id, { name: editName.trim(), is_active: editActive });
+      if (res.success) {
         setMessage({ type: 'success', text: t('wallets.update_success') });
         setEditingWallet(null);
       } else {
@@ -86,16 +89,10 @@ export default function WalletsPage() {
       try {
         setLoading(true);
         const res = await deleteWallet(id);
-        if (res.success) {
-          setMessage({ type: 'success', text: t('wallets.delete_success') });
-        } else {
-          throw new Error(res.error);
-        }
+        if (res.success) setMessage({ type: 'success', text: t('wallets.delete_success') });
+        else throw new Error(res.error);
       } catch (err) {
-        setMessage({ 
-          type: 'error', 
-          text: t('wallets.delete_error_prefix') + err.message
-        });
+        setMessage({ type: 'error', text: t('wallets.delete_error_prefix') + err.message });
       } finally {
         setLoading(false);
       }
@@ -106,18 +103,13 @@ export default function WalletsPage() {
     e.preventDefault();
     const activeWalletId = selectedWalletId || (wallets.length > 0 ? wallets[0].id : '');
     const amount = parseFloat(movementAmount);
-
     if (!activeWalletId || isNaN(amount) || amount <= 0) {
       setMessage({ type: 'error', text: t('common.confirm_delete') });
       return;
     }
-
     const targetWallet = wallets.find(w => w.id === activeWalletId);
     if (!targetWallet) return;
-
     const isDeposit = movementType === 'deposit';
-    
-    // Prepare transaction payload for capital injection/reduction
     const payload = {
       type: movementType,
       source_wallet_id: isDeposit ? null : activeWalletId,
@@ -131,14 +123,13 @@ export default function WalletsPage() {
       note: movementNote.trim() || (isDeposit ? t('wallets.movement_inject') : t('wallets.movement_withdraw')),
       transaction_id: `CAP-${Date.now().toString().slice(-6)}`
     };
-
     try {
       setLoading(true);
       const res = await addTransaction(payload);
       if (res.success) {
-        setMessage({ 
-          type: 'success', 
-          text: isDeposit 
+        setMessage({
+          type: 'success',
+          text: isDeposit
             ? `${t('wallets.movement_inject')} +${amount} ${targetWallet.currency}`
             : `${t('wallets.movement_withdraw')} -${amount} ${targetWallet.currency}`
         });
@@ -155,41 +146,21 @@ export default function WalletsPage() {
     }
   };
 
-  const formatValue = (value, curr) => {
-    return new Intl.NumberFormat('fr-FR').format(value) + ' ' + curr;
-  };
+  const formatValue = (value, curr) => new Intl.NumberFormat('fr-FR').format(value) + ' ' + curr;
 
   return (
     <div className="ofx-scrollable-page">
-      <div className="screen-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+      <div className="ofx-screen-header">
         <div>
-          <h2 className="screen-title">{t('wallets.page_title')}</h2>
-          <p className="screen-desc">{t('wallets.page_desc')}</p>
+          <h2 className="ofx-screen-title">{t('wallets.page_title')}</h2>
+          <p className="ofx-screen-desc">{t('wallets.page_desc')}</p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button 
-            type="button" 
-            className="btn btn-outline" 
-            style={{ width: 'auto', padding: '8px 14px', fontSize: '13px' }}
-            onClick={() => {
-              setShowCapitalForm(true);
-              setShowAddForm(false);
-              setEditingWallet(null);
-            }}
-          >
+        <div className="ofx-screen-actions">
+          <button type="button" className="ofx-btn ofx-btn-outline" onClick={() => { setShowCapitalForm(true); setShowAddForm(false); setEditingWallet(null); }}>
             <ArrowUpRight size={14} />
             <span>{t('wallets.capital_movement')}</span>
           </button>
-          <button 
-            type="button" 
-            className="btn btn-primary" 
-            style={{ width: 'auto', padding: '8px 14px', fontSize: '13px' }}
-            onClick={() => {
-              setShowAddForm(true);
-              setShowCapitalForm(false);
-              setEditingWallet(null);
-            }}
-          >
+          <button type="button" className="ofx-btn ofx-btn-primary" onClick={() => { setShowAddForm(true); setShowCapitalForm(false); setEditingWallet(null); }}>
             <Plus size={14} />
             <span>{t('wallets.new_wallet')}</span>
           </button>
@@ -197,253 +168,131 @@ export default function WalletsPage() {
       </div>
 
       {message && (
-        <div className={`alert ${message.type === 'success' ? 'alert-success' : 'alert-info'}`} style={{ marginBottom: '16px' }}>
+        <div className={`ofx-alert ${message.type === 'success' ? 'ofx-alert-success' : 'ofx-alert-error'}`}>
           {message.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
           <span>{message.text}</span>
         </div>
       )}
 
-      {/* A. Create Wallet Form */}
       {showAddForm && (
-        <form onSubmit={handleCreateWallet} className="card glass-card" style={{ border: '1px solid var(--primary-blue)', marginBottom: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '700' }}>{t('wallets.create_wallet_title')}</h3>
-            <button type="button" onClick={() => setShowAddForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><X size={18} /></button>
+        <form onSubmit={handleCreateWallet} className="ofx-card ofx-card-accent">
+          <div className="ofx-card-header">
+            <h3>{t('wallets.create_wallet_title')}</h3>
+            <button type="button" className="ofx-icon-btn" onClick={() => setShowAddForm(false)}><X size={18} /></button>
           </div>
-
-          <div className="form-group">
-            <label className="form-label">{t('wallets.create_wallet_title')}</label>
-            <input 
-              type="text" 
-              className="form-control" 
-              placeholder={t('wallets.create_wallet_title')}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required 
-            />
+          <div className="ofx-form-group">
+            <label>{t('wallets.create_wallet_title')}</label>
+            <input type="text" className="ofx-input" placeholder={t('wallets.create_wallet_title')} value={name} onChange={(e) => setName(e.target.value)} required />
           </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">{t('wallets.type_label')}</label>
-              <select className="form-control" value={type} onChange={(e) => setType(e.target.value)}>
+          <div className="ofx-form-row">
+            <div className="ofx-form-group">
+              <label>{t('wallets.type_label')}</label>
+              <select className="ofx-input" value={type} onChange={(e) => setType(e.target.value)}>
                 <option value="cash">{t('wallets.wallet_type_cash')}</option>
                 <option value="mobile_money">{t('wallets.wallet_type_mmoney')}</option>
               </select>
             </div>
-
-            <div className="form-group">
-              <label className="form-label">{t('wallets.currency_label')}</label>
-              <select className="form-control" value={currency} onChange={(e) => setCurrency(e.target.value)}>
-                <option value="USD">USD ($)</option>
-                <option value="UGX">UGX (Ouganda)</option>
-                <option value="KES">KES (Kenya)</option>
-                <option value="RWF">RWF (Rwanda)</option>
-                <option value="CDF">CDF (Congo)</option>
-                <option value="TZS">TZS (Tanzanie)</option>
-                <option value="BIF">BIF (Burundi)</option>
-                <option value="EUR">EUR (Euro)</option>
-                <option value="FCFA">FCFA (Afrique CFA)</option>
+            <div className="ofx-form-group">
+              <label>{t('wallets.currency_label')}</label>
+              <select className="ofx-input" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+                {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.label}</option>)}
               </select>
             </div>
           </div>
-
-          <div className="form-group">
-            <label className="form-label">{t('wallets.initial_balance')}</label>
-            <input 
-              type="number" 
-              step="any"
-              className="form-control" 
-              value={balance}
-              onChange={(e) => setBalance(e.target.value)}
-            />
+          <div className="ofx-form-group">
+            <label>{t('wallets.initial_balance')}</label>
+            <input type="number" step="any" className="ofx-input" value={balance} onChange={(e) => setBalance(e.target.value)} />
           </div>
-
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            <span>{t('wallets.create_wallet_button')}</span>
-          </button>
+          <button type="submit" className="ofx-btn ofx-btn-primary" disabled={loading}>{t('wallets.create_wallet_button')}</button>
         </form>
       )}
 
-      {/* B. Edit Wallet Form */}
       {editingWallet && (
-        <form onSubmit={handleUpdateWallet} className="card glass-card" style={{ border: '1px solid var(--color-orange)', marginBottom: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--color-orange)' }}>{t('wallets.create_wallet_title')}</h3>
-            <button type="button" onClick={() => setEditingWallet(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><X size={18} /></button>
+        <form onSubmit={handleUpdateWallet} className="ofx-card ofx-card-warn">
+          <div className="ofx-card-header">
+            <h3>{t('wallets.create_wallet_title')}</h3>
+            <button type="button" className="ofx-icon-btn" onClick={() => setEditingWallet(null)}><X size={18} /></button>
           </div>
-
-          <div className="form-group">
-            <label className="form-label">{t('wallets.create_wallet_title')}</label>
-            <input 
-              type="text" 
-              className="form-control" 
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              required 
-            />
+          <div className="ofx-form-group">
+            <label>{t('wallets.create_wallet_title')}</label>
+            <input type="text" className="ofx-input" value={editName} onChange={(e) => setEditName(e.target.value)} required />
           </div>
-
-          <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px', marginBottom: '20px' }}>
-            <input 
-              type="checkbox" 
-              id="wallet-active" 
-              checked={editActive} 
-              onChange={(e) => setEditActive(e.target.checked)}
-              style={{ width: '16px', height: '16px' }}
-            />
-            <label htmlFor="wallet-active" style={{ fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>{t('wallets.wallet_active_label')}</label>
-          </div>
-
-          <button type="submit" className="btn btn-primary" style={{ backgroundColor: 'var(--color-orange)' }} disabled={loading}>
-            <span>{t('wallets.update_success')}</span>
-          </button>
+          <label className="ofx-checkbox">
+            <input type="checkbox" checked={editActive} onChange={(e) => setEditActive(e.target.checked)} />
+            <span>{t('wallets.wallet_active_label')}</span>
+          </label>
+          <button type="submit" className="ofx-btn ofx-btn-warn" disabled={loading}>{t('wallets.update_success')}</button>
         </form>
       )}
 
-      {/* C. Capital Movement Form */}
       {showCapitalForm && (
-        <form onSubmit={handleCapitalMovement} className="card glass-card" style={{ border: '1px solid var(--color-cyan)', marginBottom: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--color-cyan)' }}>{t('wallets.capital_movement')}</h3>
-            <button type="button" onClick={() => setShowCapitalForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><X size={18} /></button>
+        <form onSubmit={handleCapitalMovement} className="ofx-card ofx-card-info">
+          <div className="ofx-card-header">
+            <h3>{t('wallets.capital_movement')}</h3>
+            <button type="button" className="ofx-icon-btn" onClick={() => setShowCapitalForm(false)}><X size={18} /></button>
           </div>
-
-          <div className="toggle-group" style={{ marginBottom: '16px' }}>
-            <button
-              type="button"
-              className={`toggle-button ${movementType === 'deposit' ? 'active business' : ''}`}
-              onClick={() => setMovementType('deposit')}
-              style={{ padding: '8px 12px' }}
-            >
-              <ArrowUpRight size={14} style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle' }} />
-              {t('wallets.movement_inject')}
+          <div className="ofx-toggle-group">
+            <button type="button" className={`ofx-toggle ${movementType === 'deposit' ? 'active' : ''}`} onClick={() => setMovementType('deposit')}>
+              <ArrowUpRight size={14} /> {t('wallets.movement_inject')}
             </button>
-            <button
-              type="button"
-              className={`toggle-button ${movementType === 'withdrawal' ? 'active personal' : ''}`}
-              onClick={() => setMovementType('withdrawal')}
-              style={{ padding: '8px 12px' }}
-            >
-              <ArrowDownLeft size={14} style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle' }} />
-              {t('wallets.movement_withdraw')}
+            <button type="button" className={`ofx-toggle ${movementType === 'withdrawal' ? 'active' : ''}`} onClick={() => setMovementType('withdrawal')}>
+              <ArrowDownLeft size={14} /> {t('wallets.movement_withdraw')}
             </button>
           </div>
-
-          <div className="form-group">
-            <label className="form-label">{t('wallets.select_wallet')}</label>
-            <select 
-              className="form-control"
-              value={selectedWalletId}
-              onChange={(e) => setSelectedWalletId(e.target.value)}
-            >
-              {wallets.map(w => (
-                <option key={w.id} value={w.id}>{w.name} ({w.currency}) - Actuel: {formatValue(w.balance, w.currency)}</option>
-              ))}
+          <div className="ofx-form-group">
+            <label>{t('wallets.select_wallet')}</label>
+            <select className="ofx-input" value={selectedWalletId} onChange={(e) => setSelectedWalletId(e.target.value)}>
+              {wallets.map(w => <option key={w.id} value={w.id}>{w.name} ({w.currency}) - Actuel: {formatValue(w.balance, w.currency)}</option>)}
             </select>
           </div>
-
-          <div className="form-group">
-            <label className="form-label">{t('wallets.amount_placeholder')}</label>
-            <input 
-              type="number" 
-              step="any"
-              className="form-control" 
-              placeholder={t('wallets.amount_placeholder')}
-              value={movementAmount}
-              onChange={(e) => setMovementAmount(e.target.value)}
-              required 
-            />
+          <div className="ofx-form-group">
+            <label>{t('wallets.amount_placeholder')}</label>
+            <input type="number" step="any" className="ofx-input" placeholder={t('wallets.amount_placeholder')} value={movementAmount} onChange={(e) => setMovementAmount(e.target.value)} required />
           </div>
-
-          <div className="form-group">
-            <label className="form-label">{t('wallets.note_placeholder')}</label>
-            <input 
-              type="text" 
-              className="form-control" 
-              placeholder={t('wallets.note_placeholder')}
-              value={movementNote}
-              onChange={(e) => setMovementNote(e.target.value)}
-            />
+          <div className="ofx-form-group">
+            <label>{t('wallets.note_placeholder')}</label>
+            <input type="text" className="ofx-input" placeholder={t('wallets.note_placeholder')} value={movementNote} onChange={(e) => setMovementNote(e.target.value)} />
           </div>
-
-          <button type="submit" className="btn btn-primary" style={{ backgroundColor: 'var(--color-cyan)', color: '#090c10' }} disabled={loading}>
-            <span>{t('wallets.validate_movement')}</span>
-          </button>
+          <button type="submit" className="ofx-btn ofx-btn-info" disabled={loading}>{t('wallets.validate_movement')}</button>
         </form>
       )}
 
-      {/* D. Wallets List */}
       {wallets.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '40px 20px' }}>
-          <Landmark size={48} color="var(--text-muted)" style={{ margin: '0 auto 16px', opacity: 0.5 }} />
-          <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>{t('wallets.wallet_none')}</h3>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: '1.6' }}>
-            {t('wallets.create_first_wallet')}
-          </p>
-          <button type="button" className="btn btn-primary" style={{ display: 'inline-flex', width: 'auto' }} onClick={() => setShowAddForm(true)}>
-            <Plus size={14} />
-            <span>{t('wallets.create_first_wallet')}</span>
+        <div className="ofx-empty-card">
+          <Landmark size={48} />
+          <h3>{t('wallets.wallet_none')}</h3>
+          <p>{t('wallets.create_first_wallet')}</p>
+          <button className="ofx-btn ofx-btn-primary" onClick={() => setShowAddForm(true)}>
+            <Plus size={14} /> {t('wallets.create_first_wallet')}
           </button>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="ofx-card-list">
           {wallets.map(w => {
             const isCash = w.type === 'cash';
             const isInactive = w.is_active === false;
             return (
-              <div 
-                key={w.id} 
-                className="card" 
-                style={{ 
-                  margin: 0, 
-                  opacity: isInactive ? 0.6 : 1,
-                  borderLeft: `5px solid ${isInactive ? 'var(--text-muted)' : isCash ? 'var(--primary-blue)' : 'var(--color-cyan)'}`
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--deep-navy)' }}>{w.name}</h3>
-                          {isInactive && <span className="mock-badge" style={{ backgroundColor: 'var(--border-color)', color: 'var(--text-secondary)', border: 'none', padding: '2px 6px', fontSize: '8px' }}>{t('common.no')}</span>}
+              <div key={w.id} className={`ofx-wallet-card ${isInactive ? 'inactive' : ''}`}>
+                <div className="ofx-wallet-card-head">
+                  <div className="ofx-wallet-card-meta">
+                    <div className={`ofx-wallet-card-type ${isCash ? 'cash' : 'mobile'}`}>{isCash ? <Landmark size={16} /> : <Wallet size={16} />}</div>
+                    <div>
+                      <div className="ofx-wallet-card-name">{w.name} {isInactive && <span className="ofx-badge-muted">{t('common.no')}</span>}</div>
+                      <div className="ofx-wallet-card-currency">{isCash ? t('wallets.wallet_type_cash') : t('wallets.wallet_type_mmoney')} • {w.currency}</div>
                     </div>
-                        <span className="wallet-type-badge" style={{ display: 'inline-block', marginTop: '2px' }}>
-                          {isCash ? t('wallets.wallet_type_cash') : t('wallets.wallet_type_mmoney')} • {w.currency}
-                        </span>
                   </div>
-
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <button 
-                      type="button" 
-                      className="draft-btn edit" 
-                      style={{ backgroundColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
-                      onClick={() => {
-                        setEditingWallet(w);
-                        setEditName(w.name);
-                        setEditActive(w.is_active !== undefined ? w.is_active : true);
-                        setShowAddForm(false);
-                        setShowCapitalForm(false);
-                      }}
-                      title="Modifier"
-                    >
-                      <Edit size={14} />
+                  <div className="ofx-wallet-card-actions">
+                    <button className="ofx-icon-btn" onClick={() => { setEditingWallet(w); setEditName(w.name); setEditActive(w.is_active !== undefined ? w.is_active : true); setShowAddForm(false); setShowCapitalForm(false); }}>
+                      <Edit size={16} />
                     </button>
-                    <button 
-                      type="button" 
-                      className="draft-btn reject" 
-                      onClick={() => handleDeleteWallet(w.id, w.name)}
-                      title="Supprimer définitivement"
-                    >
-                      <Trash2 size={14} />
+                    <button className="ofx-icon-btn danger" onClick={() => handleDeleteWallet(w.id, w.name)}>
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: '15px' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600' }}>STOCK ACTUEL :</span>
-                  <span className="wallet-balance" style={{ fontSize: '22px' }}>
-                    {formatValue(w.balance, w.currency)}
-                  </span>
+                <div className="ofx-wallet-card-balance">
+                  <span>Stock actuel</span>
+                  <strong>{formatValue(w.balance, w.currency)}</strong>
                 </div>
               </div>
             );

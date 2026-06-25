@@ -1,14 +1,16 @@
 import { useState, useMemo } from 'react';
 import { Landmark, Wallet, Smartphone } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { useT } from '../i18n';
 
 function getIcon(type) {
-  if (type === 'cash') return <Landmark size={24} />;
-  if (type === 'mobile_money') return <Smartphone size={22} />;
-  return <Wallet size={22} />;
+  if (type === 'cash') return <Landmark size={22} />;
+  if (type === 'mobile_money') return <Smartphone size={20} />;
+  return <Wallet size={20} />;
 }
 
-export default function TreasuryCanvas({ onSelectWallet, selectedWalletId, searchQuery }) {
+export default function TreasuryCanvas({ searchQuery }) {
+  const t = useT();
   const { wallets, transactions, getNetWorthUSD } = useApp();
   const [hoveredNode, setHoveredNode] = useState(null);
 
@@ -41,19 +43,6 @@ export default function TreasuryCanvas({ onSelectWallet, selectedWalletId, searc
     return points;
   }, [transactions, now]);
 
-  const positions = useMemo(() => {
-    const count = filteredWallets.length;
-    if (count === 0) return [];
-    const cols = Math.min(3, Math.ceil(Math.sqrt(count)));
-    const cellW = 100 / cols;
-    const cellH = 100 / Math.ceil(count / cols);
-    return filteredWallets.map((w, i) => ({
-      left: `${(i % cols) * cellW + cellW / 2}%`,
-      top: `${Math.floor(i / cols) * cellH + cellH / 2}%`,
-      wallet: w
-    }));
-  }, [filteredWallets]);
-
   const maxProfit = Math.max(...profitPoints.map(p => p.value), 1);
   const pathD = profitPoints
     .map((p, i) => {
@@ -65,58 +54,51 @@ export default function TreasuryCanvas({ onSelectWallet, selectedWalletId, searc
 
   return (
     <div className="ofx-canvas">
-      <div className="ofx-canvas-grid" />
+      <div className="ofx-canvas-header">
+        <div className="ofx-canvas-title">{t('dashboard.overview') || 'Vue ensemble'}</div>
+        <div className="ofx-canvas-subtitle">{filteredWallets.length} caisse(s)</div>
+      </div>
+
+      <div className="ofx-canvas-balance">
+        <div className="ofx-canvas-label">{t('dashboard.totalAssets') || 'Patrimoine total'}</div>
+        <div className="ofx-canvas-amount">
+          ${getNetWorthUSD().toLocaleString('fr-FR', { maximumFractionDigits: 0 })}
+        </div>
+        <div className="ofx-canvas-hint">USD equivalent</div>
+      </div>
 
       <div className="ofx-profit-curve">
         <svg viewBox="0 0 100 100" preserveAspectRatio="none">
           <defs>
             <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--opays-blue-light)" stopOpacity="0.6" />
+              <stop offset="0%" stopColor="var(--opays-blue-light)" stopOpacity="0.5" />
               <stop offset="100%" stopColor="var(--opays-blue)" stopOpacity="0.05" />
             </linearGradient>
           </defs>
           <path d={`${pathD} L 100 100 L 0 100 Z`} fill="url(#profitGradient)" />
           <path d={pathD} fill="none" stroke="var(--opays-blue-light)" strokeWidth="0.6" />
         </svg>
+        <div className="ofx-curve-label">{t('dashboard.profit7d') || 'Benefice 7 jours'}</div>
       </div>
 
-      <div className="ofx-wallet-nodes">
-        {positions.map(({ left, top, wallet }) => (
+      <div className="ofx-wallet-grid">
+        {filteredWallets.map(wallet => (
           <div
             key={wallet.id}
-            className="ofx-node"
-            style={{ left, top, transform: 'translate(-50%, -50%)' }}
+            className="ofx-wallet-tile"
             onMouseEnter={() => setHoveredNode(wallet.id)}
             onMouseLeave={() => setHoveredNode(null)}
-            onClick={() => onSelectWallet(wallet.id === selectedWalletId ? null : wallet.id)}
           >
-            <div className={`ofx-node-bubble ${selectedWalletId === wallet.id ? 'active' : ''}`}>
-              {getIcon(wallet.type)}
-            </div>
-            <div className="ofx-node-label">{wallet.name}</div>
-            <div className="ofx-node-balance">
-              {hoveredNode === wallet.id || selectedWalletId === wallet.id
-                ? formatValue(wallet.balance, wallet.currency)
-                : wallet.currency}
+            <div className="ofx-wallet-tile-icon">{getIcon(wallet.type)}</div>
+            <div className="ofx-wallet-tile-name">{wallet.name}</div>
+            <div className="ofx-wallet-tile-balance">
+              {hoveredNode === wallet.id ? formatValue(wallet.balance, wallet.currency) : wallet.currency}
             </div>
           </div>
         ))}
-      </div>
-
-      <div style={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        textAlign: 'center',
-        zIndex: 3,
-        pointerEvents: 'none'
-      }}>
-        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Patrimoine total</div>
-        <div style={{ fontSize: 'clamp(28px, 5vw, 48px)', fontWeight: 700, color: 'white', fontFamily: 'var(--font-body)' }}>
-          ${getNetWorthUSD().toLocaleString('fr-FR', { maximumFractionDigits: 0 })}
-        </div>
-        <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>USD équivalent</div>
+        {filteredWallets.length === 0 && (
+          <div className="ofx-empty-canvas">{t('wallets.create_first_wallet')}</div>
+        )}
       </div>
     </div>
   );

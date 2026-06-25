@@ -18,14 +18,7 @@ export default function RemoteOrders() {
     try {
       let order;
       if (isUsingMock) {
-        order = {
-          id: crypto.randomUUID(),
-          ...form,
-          sourceAmount: Number(form.sourceAmount),
-          destAmount: Number(form.destAmount),
-          status: 'pending',
-          createdAt: new Date().toISOString()
-        };
+        order = { id: crypto.randomUUID(), ...form, sourceAmount: Number(form.sourceAmount), destAmount: Number(form.destAmount), status: 'pending', createdAt: new Date().toISOString() };
       } else {
         const res = await remoteOrderApi.create({
           customerName: form.customerName,
@@ -69,11 +62,8 @@ export default function RemoteOrders() {
     });
     if (res.success) {
       try {
-        if (!isUsingMock) {
-          await remoteOrderApi.update(order.id, { status: 'completed' });
-        }
-        const updated = remoteOrders.map(o => o.id === order.id ? { ...o, status: 'completed' } : o);
-        setRemoteOrders(updated);
+        if (!isUsingMock) await remoteOrderApi.update(order.id, { status: 'completed' });
+        setRemoteOrders(remoteOrders.map(o => o.id === order.id ? { ...o, status: 'completed' } : o));
         setMessage({ type: 'success', text: t('remoteOrders.executed') });
       } catch (err) {
         setMessage({ type: 'error', text: err.message || t('common.error') });
@@ -81,68 +71,91 @@ export default function RemoteOrders() {
     }
   };
 
-  const currencies = [...new Set(wallets.map(w => w.currencyCode))];
+  const currencies = [...new Set(wallets.map(w => w.currencyCode).filter(Boolean))];
 
   return (
-    <div className="page-card">
-      <div className="page-header">
-        <Smartphone className="page-icon" size={28} />
+    <div className="ofx-scrollable-page">
+      <div className="ofx-screen-header">
+        <div className="ofx-screen-icon"><Smartphone size={28} /></div>
         <div>
-          <h2 className="page-title">{t('remoteOrders.title')}</h2>
-          <p className="page-subtitle">{t('remoteOrders.subtitle')}</p>
+          <h2 className="ofx-screen-title">{t('remoteOrders.title')}</h2>
+          <p className="ofx-screen-desc">{t('remoteOrders.subtitle')}</p>
         </div>
       </div>
 
       {message && (
-        <div className={`alert alert-${message.type}`}>
-          {message.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+        <div className={`ofx-alert ${message.type === 'success' ? 'ofx-alert-success' : 'ofx-alert-error'}`}>
+          {message.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
           <span>{message.text}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="form-grid" style={{ marginBottom: '24px' }}>
-        <input placeholder={t('remoteOrders.customerName')} value={form.customerName} onChange={e => setForm({ ...form, customerName: e.target.value })} required className="form-input" />
-        <input placeholder={t('remoteOrders.customerPhone')} value={form.customerPhone} onChange={e => setForm({ ...form, customerPhone: e.target.value })} required className="form-input" />
-        <select value={form.sourceCurrency} onChange={e => setForm({ ...form, sourceCurrency: e.target.value })} required className="form-input">
-          <option value="">{t('remoteOrders.sourceCurrency')}</option>
-          {currencies.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <select value={form.destCurrency} onChange={e => setForm({ ...form, destCurrency: e.target.value })} required className="form-input">
-          <option value="">{t('remoteOrders.destCurrency')}</option>
-          {currencies.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <input type="number" min="0" step="0.01" placeholder={t('remoteOrders.sourceAmount')} value={form.sourceAmount} onChange={e => setForm({ ...form, sourceAmount: e.target.value })} required className="form-input" />
-        <input type="number" min="0" step="0.01" placeholder={t('remoteOrders.destAmount')} value={form.destAmount} onChange={e => setForm({ ...form, destAmount: e.target.value })} required className="form-input" />
-        <select value={form.channel} onChange={e => setForm({ ...form, channel: e.target.value })} className="form-input">
-          <option value="whatsapp">WhatsApp</option>
-          <option value="telegram">Telegram</option>
-          <option value="sms">SMS</option>
-          <option value="app">App</option>
-        </select>
-        <input placeholder={t('remoteOrders.note')} value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} className="form-input" />
-        <button type="submit" disabled={loading} className="btn btn-primary">
-          <Plus size={18} /> {loading ? t('common.saving') : t('remoteOrders.add')}
+      <form onSubmit={handleSubmit} className="ofx-card">
+        <div className="ofx-form-row">
+          <div className="ofx-form-group">
+            <input type="text" className="ofx-input" placeholder={t('remoteOrders.customerName')} value={form.customerName} onChange={(e) => setForm({ ...form, customerName: e.target.value })} required />
+          </div>
+          <div className="ofx-form-group">
+            <input type="tel" className="ofx-input" placeholder={t('remoteOrders.customerPhone')} value={form.customerPhone} onChange={(e) => setForm({ ...form, customerPhone: e.target.value })} required />
+          </div>
+        </div>
+        <div className="ofx-form-row">
+          <div className="ofx-form-group">
+            <select className="ofx-input" value={form.sourceCurrency} onChange={(e) => setForm({ ...form, sourceCurrency: e.target.value })} required>
+              <option value="">{t('remoteOrders.sourceCurrency')}</option>
+              {currencies.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="ofx-form-group">
+            <select className="ofx-input" value={form.destCurrency} onChange={(e) => setForm({ ...form, destCurrency: e.target.value })} required>
+              <option value="">{t('remoteOrders.destCurrency')}</option>
+              {currencies.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="ofx-form-row">
+          <div className="ofx-form-group">
+            <input type="number" min="0" step="0.01" className="ofx-input" placeholder={t('remoteOrders.sourceAmount')} value={form.sourceAmount} onChange={(e) => setForm({ ...form, sourceAmount: e.target.value })} required />
+          </div>
+          <div className="ofx-form-group">
+            <input type="number" min="0" step="0.01" className="ofx-input" placeholder={t('remoteOrders.destAmount')} value={form.destAmount} onChange={(e) => setForm({ ...form, destAmount: e.target.value })} required />
+          </div>
+        </div>
+        <div className="ofx-form-row">
+          <div className="ofx-form-group">
+            <select className="ofx-input" value={form.channel} onChange={(e) => setForm({ ...form, channel: e.target.value })}>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="telegram">Telegram</option>
+              <option value="sms">SMS</option>
+              <option value="app">App</option>
+            </select>
+          </div>
+          <div className="ofx-form-group">
+            <input type="text" className="ofx-input" placeholder={t('remoteOrders.note')} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+          </div>
+        </div>
+        <button type="submit" className="ofx-btn ofx-btn-primary" disabled={loading}>
+          <Plus size={16} /> {loading ? t('common.saving') : t('remoteOrders.add')}
         </button>
       </form>
 
-      <div className="list-container">
-        {remoteOrders.length === 0 ? (
-          <p className="empty-state">{t('remoteOrders.empty')}</p>
-        ) : (
-          remoteOrders.map(o => (
-            <div key={o.id} className="order-card">
-              <div className="order-header">
-                <span><MessageCircle size={16} /> {o.channel || o.source}</span>
-                <span className={`status-badge ${o.status}`}>{o.status}</span>
+      <div className="ofx-section">
+        <div className="ofx-section-header">{t('remoteOrders.list')} ({remoteOrders.length})</div>
+        <div className="ofx-list">
+          {remoteOrders.length === 0 ? <p className="ofx-empty">{t('remoteOrders.empty')}</p> : remoteOrders.map(o => (
+            <div key={o.id} className="ofx-list-item">
+              <div className="ofx-list-icon primary"><MessageCircle size={18} /></div>
+              <div className="ofx-list-body">
+                <div className="ofx-list-title">{(o.customerName || o.customer_name)} ({o.customerPhone || o.customer_phone})</div>
+                <div className="ofx-list-sub">{(o.sourceAmount || o.source_amount)} {(o.sourceCurrency || o.source_currency_code)} → {(o.destAmount || o.dest_amount)} {(o.destCurrency || o.dest_currency_code)} • {o.channel || o.source}</div>
               </div>
-              <p>{(o.customerName || o.customer_name)} ({o.customerPhone || o.customer_phone})</p>
-              <p>{(o.sourceAmount || o.source_amount)} {(o.sourceCurrency || o.source_currency_code)} → {(o.destAmount || o.dest_amount)} {(o.destCurrency || o.dest_currency_code)}</p>
-              {o.status === 'pending' && (
-                <button onClick={() => execute(o)} className="btn btn-primary btn-sm">{t('remoteOrders.execute')}</button>
-              )}
+              <div className="ofx-list-actions">
+                <span className={`ofx-status ${o.status}`}>{o.status}</span>
+                {o.status === 'pending' && <button className="ofx-btn ofx-btn-sm ofx-btn-primary" onClick={() => execute(o)}>{t('remoteOrders.execute')}</button>}
+              </div>
             </div>
-          ))
-        )}
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Shield, Users, Building2, Activity, DollarSign } from 'lucide-react';
+import { Shield, Users, Building2, Activity, DollarSign, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useT } from '../i18n';
 import { agencyApi } from '../services/api';
 
@@ -13,8 +13,8 @@ export default function SuperAdmin() {
   useEffect(() => {
     async function load() {
       try {
-        const agenciesRes = await agencyApi.list();
-        setAgencies(agenciesRes.data || []);
+        const res = await agencyApi.list();
+        setAgencies(res.data || []);
       } catch (err) {
         setMessage({ type: 'error', text: err.message || t('superAdmin.loadError') });
       }
@@ -28,91 +28,57 @@ export default function SuperAdmin() {
 
   if (user?.role !== 'superadmin') {
     return (
-      <div className="page-card">
-        <div className="page-header">
-          <Shield className="page-icon" size={28} />
+      <div className="ofx-scrollable-page">
+        <div className="ofx-screen-header">
+          <div className="ofx-screen-icon"><Shield size={28} /></div>
           <div>
-            <h2 className="page-title">{t('superAdmin.title')}</h2>
-            <p className="page-subtitle">{t('superAdmin.subtitle')}</p>
+            <h2 className="ofx-screen-title">{t('superAdmin.title')}</h2>
+            <p className="ofx-screen-desc">{t('superAdmin.subtitle')}</p>
           </div>
         </div>
-        <div className="alert alert-error">{t('superAdmin.accessDenied')}</div>
-        <p className="empty-state">{t('superAdmin.accessDeniedDesc')}</p>
+        <div className="ofx-alert ofx-alert-error"><AlertCircle size={16} /> <span>{t('superAdmin.accessDenied')}</span></div>
+        <p className="ofx-empty">{t('superAdmin.accessDeniedDesc')}</p>
       </div>
     );
   }
 
-  const totalWallets = wallets.length;
-  const totalTransactions = transactions.length;
-  const totalCustomers = customers.length;
-
   return (
-    <div className="page-card">
-      <div className="page-header">
-        <Shield className="page-icon" size={28} />
+    <div className="ofx-scrollable-page">
+      <div className="ofx-screen-header">
+        <div className="ofx-screen-icon"><Shield size={28} /></div>
         <div>
-          <h2 className="page-title">{t('superAdmin.title')}</h2>
-          <p className="page-subtitle">{t('superAdmin.subtitle')}</p>
+          <h2 className="ofx-screen-title">{t('superAdmin.title')}</h2>
+          <p className="ofx-screen-desc">{t('superAdmin.subtitle')}</p>
         </div>
       </div>
 
-      {message && <div className={`alert alert-${message.type}`}>{message.text}</div>}
+      {message && (
+        <div className={`ofx-alert ${message.type === 'success' ? 'ofx-alert-success' : 'ofx-alert-error'}`}>
+          {message.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+          <span>{message.text}</span>
+        </div>
+      )}
 
-      <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div className="stat-card">
-          <Building2 size={24} />
-          <div className="stat-value">{agencies.length}</div>
-          <div className="stat-label">{t('superAdmin.agencies')}</div>
-        </div>
-        <div className="stat-card">
-          <DollarSign size={24} />
-          <div className="stat-value">{totalWallets}</div>
-          <div className="stat-label">{t('superAdmin.wallets')}</div>
-        </div>
-        <div className="stat-card">
-          <Activity size={24} />
-          <div className="stat-value">{totalTransactions}</div>
-          <div className="stat-label">{t('superAdmin.transactions')}</div>
-        </div>
-        <div className="stat-card">
-          <Users size={24} />
-          <div className="stat-value">{totalCustomers}</div>
-          <div className="stat-label">{t('superAdmin.customers')}</div>
-        </div>
+      <div className="ofx-stats-row">
+        <div className="ofx-stat-card"><Building2 size={20} /><div className="ofx-stat-label">Agences</div><div className="ofx-stat-value">{agencies.length}</div></div>
+        <div className="ofx-stat-card"><DollarSign size={20} /><div className="ofx-stat-label">Caisse</div><div className="ofx-stat-value">{wallets.length}</div></div>
+        <div className="ofx-stat-card"><Activity size={20} /><div className="ofx-stat-label">Transactions</div><div className="ofx-stat-value">{transactions.length}</div></div>
+        <div className="ofx-stat-card"><Users size={20} /><div className="ofx-stat-label">Clients</div><div className="ofx-stat-value">{customers.length}</div></div>
       </div>
 
-      <h3 className="section-title">{t('superAdmin.agenciesList')}</h3>
-      <div className="table-container">
-        {agencies.length === 0 ? (
-          <p className="empty-state">{t('superAdmin.noAgencies')}</p>
-        ) : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>{t('superAdmin.name')}</th>
-                <th>{t('superAdmin.slug')}</th>
-                <th>{t('superAdmin.email')}</th>
-                <th>{t('superAdmin.phone')}</th>
-                <th>{t('superAdmin.status')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {agencies.map(a => (
-                <tr key={a.id}>
-                  <td>{a.name}</td>
-                  <td>{a.slug}</td>
-                  <td>{a.email || '-'}</td>
-                  <td>{a.phone || '-'}</td>
-                  <td>
-                    <span className={`status-badge ${a.isActive ? 'active' : 'inactive'}`}>
-                      {a.isActive ? t('superAdmin.active') : t('superAdmin.inactive')}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+      <div className="ofx-section">
+        <div className="ofx-section-header"><Building2 size={16} /> Agences ({agencies.length})</div>
+        <div className="ofx-list">
+          {agencies.length === 0 ? <p className="ofx-empty">Aucune agence.</p> : agencies.map(a => (
+            <div key={a.id} className="ofx-list-item">
+              <div className="ofx-list-icon primary"><Building2 size={18} /></div>
+              <div className="ofx-list-body">
+                <div className="ofx-list-title">{a.name}</div>
+                <div className="ofx-list-sub">{a.id} &bull; {a.createdAt ? new Date(a.createdAt).toLocaleDateString('fr-FR') : ''}</div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

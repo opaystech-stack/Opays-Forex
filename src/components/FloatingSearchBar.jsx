@@ -2,7 +2,7 @@ import { Search, Mic } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useT } from '../i18n';
 
-export default function FloatingSearchBar({ value, onChange, onVoice }) {
+export default function FloatingSearchBar({ value, onChange, onVoice, placeholder }) {
   const t = useT();
   const { user } = useApp();
   const initials = `${user?.firstName?.[0] || 'O'}${user?.lastName?.[0] || 'P'}`;
@@ -12,7 +12,7 @@ export default function FloatingSearchBar({ value, onChange, onVoice }) {
       <Search className="ofx-search-icon" size={18} />
       <input
         type="text"
-        placeholder={t('ui.searchPlaceholder') || 'Rechercher caisses, transactions...'}
+        placeholder={placeholder || t('ui.searchPlaceholder') || 'Rechercher caisses, transactions...'}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />

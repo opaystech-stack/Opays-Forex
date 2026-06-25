@@ -1,134 +1,73 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { CalendarCheck, Plus, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
+import { CreditCard, CheckCircle2, AlertCircle, Calendar, Clock } from 'lucide-react';
 import { useT } from '../i18n';
-import { subscriptionApi } from '../services/api';
 
 export default function Subscriptions() {
-  const { customers, subscriptions, setSubscriptions, isUsingMock } = useApp();
+  const { subscription, createSubscription } = useApp();
   const t = useT();
-  const [form, setForm] = useState({ customerId: '', serviceName: '', amount: '', frequency: 'monthly', nextDate: '' });
+  const [plan, setPlan] = useState('monthly');
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage(null);
+  const handleSubscribe = async () => {
     setLoading(true);
+    setMessage(null);
     try {
-      let sub;
-      const payload = {
-        customerId: form.customerId || null,
-        planName: form.serviceName,
-        amount: Number(form.amount),
-        currencyCode: 'USD',
-        frequency: form.frequency,
-        nextBillingDate: form.nextDate
-      };
-      if (isUsingMock) {
-        sub = {
-          id: crypto.randomUUID(),
-          customerId: form.customerId,
-          serviceName: form.serviceName,
-          amount: Number(form.amount),
-          frequency: form.frequency,
-          nextDate: form.nextDate,
-          status: 'active',
-          createdAt: new Date().toISOString()
-        };
-      } else {
-        const res = await subscriptionApi.create(payload);
-        sub = { ...res.data, serviceName: res.data.planName, nextDate: res.data.nextBillingDate };
-      }
-      setSubscriptions([sub, ...subscriptions]);
-      setMessage({ type: 'success', text: t('subscriptions.created') });
-      setForm({ customerId: '', serviceName: '', amount: '', frequency: 'monthly', nextDate: '' });
+      const res = await createSubscription({ plan });
+      if (res.success) setMessage({ type: 'success', text: t('subscriptions.success') });
+      else setMessage({ type: 'error', text: res.error || t('common.error') });
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || t('common.error') });
+      setMessage({ type: 'error', text: err.message });
     } finally {
       setLoading(false);
     }
   };
 
-  const renew = async (id) => {
-    try {
-      const next = new Date();
-      next.setDate(next.getDate() + 30);
-      const nextStr = next.toISOString().split('T')[0];
-      if (!isUsingMock) {
-        await subscriptionApi.update(id, { nextBillingDate: nextStr });
-      }
-      const updated = subscriptions.map(s => s.id === id ? { ...s, nextDate: nextStr, nextBillingDate: nextStr } : s);
-      setSubscriptions(updated);
-      setMessage({ type: 'success', text: t('subscriptions.renewed') });
-    } catch (err) {
-      setMessage({ type: 'error', text: err.message || t('common.error') });
-    }
-  };
+  const plans = [
+    { id: 'monthly', name: t('subscriptions.monthly'), price: '29 USD/mois', desc: t('subscriptions.monthly_desc'), icon: Calendar },
+    { id: 'yearly', name: t('subscriptions.yearly'), price: '290 USD/an', desc: t('subscriptions.yearly_desc'), icon: Clock },
+  ];
 
   return (
-    <div className="page-card">
-      <div className="page-header">
-        <CalendarCheck className="page-icon" size={28} />
+    <div className="ofx-scrollable-page">
+      <div className="ofx-screen-header">
+        <div className="ofx-screen-icon"><CreditCard size={28} /></div>
         <div>
-          <h2 className="page-title">{t('subscriptions.title')}</h2>
-          <p className="page-subtitle">{t('subscriptions.subtitle')}</p>
+          <h2 className="ofx-screen-title">{t('subscriptions.title')}</h2>
+          <p className="ofx-screen-desc">{t('subscriptions.subtitle')}</p>
         </div>
       </div>
 
+      {subscription && (
+        <div className="ofx-alert ofx-alert-success">
+          <CheckCircle2 size={16} /> <span>Abonnement actif : {subscription.plan} &bull; expire le {new Date(subscription.expiresAt).toLocaleDateString('fr-FR')}</span>
+        </div>
+      )}
+
       {message && (
-        <div className={`alert alert-${message.type}`}>
-          {message.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+        <div className={`ofx-alert ${message.type === 'success' ? 'ofx-alert-success' : 'ofx-alert-error'}`}>
+          {message.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
           <span>{message.text}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="form-grid" style={{ marginBottom: '24px' }}>
-        <select value={form.customerId} onChange={e => setForm({ ...form, customerId: e.target.value })} className="form-input">
-          <option value="">{t('subscriptions.customer')}</option>
-          {(customers || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-        <input placeholder={t('subscriptions.serviceName')} value={form.serviceName} onChange={e => setForm({ ...form, serviceName: e.target.value })} required className="form-input" />
-        <input type="number" min="0" step="0.01" placeholder={t('subscriptions.amount')} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} required className="form-input" />
-        <select value={form.frequency} onChange={e => setForm({ ...form, frequency: e.target.value })} className="form-input">
-          <option value="weekly">{t('subscriptions.weekly')}</option>
-          <option value="monthly">{t('subscriptions.monthly')}</option>
-          <option value="yearly">{t('subscriptions.yearly')}</option>
-        </select>
-        <input type="date" value={form.nextDate} onChange={e => setForm({ ...form, nextDate: e.target.value })} required className="form-input" />
-        <button type="submit" disabled={loading} className="btn btn-primary">
-          <Plus size={18} /> {loading ? t('common.saving') : t('subscriptions.add')}
-        </button>
-      </form>
-
-      <div className="table-container">
-        {subscriptions.length === 0 ? (
-          <p className="empty-state">{t('subscriptions.empty')}</p>
-        ) : (
-          <table className="data-table">
-            <thead>
-              <tr><th>{t('subscriptions.service')}</th><th>{t('subscriptions.customer')}</th><th>{t('subscriptions.amount')}</th><th>{t('subscriptions.frequencyLabel')}</th><th>{t('subscriptions.nextDate')}</th><th></th></tr>
-            </thead>
-            <tbody>
-              {subscriptions.map(s => {
-                const customer = (customers || []).find(c => c.id === (s.customerId || s.customer_id));
-                return (
-                  <tr key={s.id}>
-                    <td>{s.serviceName || s.plan_name}</td>
-                    <td>{customer?.name || '-'}</td>
-                    <td>{Number(s.amount).toLocaleString()} USD</td>
-                    <td>{s.frequency}</td>
-                    <td>{s.nextDate || s.next_billing_date}</td>
-                    <td>
-                      <button onClick={() => renew(s.id)} className="btn btn-icon btn-secondary"><RefreshCw size={16} /></button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+      <div className="ofx-plan-list">
+        {plans.map(p => (
+          <div key={p.id} className={`ofx-plan-card ${plan === p.id ? 'active' : ''}`} onClick={() => setPlan(p.id)}>
+            <div className="ofx-plan-icon">{plan === 'monthly' ? <Calendar size={24} /> : <Clock size={24} />}</div>
+            <div className="ofx-plan-body">
+              <div className="ofx-plan-name">{p.name}</div>
+              <div className="ofx-plan-desc">{p.desc}</div>
+            </div>
+            <div className="ofx-plan-price">{p.price}</div>
+          </div>
+        ))}
       </div>
+
+      <button className="ofx-btn ofx-btn-primary" onClick={handleSubscribe} disabled={loading || !!subscription}>
+        <CreditCard size={16} /> {loading ? 'Traitement...' : (subscription ? 'Deja actif' : t('subscriptions.subscribe'))}
+      </button>
     </div>
   );
 }

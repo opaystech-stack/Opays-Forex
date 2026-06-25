@@ -1,18 +1,24 @@
 import { useApp } from '../context/AppContext';
+import { Building2, Mail, Shield, Calendar } from 'lucide-react';
 
 export default function AgencyAdmin() {
   const { user } = useApp();
 
   return (
-    <div className="admin-page">
-      <div className="card glass-card" style={{ maxWidth: '800px', margin: '40px auto' }}>
-        <h1 style={{ fontSize: '24px', marginBottom: '16px', color: 'var(--deep-navy)' }}>Admin Agence</h1>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-          Interface de gestion de l'agence. Utilisateur connecté :
-        </p>
-        <pre style={{ background: 'var(--bg-light)', padding: '16px', borderRadius: '12px', overflow: 'auto' }}>
-          {JSON.stringify(user, null, 2)}
-        </pre>
+    <div className="ofx-scrollable-page">
+      <div className="ofx-screen-header">
+        <div className="ofx-screen-icon"><Building2 size={28} /></div>
+        <div>
+          <h2 className="ofx-screen-title">Admin Agence</h2>
+          <p className="ofx-screen-desc">Informations et statut de votre agence.</p>
+        </div>
+      </div>
+
+      <div className="ofx-card">
+        <div className="ofx-admin-row"><Mail size={18} /> <span>{user?.email}</span></div>
+        <div className="ofx-admin-row"><Shield size={18} /> <span>Role : <strong>{user?.role || 'user'}</strong></span></div>
+        <div className="ofx-admin-row"><Calendar size={18} /> <span>Agence : <strong>{user?.agencyId}</strong></span></div>
+        <pre className="ofx-code">{JSON.stringify(user, null, 2)}</pre>
       </div>
     </div>
   );

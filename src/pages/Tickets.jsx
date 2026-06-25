@@ -2,35 +2,38 @@ import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { MessageSquare, Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useT } from '../i18n';
+import { ticketApi } from '../services/api';
 
 export default function Tickets() {
-  const { user, setTickets } = useApp();
+  const { user, tickets, setTickets, isUsingMock } = useApp();
   const t = useT();
-  const [list, setList] = useState([]);
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage(null);
     setLoading(true);
     try {
-      const ticket = {
-        id: crypto.randomUUID(),
-        subject,
-        body,
-        status: 'open',
-        priority: 'medium',
-        createdBy: user?.id,
-        createdAt: new Date().toISOString(),
-        replies: []
-      };
-      const updated = [ticket, ...list];
-      setList(updated);
-      if (setTickets) setTickets(updated);
+      let ticket;
+      if (isUsingMock) {
+        ticket = {
+          id: crypto.randomUUID(),
+          subject,
+          body,
+          status: 'open',
+          priority: 'medium',
+          createdBy: user?.id,
+          createdAt: new Date().toISOString(),
+          replies: []
+        };
+      } else {
+        const res = await ticketApi.create({ title: subject, description: body });
+        ticket = { ...res.data, subject: res.data.title, body: res.data.description, replies: [] };
+      }
+      setTickets([ticket, ...tickets]);
       setMessage({ type: 'success', text: t('tickets.created') });
       setSubject('');
       setBody('');
@@ -41,10 +44,20 @@ export default function Tickets() {
     }
   };
 
-  const reply = (id, text) => {
-    const updated = list.map(tk => tk.id === id ? { ...tk, replies: [...(tk.replies || []), { text, at: new Date().toISOString() }] } : tk);
-    setList(updated);
-    if (setTickets) setTickets(updated);
+  const reply = async (id, text) => {
+    try {
+      const ticket = tickets.find(tk => tk.id === id);
+      const replies = [...(ticket.replies || []), { text, at: new Date().toISOString() }];
+      if (!isUsingMock) {
+        await ticketApi.update(id, { description: `${ticket.body || ticket.description}
+
+Reply: ${text}` });
+      }
+      const updated = tickets.map(tk => tk.id === id ? { ...tk, replies } : tk);
+      setTickets(updated);
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message || t('common.error') });
+    }
   };
 
   return (
@@ -73,16 +86,16 @@ export default function Tickets() {
       </form>
 
       <div className="list-container">
-        {list.length === 0 ? (
+        {tickets.length === 0 ? (
           <p className="empty-state">{t('tickets.empty')}</p>
         ) : (
-          list.map(tk => (
+          tickets.map(tk => (
             <div key={tk.id} className="ticket-card">
               <div className="ticket-header">
-                <span className="ticket-subject">{tk.subject}</span>
+                <span className="ticket-subject">{tk.subject || tk.title}</span>
                 <span className={`status-badge ${tk.status}`}>{tk.status}</span>
               </div>
-              <p className="ticket-body">{tk.body}</p>
+              <p className="ticket-body">{tk.body || tk.description}</p>
               {tk.replies?.map((r, i) => <p key={i} className="ticket-reply">→ {r.text}</p>)}
               <ReplyForm onReply={text => reply(tk.id, text)} />
             </div>

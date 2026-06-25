@@ -280,7 +280,15 @@ const translations = {
       status: 'Statut',
       created: 'Créée le',
       active: 'Active',
-      inactive: 'Inactive'
+      inactive: 'Inactive',
+      wallets: 'Caisses',
+      transactions: 'Transactions',
+      customers: 'Clients',
+      agenciesList: 'Liste des agences',
+      email: 'Email',
+      phone: 'Téléphone',
+      slug: 'Identifiant',
+      loadError: 'Erreur de chargement des données.'
     },
     common: {
       yes: 'Oui',
@@ -571,7 +579,15 @@ const translations = {
       status: 'Status',
       created: 'Created',
       active: 'Active',
-      inactive: 'Inactive'
+      inactive: 'Inactive',
+      wallets: 'Wallets',
+      transactions: 'Transactions',
+      customers: 'Customers',
+      agenciesList: 'Agencies list',
+      email: 'Email',
+      phone: 'Phone',
+      slug: 'Slug',
+      loadError: 'Failed to load data.'
     },
     common: { yes: 'Yes', no: 'No', save: 'Save', confirm_delete: 'Delete this draft? This action is irreversible.', error: 'An error occurred.', saving: 'Saving...', sending: 'Sending...' }
   }

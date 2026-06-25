@@ -2,32 +2,44 @@ import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Smartphone, Plus, CheckCircle2, AlertCircle, MessageCircle } from 'lucide-react';
 import { useT } from '../i18n';
+import { remoteOrderApi } from '../services/api';
 
 export default function RemoteOrders() {
-  const { wallets, setRemoteOrders, addTransaction } = useApp();
+  const { wallets, remoteOrders, setRemoteOrders, addTransaction, isUsingMock } = useApp();
   const t = useT();
-  const [list, setList] = useState([]);
   const [form, setForm] = useState({ customerName: '', customerPhone: '', sourceCurrency: '', destCurrency: '', sourceAmount: '', destAmount: '', channel: 'whatsapp', note: '' });
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage(null);
     setLoading(true);
     try {
-      const order = {
-        id: crypto.randomUUID(),
-        ...form,
-        sourceAmount: Number(form.sourceAmount),
-        destAmount: Number(form.destAmount),
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      };
-      const updated = [order, ...list];
-      setList(updated);
-      if (setRemoteOrders) setRemoteOrders(updated);
+      let order;
+      if (isUsingMock) {
+        order = {
+          id: crypto.randomUUID(),
+          ...form,
+          sourceAmount: Number(form.sourceAmount),
+          destAmount: Number(form.destAmount),
+          status: 'pending',
+          createdAt: new Date().toISOString()
+        };
+      } else {
+        const res = await remoteOrderApi.create({
+          customerName: form.customerName,
+          customerPhone: form.customerPhone,
+          sourceCurrencyCode: form.sourceCurrency,
+          destCurrencyCode: form.destCurrency,
+          sourceAmount: Number(form.sourceAmount),
+          destAmount: Number(form.destAmount),
+          source: form.channel,
+          note: form.note
+        });
+        order = { ...res.data, channel: res.data.source, status: res.data.status || 'pending' };
+      }
+      setRemoteOrders([order, ...remoteOrders]);
       setMessage({ type: 'success', text: t('remoteOrders.created') });
       setForm({ customerName: '', customerPhone: '', sourceCurrency: '', destCurrency: '', sourceAmount: '', destAmount: '', channel: 'whatsapp', note: '' });
     } catch (err) {
@@ -38,28 +50,34 @@ export default function RemoteOrders() {
   };
 
   const execute = async (order) => {
-    const source = wallets.find(w => w.currencyCode === order.sourceCurrency);
-    const dest = wallets.find(w => w.currencyCode === order.destCurrency);
+    const source = wallets.find(w => w.currencyCode === (order.sourceCurrency || order.source_currency_code));
+    const dest = wallets.find(w => w.currencyCode === (order.destCurrency || order.dest_currency_code));
     if (!source || !dest) {
       setMessage({ type: 'error', text: t('remoteOrders.noWallet') });
       return;
     }
-    const rate = order.destAmount / order.sourceAmount;
+    const rate = (order.destAmount || order.dest_amount) / (order.sourceAmount || order.source_amount);
     const res = await addTransaction({
       sourceWalletId: source.id,
       destWalletId: dest.id,
-      sourceAmount: order.sourceAmount,
-      destAmount: order.destAmount,
+      sourceAmount: order.sourceAmount || order.source_amount,
+      destAmount: order.destAmount || order.dest_amount,
       exchangeRate: rate,
       fee: 0,
       type: 'exchange',
-      note: `${t('remoteOrders.from')} ${order.channel} — ${order.customerName} — ${order.note || ''}`
+      note: `${t('remoteOrders.from')} ${order.channel || order.source} — ${order.customerName || order.customer_name} — ${order.note || ''}`
     });
     if (res.success) {
-      const updated = list.map(o => o.id === order.id ? { ...o, status: 'executed' } : o);
-      setList(updated);
-      if (setRemoteOrders) setRemoteOrders(updated);
-      setMessage({ type: 'success', text: t('remoteOrders.executed') });
+      try {
+        if (!isUsingMock) {
+          await remoteOrderApi.update(order.id, { status: 'completed' });
+        }
+        const updated = remoteOrders.map(o => o.id === order.id ? { ...o, status: 'completed' } : o);
+        setRemoteOrders(updated);
+        setMessage({ type: 'success', text: t('remoteOrders.executed') });
+      } catch (err) {
+        setMessage({ type: 'error', text: err.message || t('common.error') });
+      }
     }
   };
 
@@ -108,17 +126,17 @@ export default function RemoteOrders() {
       </form>
 
       <div className="list-container">
-        {list.length === 0 ? (
+        {remoteOrders.length === 0 ? (
           <p className="empty-state">{t('remoteOrders.empty')}</p>
         ) : (
-          list.map(o => (
+          remoteOrders.map(o => (
             <div key={o.id} className="order-card">
               <div className="order-header">
-                <span><MessageCircle size={16} /> {o.channel}</span>
+                <span><MessageCircle size={16} /> {o.channel || o.source}</span>
                 <span className={`status-badge ${o.status}`}>{o.status}</span>
               </div>
-              <p>{o.customerName} ({o.customerPhone})</p>
-              <p>{o.sourceAmount} {o.sourceCurrency} → {o.destAmount} {o.destCurrency}</p>
+              <p>{(o.customerName || o.customer_name)} ({o.customerPhone || o.customer_phone})</p>
+              <p>{(o.sourceAmount || o.source_amount)} {(o.sourceCurrency || o.source_currency_code)} → {(o.destAmount || o.dest_amount)} {(o.destCurrency || o.dest_currency_code)}</p>
               {o.status === 'pending' && (
                 <button onClick={() => execute(o)} className="btn btn-primary btn-sm">{t('remoteOrders.execute')}</button>
               )}

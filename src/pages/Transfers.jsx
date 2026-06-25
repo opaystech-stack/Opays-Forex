@@ -2,15 +2,14 @@ import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { ArrowRightLeft, Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useT } from '../i18n';
+import { transferApi } from '../services/api';
 
 export default function Transfers() {
-  const { wallets, setTransfers, addTransaction } = useApp();
+  const { user, wallets, transfers, setTransfers, addTransaction, isUsingMock } = useApp();
   const t = useT();
-  const [list, setList] = useState([]);
   const [form, setForm] = useState({ sourceWalletId: '', destWalletId: '', amount: '', note: '' });
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,23 +22,33 @@ export default function Transfers() {
       if (Number(form.amount) <= 0) throw new Error(t('transfers.amountRequired'));
       if (source.id === dest.id) throw new Error(t('transfers.sameWallet'));
 
-      // Record internal transfer
-      const transfer = {
-        id: crypto.randomUUID(),
-        sourceWalletId: source.id,
-        destWalletId: dest.id,
-        sourceCurrency: source.currencyCode,
-        destCurrency: dest.currencyCode,
-        amount: Number(form.amount),
-        note: form.note,
-        status: 'completed',
-        createdAt: new Date().toISOString()
-      };
-      const updated = [transfer, ...list];
-      setList(updated);
-      if (setTransfers) setTransfers(updated);
+      let transfer;
+      if (isUsingMock) {
+        transfer = {
+          id: crypto.randomUUID(),
+          sourceWalletId: source.id,
+          destWalletId: dest.id,
+          sourceCurrency: source.currencyCode,
+          destCurrency: dest.currencyCode,
+          amount: Number(form.amount),
+          note: form.note,
+          status: 'completed',
+          createdAt: new Date().toISOString()
+        };
+      } else {
+        const res = await transferApi.create({
+          sourceWalletId: source.id,
+          destAgencyId: user?.agencyId,
+          destWalletId: dest.id,
+          amount: Number(form.amount),
+          currencyCode: source.currencyCode,
+          note: form.note
+        });
+        const completed = await transferApi.complete(res.data.id);
+        transfer = completed.data;
+      }
 
-      // Mirror as a transaction for accounting
+      setTransfers([transfer, ...transfers]);
       await addTransaction({
         sourceWalletId: source.id,
         destWalletId: dest.id,
@@ -94,7 +103,7 @@ export default function Transfers() {
       </form>
 
       <div className="table-container">
-        {list.length === 0 ? (
+        {transfers.length === 0 ? (
           <p className="empty-state">{t('transfers.empty')}</p>
         ) : (
           <table className="data-table">
@@ -102,13 +111,13 @@ export default function Transfers() {
               <tr><th>{t('transfers.date')}</th><th>{t('transfers.from')}</th><th>{t('transfers.to')}</th><th>{t('transfers.amount')}</th><th>{t('transfers.status')}</th></tr>
             </thead>
             <tbody>
-              {list.map(tx => (
+              {transfers.map(tx => (
                 <tr key={tx.id}>
-                  <td>{new Date(tx.createdAt).toLocaleDateString()}</td>
-                  <td>{tx.sourceCurrency}</td>
-                  <td>{tx.destCurrency}</td>
-                  <td>{tx.amount.toLocaleString()}</td>
-                  <td><span className="status-badge completed">{tx.status}</span></td>
+                  <td>{new Date(tx.createdAt || tx.created_at).toLocaleDateString()}</td>
+                  <td>{tx.sourceCurrency || tx.source_currency_code || tx.sourceWalletId}</td>
+                  <td>{tx.destCurrency || tx.dest_currency_code || tx.destWalletId}</td>
+                  <td>{Number(tx.amount).toLocaleString()}</td>
+                  <td><span className={`status-badge ${tx.status}`}>{tx.status}</span></td>
                 </tr>
               ))}
             </tbody>

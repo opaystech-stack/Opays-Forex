@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authApi, walletApi, transactionApi, customerApi, loanApi, expenseApi } from '../services/api';
+import { authApi, walletApi, transactionApi, customerApi, loanApi, expenseApi, employeeApi, transferApi, subscriptionApi, ticketApi, remoteOrderApi } from '../services/api';
 import { calculateLoanRepaymentUSD, convertToUSD } from '../utils/finance';
 
 const AppContext = createContext();
@@ -137,12 +137,17 @@ export const AppProvider = ({ children }) => {
     }
 
     try {
-      const [wRes, tRes, eRes, cRes, lRes] = await Promise.all([
+      const [wRes, tRes, eRes, cRes, lRes, empRes, trRes, subRes, tkRes, roRes] = await Promise.all([
         walletApi.list(),
         transactionApi.list({ limit: 200 }),
         expenseApi.list(),
         customerApi.list(),
         loanApi.list(),
+        employeeApi.list(),
+        transferApi.list(),
+        subscriptionApi.list(),
+        ticketApi.list(),
+        remoteOrderApi.list(),
       ]);
 
       setWallets((wRes.data || []).map(w => ({ ...w, currency: w.currencyCode, balance: parseFloat(w.balance) })));
@@ -150,6 +155,11 @@ export const AppProvider = ({ children }) => {
       setExpenses((eRes.data || []).map(e => ({ ...e, wallet_id: e.walletId, is_business: e.isBusiness })));
       setCustomers(cRes.data || []);
       setLoans((lRes.data || []).map(l => ({ ...l, customer_id: l.customerId, wallet_id: l.walletId, currency: l.currencyCode, interest_rate: l.interestRate, contract_image_url: l.contractImageUrl })));
+      setEmployees(empRes.data || []);
+      setTransfers(trRes.data || []);
+      setSubscriptions(subRes.data || []);
+      setTickets(tkRes.data || []);
+      setRemoteOrders(roRes.data || []);
       setIsUsingMock(false);
     } catch (error) {
       console.error('Error fetching API data, falling back to local mock data:', error);
@@ -159,6 +169,11 @@ export const AppProvider = ({ children }) => {
       setExpenses(getLocalMock('forex_expenses', MOCK_EXPENSES));
       setCustomers(getLocalMock('forex_customers', MOCK_CUSTOMERS));
       setLoans(getLocalMock('forex_loans', MOCK_LOANS));
+      setEmployees(getLocalMock('forex_employees', []));
+      setTransfers(getLocalMock('forex_transfers', []));
+      setSubscriptions(getLocalMock('forex_subscriptions', []));
+      setTickets(getLocalMock('forex_tickets', []));
+      setRemoteOrders(getLocalMock('forex_remote_orders', []));
     } finally {
       setLoading(false);
     }

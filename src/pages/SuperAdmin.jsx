@@ -1,29 +1,50 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Shield, Users, Building2, Activity, DollarSign, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Shield, Users, Building2, Activity, DollarSign } from 'lucide-react';
 import { useT } from '../i18n';
+import { agencyApi } from '../services/api';
 
 export default function SuperAdmin() {
-  const { user, agencies } = useApp();
+  const { user, wallets, transactions, customers } = useApp();
   const t = useT();
-  const [agenciesList] = useState(agencies || []);
+  const [agencies, setAgencies] = useState([]);
+  const [message, setMessage] = useState(null);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const agenciesRes = await agencyApi.list();
+        setAgencies(agenciesRes.data || []);
+      } catch (err) {
+        setMessage({ type: 'error', text: err.message || t('superAdmin.loadError') });
+      }
+    }
+    if (user?.role === 'superadmin') {
+      const id = setTimeout(() => load(), 0);
+      return () => clearTimeout(id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   if (user?.role !== 'superadmin') {
     return (
-      <div className="page-card" style={{ textAlign: 'center', padding: '48px' }}>
-        <Shield size={48} style={{ marginBottom: '16px', color: 'var(--error)' }} />
-        <h2 className="page-title">{t('superAdmin.accessDenied')}</h2>
-        <p className="page-subtitle">{t('superAdmin.accessDeniedDesc')}</p>
+      <div className="page-card">
+        <div className="page-header">
+          <Shield className="page-icon" size={28} />
+          <div>
+            <h2 className="page-title">{t('superAdmin.title')}</h2>
+            <p className="page-subtitle">{t('superAdmin.subtitle')}</p>
+          </div>
+        </div>
+        <div className="alert alert-error">{t('superAdmin.accessDenied')}</div>
+        <p className="empty-state">{t('superAdmin.accessDeniedDesc')}</p>
       </div>
     );
   }
 
-  const stats = [
-    { label: t('superAdmin.totalAgencies'), value: agenciesList.length, icon: Building2, trend: 'neutral' },
-    { label: t('superAdmin.totalUsers'), value: agenciesList.reduce((a, b) => a + (b.userCount || 0), 0), icon: Users, trend: 'up' },
-    { label: t('superAdmin.totalRevenue'), value: '$12,450', icon: DollarSign, trend: 'up' },
-    { label: t('superAdmin.activeToday'), value: '89%', icon: Activity, trend: 'up' }
-  ];
+  const totalWallets = wallets.length;
+  const totalTransactions = transactions.length;
+  const totalCustomers = customers.length;
 
   return (
     <div className="page-card">
@@ -35,44 +56,58 @@ export default function SuperAdmin() {
         </div>
       </div>
 
+      {message && <div className={`alert alert-${message.type}`}>{message.text}</div>}
+
       <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div key={stat.label} className="stat-card" style={{ padding: '16px', borderRadius: '12px', background: 'var(--surface)', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{stat.label}</span>
-                <Icon size={18} style={{ color: 'var(--primary-blue)' }} />
-              </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>{stat.value}</div>
-              {stat.trend === 'up' && <ArrowUpRight size={14} style={{ color: 'var(--success)' }} />}
-              {stat.trend === 'down' && <ArrowDownRight size={14} style={{ color: 'var(--error)' }} />}
-            </div>
-          );
-        })}
+        <div className="stat-card">
+          <Building2 size={24} />
+          <div className="stat-value">{agencies.length}</div>
+          <div className="stat-label">{t('superAdmin.agencies')}</div>
+        </div>
+        <div className="stat-card">
+          <DollarSign size={24} />
+          <div className="stat-value">{totalWallets}</div>
+          <div className="stat-label">{t('superAdmin.wallets')}</div>
+        </div>
+        <div className="stat-card">
+          <Activity size={24} />
+          <div className="stat-value">{totalTransactions}</div>
+          <div className="stat-label">{t('superAdmin.transactions')}</div>
+        </div>
+        <div className="stat-card">
+          <Users size={24} />
+          <div className="stat-value">{totalCustomers}</div>
+          <div className="stat-label">{t('superAdmin.customers')}</div>
+        </div>
       </div>
 
+      <h3 className="section-title">{t('superAdmin.agenciesList')}</h3>
       <div className="table-container">
-        <h3 style={{ marginBottom: '12px' }}>{t('superAdmin.agencies')}</h3>
-        {agenciesList.length === 0 ? (
+        {agencies.length === 0 ? (
           <p className="empty-state">{t('superAdmin.noAgencies')}</p>
         ) : (
           <table className="data-table">
             <thead>
               <tr>
                 <th>{t('superAdmin.name')}</th>
-                <th>{t('superAdmin.owner')}</th>
+                <th>{t('superAdmin.slug')}</th>
+                <th>{t('superAdmin.email')}</th>
+                <th>{t('superAdmin.phone')}</th>
                 <th>{t('superAdmin.status')}</th>
-                <th>{t('superAdmin.created')}</th>
               </tr>
             </thead>
             <tbody>
-              {agenciesList.map((a) => (
+              {agencies.map(a => (
                 <tr key={a.id}>
                   <td>{a.name}</td>
-                  <td>{a.ownerEmail || '-'}</td>
-                  <td><span className={`status-badge ${a.isActive ? 'active' : 'inactive'}`}>{a.isActive ? t('superAdmin.active') : t('superAdmin.inactive')}</span></td>
-                  <td>{new Date(a.createdAt).toLocaleDateString()}</td>
+                  <td>{a.slug}</td>
+                  <td>{a.email || '-'}</td>
+                  <td>{a.phone || '-'}</td>
+                  <td>
+                    <span className={`status-badge ${a.isActive ? 'active' : 'inactive'}`}>
+                      {a.isActive ? t('superAdmin.active') : t('superAdmin.inactive')}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>

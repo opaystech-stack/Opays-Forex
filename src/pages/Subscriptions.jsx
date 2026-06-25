@@ -2,34 +2,45 @@ import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { CalendarCheck, Plus, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import { useT } from '../i18n';
+import { subscriptionApi } from '../services/api';
 
 export default function Subscriptions() {
-  const { customers, setSubscriptions } = useApp();
+  const { customers, subscriptions, setSubscriptions, isUsingMock } = useApp();
   const t = useT();
-  const [list, setList] = useState([]);
   const [form, setForm] = useState({ customerId: '', serviceName: '', amount: '', frequency: 'monthly', nextDate: '' });
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage(null);
     setLoading(true);
     try {
-      const sub = {
-        id: crypto.randomUUID(),
-        customerId: form.customerId,
-        serviceName: form.serviceName,
+      let sub;
+      const payload = {
+        customerId: form.customerId || null,
+        planName: form.serviceName,
         amount: Number(form.amount),
+        currencyCode: 'USD',
         frequency: form.frequency,
-        nextDate: form.nextDate,
-        status: 'active',
-        createdAt: new Date().toISOString()
+        nextBillingDate: form.nextDate
       };
-      const updated = [sub, ...list];
-      setList(updated);
-      if (setSubscriptions) setSubscriptions(updated);
+      if (isUsingMock) {
+        sub = {
+          id: crypto.randomUUID(),
+          customerId: form.customerId,
+          serviceName: form.serviceName,
+          amount: Number(form.amount),
+          frequency: form.frequency,
+          nextDate: form.nextDate,
+          status: 'active',
+          createdAt: new Date().toISOString()
+        };
+      } else {
+        const res = await subscriptionApi.create(payload);
+        sub = { ...res.data, serviceName: res.data.planName, nextDate: res.data.nextBillingDate };
+      }
+      setSubscriptions([sub, ...subscriptions]);
       setMessage({ type: 'success', text: t('subscriptions.created') });
       setForm({ customerId: '', serviceName: '', amount: '', frequency: 'monthly', nextDate: '' });
     } catch (err) {
@@ -39,11 +50,20 @@ export default function Subscriptions() {
     }
   };
 
-  const renew = (id) => {
-    const updated = list.map(s => s.id === id ? { ...s, nextDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0] } : s);
-    setList(updated);
-    if (setSubscriptions) setSubscriptions(updated);
-    setMessage({ type: 'success', text: t('subscriptions.renewed') });
+  const renew = async (id) => {
+    try {
+      const next = new Date();
+      next.setDate(next.getDate() + 30);
+      const nextStr = next.toISOString().split('T')[0];
+      if (!isUsingMock) {
+        await subscriptionApi.update(id, { nextBillingDate: nextStr });
+      }
+      const updated = subscriptions.map(s => s.id === id ? { ...s, nextDate: nextStr, nextBillingDate: nextStr } : s);
+      setSubscriptions(updated);
+      setMessage({ type: 'success', text: t('subscriptions.renewed') });
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message || t('common.error') });
+    }
   };
 
   return (
@@ -64,7 +84,7 @@ export default function Subscriptions() {
       )}
 
       <form onSubmit={handleSubmit} className="form-grid" style={{ marginBottom: '24px' }}>
-        <select value={form.customerId} onChange={e => setForm({ ...form, customerId: e.target.value })} required className="form-input">
+        <select value={form.customerId} onChange={e => setForm({ ...form, customerId: e.target.value })} className="form-input">
           <option value="">{t('subscriptions.customer')}</option>
           {(customers || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
@@ -82,7 +102,7 @@ export default function Subscriptions() {
       </form>
 
       <div className="table-container">
-        {list.length === 0 ? (
+        {subscriptions.length === 0 ? (
           <p className="empty-state">{t('subscriptions.empty')}</p>
         ) : (
           <table className="data-table">
@@ -90,15 +110,15 @@ export default function Subscriptions() {
               <tr><th>{t('subscriptions.service')}</th><th>{t('subscriptions.customer')}</th><th>{t('subscriptions.amount')}</th><th>{t('subscriptions.frequencyLabel')}</th><th>{t('subscriptions.nextDate')}</th><th></th></tr>
             </thead>
             <tbody>
-              {list.map(s => {
-                const customer = (customers || []).find(c => c.id === s.customerId);
+              {subscriptions.map(s => {
+                const customer = (customers || []).find(c => c.id === (s.customerId || s.customer_id));
                 return (
                   <tr key={s.id}>
-                    <td>{s.serviceName}</td>
+                    <td>{s.serviceName || s.plan_name}</td>
                     <td>{customer?.name || '-'}</td>
-                    <td>{s.amount.toLocaleString()} USD</td>
+                    <td>{Number(s.amount).toLocaleString()} USD</td>
                     <td>{s.frequency}</td>
-                    <td>{s.nextDate}</td>
+                    <td>{s.nextDate || s.next_billing_date}</td>
                     <td>
                       <button onClick={() => renew(s.id)} className="btn btn-icon btn-secondary"><RefreshCw size={16} /></button>
                     </td>

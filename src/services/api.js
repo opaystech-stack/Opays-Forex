@@ -114,6 +114,7 @@ export const loanApi = {
 };
 
 export const agencyApi = {
+  list: () => apiClient.get('/agencies'),
   mine: () => apiClient.get('/agencies/mine'),
   updateMine: (body) => apiClient.put('/agencies/mine', body),
 };

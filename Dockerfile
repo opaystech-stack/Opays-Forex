@@ -33,9 +33,9 @@ COPY --from=backend-builder /app/api /app/api
 RUN mkdir -p /etc/supervisor.d
 COPY supervisord.conf /etc/supervisor.d/supervisord.conf
 
-# Healthcheck on main Nginx port (API health proxied through /api/health)
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:80/api/health || exit 1
+# Healthcheck on Nginx root (API may take longer to start; separate API monitoring via /api/health once warm)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=5 \
+  CMD wget -qO- http://127.0.0.1:80/ || exit 1
 
 EXPOSE 80
 

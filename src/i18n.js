@@ -4,6 +4,7 @@ const translations = {
   fr: {
     app: { subtitle: 'Gestion Forex', title: 'OpaysFox', demo: 'Démo' },
     nav: { dashboard: 'Dashboard', transactions: 'Transactions', wallets: 'Portefeuilles', expenses: 'Dépenses', loans: 'Prêts', settings: 'Paramètres', employees: 'Employés', transfers: 'Transferts', subscriptions: 'Abonnements', tickets: 'Tickets', remoteOrders: 'Commandes' },
+    ui: { searchPlaceholder: 'Rechercher caisses, transactions...', voice: 'Dictée vocale', profile: 'Profil', quickActions: 'Actions rapides', tabTreasury: 'Trésorerie', tabLedger: 'Dettes & Créances', tabAdd: 'Ajouter', tapNode: 'Tapez un nœud pour filtrer', ledgerTitle: 'Dettes & Créances', addTitle: 'Nouvelle opération', filterAll: 'Toutes les caisses', filterReceivables: 'Créances', filterDebts: 'Dettes', whatsapp: 'WhatsApp', back: 'Retour', initials: 'OP' },
     loading: { data: 'Chargement des données...', init_title: 'Initialisation...', session_check: 'Vérification de la session en cours', skeleton: 'Chargement…', page: 'Chargement de la page…' },
     dashboard: {
       patrimoine: 'Patrimoine Global',
@@ -303,6 +304,7 @@ const translations = {
   en: {
     app: { subtitle: 'Forex Management', title: 'OpaysFox', demo: 'Demo' },
     nav: { dashboard: 'Dashboard', transactions: 'Transactions', wallets: 'Wallets', expenses: 'Expenses', loans: 'Loans', settings: 'Settings', employees: 'Employees', transfers: 'Transfers', subscriptions: 'Subscriptions', tickets: 'Tickets', remoteOrders: 'Orders' },
+    ui: { searchPlaceholder: 'Search wallets, transactions...', voice: 'Voice dictation', profile: 'Profile', quickActions: 'Quick actions', tabTreasury: 'Treasury', tabLedger: 'Debts & Receivables', tabAdd: 'Add', tapNode: 'Tap a node to filter', ledgerTitle: 'Debts & Receivables', addTitle: 'New operation', filterAll: 'All wallets', filterReceivables: 'Receivables', filterDebts: 'Debts', whatsapp: 'WhatsApp', back: 'Back', initials: 'OP' },
     loading: { data: 'Loading data...', init_title: 'Initializing...', session_check: 'Checking session', skeleton: 'Loading…', page: 'Loading page…' },
     dashboard: {
       patrimoine: 'Net Worth',

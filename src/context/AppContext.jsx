@@ -563,6 +563,23 @@ export const AppProvider = ({ children }) => {
   const getDrafts = () => transactions.filter(t => t.status === 'draft');
   const getCompletedTransactions = () => transactions.filter(t => t.status === 'completed');
 
+  const getTodayStats = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const completedTxns = getCompletedTransactions();
+    const todayTxns = completedTxns.filter(t => t.timestamp && t.timestamp.startsWith(today));
+    const volumeUSD = todayTxns.reduce((acc, t) => acc + convertToUSDValue(parseFloat(t.source_amount) || 0, wallets.find(w => w.id === t.source_wallet_id)?.currency || 'USD'), 0);
+    const profitUSD = todayTxns.reduce((acc, t) => acc + (parseFloat(t.profit_usd) || 0), 0);
+    const todayExp = expenses.filter(e => e.timestamp && e.timestamp.startsWith(today));
+    const bizExpenseUSD = todayExp.filter(e => e.is_business).reduce((acc, e) => acc + convertToUSDValue(parseFloat(e.amount) || 0, wallets.find(w => w.id === e.wallet_id)?.currency || 'USD'), 0);
+    const persExpenseUSD = todayExp.filter(e => !e.is_business).reduce((acc, e) => acc + convertToUSDValue(parseFloat(e.amount) || 0, wallets.find(w => w.id === e.wallet_id)?.currency || 'USD'), 0);
+    return {
+      volumeUSD,
+      profitUSD,
+      bizExpenseUSD,
+      persExpenseUSD,
+      netProfitUSD: profitUSD - bizExpenseUSD
+    };
+  };
   return (
     <AppContext.Provider value={{
       wallets, rates, transactions, expenses, customers, loans,
@@ -578,7 +595,7 @@ export const AppProvider = ({ children }) => {
       createWallet, updateWallet, deleteWallet, adjustWalletBalance,
       createCustomer, updateCustomer, findOrCreateCustomer,
       createLoan, updateLoanStatus,
-      refreshData: fetchData, resetMockData,
+      refreshData: fetchData, resetMockData, getTodayStats,
       language, setLanguage
     }}>
       {children}

@@ -1,0 +1,123 @@
+import { useState, useMemo } from 'react';
+import { Landmark, Wallet, Smartphone } from 'lucide-react';
+import { useApp } from '../context/AppContext';
+
+function getIcon(type) {
+  if (type === 'cash') return <Landmark size={24} />;
+  if (type === 'mobile_money') return <Smartphone size={22} />;
+  return <Wallet size={22} />;
+}
+
+export default function TreasuryCanvas({ onSelectWallet, selectedWalletId, searchQuery }) {
+  const { wallets, transactions, getNetWorthUSD } = useApp();
+  const [hoveredNode, setHoveredNode] = useState(null);
+
+  const filteredWallets = useMemo(() => {
+    if (!searchQuery) return wallets;
+    const q = searchQuery.toLowerCase();
+    return wallets.filter(w =>
+      w.name.toLowerCase().includes(q) ||
+      w.currency.toLowerCase().includes(q)
+    );
+  }, [wallets, searchQuery]);
+
+  const formatValue = (value, currency) => {
+    if (currency === 'USD') return `$${Number(value).toLocaleString('fr-FR', { maximumFractionDigits: 0 })}`;
+    return `${Number(value).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} ${currency}`;
+  };
+
+  const [now] = useState(() => Date.now());
+
+  const profitPoints = useMemo(() => {
+    const days = 7;
+    const points = [];
+    for (let i = 0; i <= days; i++) {
+      const d = new Date(now - (days - i) * 86400000).toISOString().split('T')[0];
+      const dayProfit = transactions
+        .filter(t => t.status === 'completed' && t.timestamp && t.timestamp.startsWith(d))
+        .reduce((acc, t) => acc + (parseFloat(t.profit_usd) || 0), 0);
+      points.push({ day: d.slice(5), value: Math.max(0, dayProfit) });
+    }
+    return points;
+  }, [transactions, now]);
+
+  const positions = useMemo(() => {
+    const count = filteredWallets.length;
+    if (count === 0) return [];
+    const cols = Math.min(3, Math.ceil(Math.sqrt(count)));
+    const cellW = 100 / cols;
+    const cellH = 100 / Math.ceil(count / cols);
+    return filteredWallets.map((w, i) => ({
+      left: `${(i % cols) * cellW + cellW / 2}%`,
+      top: `${Math.floor(i / cols) * cellH + cellH / 2}%`,
+      wallet: w
+    }));
+  }, [filteredWallets]);
+
+  const maxProfit = Math.max(...profitPoints.map(p => p.value), 1);
+  const pathD = profitPoints
+    .map((p, i) => {
+      const x = (i / (profitPoints.length - 1)) * 100;
+      const y = 100 - (p.value / maxProfit) * 80;
+      return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+    })
+    .join(' ');
+
+  return (
+    <div className="ofx-canvas">
+      <div className="ofx-canvas-grid" />
+
+      <div className="ofx-profit-curve">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--opays-blue-light)" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="var(--opays-blue)" stopOpacity="0.05" />
+            </linearGradient>
+          </defs>
+          <path d={`${pathD} L 100 100 L 0 100 Z`} fill="url(#profitGradient)" />
+          <path d={pathD} fill="none" stroke="var(--opays-blue-light)" strokeWidth="0.6" />
+        </svg>
+      </div>
+
+      <div className="ofx-wallet-nodes">
+        {positions.map(({ left, top, wallet }) => (
+          <div
+            key={wallet.id}
+            className="ofx-node"
+            style={{ left, top, transform: 'translate(-50%, -50%)' }}
+            onMouseEnter={() => setHoveredNode(wallet.id)}
+            onMouseLeave={() => setHoveredNode(null)}
+            onClick={() => onSelectWallet(wallet.id === selectedWalletId ? null : wallet.id)}
+          >
+            <div className={`ofx-node-bubble ${selectedWalletId === wallet.id ? 'active' : ''}`}>
+              {getIcon(wallet.type)}
+            </div>
+            <div className="ofx-node-label">{wallet.name}</div>
+            <div className="ofx-node-balance">
+              {hoveredNode === wallet.id || selectedWalletId === wallet.id
+                ? formatValue(wallet.balance, wallet.currency)
+                : wallet.currency}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        textAlign: 'center',
+        zIndex: 3,
+        pointerEvents: 'none'
+      }}>
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Patrimoine total</div>
+        <div style={{ fontSize: 'clamp(28px, 5vw, 48px)', fontWeight: 700, color: 'white', fontFamily: 'var(--font-body)' }}>
+          ${getNetWorthUSD().toLocaleString('fr-FR', { maximumFractionDigits: 0 })}
+        </div>
+        <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>USD équivalent</div>
+      </div>
+    </div>
+  );
+}

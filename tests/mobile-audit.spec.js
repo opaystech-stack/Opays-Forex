@@ -10,15 +10,10 @@ async function login(page) {
   await page.waitForURL(`${BASE}/app`, { timeout: 10000 });
 }
 
-function isScrollable(el) {
-  const style = window.getComputedStyle(el);
-  return style.overflowY === 'auto' || style.overflowY === 'scroll' || el.scrollHeight > el.clientHeight;
-}
-
 test.describe('Audit mobile OpaysFox', () => {
   test.use({ viewport: { width: 390, height: 844 }, userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15' });
 
-  test('Landing page s\u0027affiche correctement', async ({ page }) => {
+  test('Landing page s\\u0027affiche correctement', async ({ page }) => {
     await page.goto(BASE);
     await expect(page.locator('text=Gerez Votre Forex et Mobile Money')).toBeVisible();
     await expect(page.locator('text=Lancement Officiel')).toBeVisible();

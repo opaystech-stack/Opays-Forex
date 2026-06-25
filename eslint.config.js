@@ -28,4 +28,10 @@ export default defineConfig([
       globals: globals.node,
     },
   },
+  {
+    files: ['playwright.config.js', 'tests/**/*.js'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser },
+    },
+  },
 ])

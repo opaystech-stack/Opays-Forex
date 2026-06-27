@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "OpaysFox — Assistant Vocal IA (Preview)",
+  "entry": "voice-agent-preview-2.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "primary": true,
+  "createdAt": "2026-06-26T23:05:22.778Z",
+  "updatedAt": "2026-06-26T23:05:22.923Z",
+  "sourceSkillId": "agent-browser",
+  "designSystemId": "apple",
+  "metadata": {
+    "identifier": "voice-agent-preview",
+    "artifactType": "text/html",
+    "inferred": false
+  }
+}

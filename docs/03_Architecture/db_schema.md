@@ -47,8 +47,11 @@ Enregistre les opérations d'échange de devises et les transferts de fonds.
 ```sql
 CREATE TABLE transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    source_wallet_id UUID NOT NULL REFERENCES wallets(id) ON DELETE RESTRICT,
-    dest_wallet_id UUID NOT NULL REFERENCES wallets(id) ON DELETE RESTRICT,
+    -- Le type peut être 'exchange' (transfert standard), 'deposit' (renforcement), ou 'withdrawal' (prélèvement)
+    type VARCHAR(20) DEFAULT 'exchange' NOT NULL CHECK (type IN ('exchange', 'deposit', 'withdrawal')),
+    source_wallet_id UUID REFERENCES wallets(id) ON DELETE RESTRICT, -- Optionnel pour les dépôts (reinforcement)
+    dest_wallet_id UUID REFERENCES wallets(id) ON DELETE RESTRICT,   -- Optionnel pour les retraits (withdrawal)
+    customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,     -- Client associé (optionnel)
     source_amount DECIMAL(18, 4) NOT NULL CHECK (source_amount > 0),
     dest_amount DECIMAL(18, 4) NOT NULL CHECK (dest_amount > 0),
     exchange_rate DECIMAL(18, 8) NOT NULL, -- dest_amount / source_amount

@@ -1,35 +1,44 @@
 {
   "name": "opaysfox",
   "private": true,
-  "version": "2.7.0",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "node scripts/update-version.js && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run src/"
+    "test": "vitest run",
+    "audit": "node scripts/audit/runAudit.js",
+    "audit:security": "node -e \"import('./scripts/audit/agentshieldAudit.js').then(m => m.auditAgentShield().then(r => console.log(JSON.stringify(r, null, 2))))\""
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.0",
-    "framer-motion": "^12.42.0",
-    "lucide-react": "^1.17.0",
+    "framer-motion": "^12.40.0",
+    "lucide-react": "^0.562.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "react-router-dom": "^6.30.4"
+    "react-router-dom": "^7.17.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "^1.60.0",
+    "@tailwindcss/postcss": "^4.3.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "autoprefixer": "^10.5.0",
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
-    "globals": "^17.7.0",
+    "fast-check": "^3.23.1",
+    "globals": "^17.6.0",
     "jsdom": "^26.1.0",
-    "playwright": "^1.61.1",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3",
     "vite": "^8.0.12",
     "vitest": "^3.2.1"
   }

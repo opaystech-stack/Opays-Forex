@@ -1,0 +1,36 @@
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - img "Opays Forex" [ref=e7]
+    - generic [ref=e8]: FOREX
+  - heading "Se Connecter" [level=1] [ref=e9]
+  - paragraph [ref=e10]: Entrez vos identifiants pour continuer.
+  - generic [ref=e45]:
+    - img [ref=e46]
+    - generic [ref=e48]: Invalid login credentials
+  - generic [ref=e11]:
+    - generic [ref=e12]:
+      - generic [ref=e13]: Email
+      - generic [ref=e14]:
+        - img [ref=e15]
+        - textbox "votre@email.com" [ref=e18]: faux@test.com
+    - generic [ref=e19]:
+      - generic [ref=e20]: Mot de passe
+      - generic [ref=e21]:
+        - img [ref=e22]
+        - textbox "••••••••" [ref=e25]: mauvaismdp123
+        - button "Masquer" [active] [ref=e49]
+    - generic [ref=e27]:
+      - generic [ref=e28] [cursor=pointer]:
+        - checkbox "Se souvenir de moi" [ref=e29]
+        - generic [ref=e30]: Se souvenir de moi
+      - button "Mot de passe oublié ?" [ref=e31]
+    - button "Se Connecter" [ref=e32]
+  - generic [ref=e35]: OU
+  - button "Continuer avec Google" [ref=e36]:
+    - img [ref=e37]
+    - text: Continuer avec Google
+  - button "Accès Démo (sans compte)" [ref=e42]
+  - paragraph [ref=e43]:
+    - text: Pas encore de compte ?
+    - link "Créer un compte" [ref=e44] [cursor=pointer]:
+      - /url: /register

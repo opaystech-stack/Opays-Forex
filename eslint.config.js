@@ -34,4 +34,19 @@ export default defineConfig([
       globals: { ...globals.node, ...globals.browser },
     },
   },
+  // Scripts Node (build, audit, outils) : exécutés sous Node, pas dans le navigateur.
+  {
+    files: ['scripts/**/*.js', '*.config.js'],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+  },
+  // Fichiers de test : environnement Node (accès à `global`, `process`) en plus
+  // du navigateur (jsdom). Vitest expose les globals (`describe`, `it`, ...).
+  {
+    files: ['**/*.{test,spec}.{js,jsx}'],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+  },
 ])

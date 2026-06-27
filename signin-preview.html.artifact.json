@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "signin-preview.html",
+  "entry": "signin-preview.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-06-26T21:54:48.628Z",
+  "updatedAt": "2026-06-26T21:54:48.628Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "customer-card-preview.html",
+  "entry": "customer-card-preview.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-06-27T00:05:59.200Z",
+  "updatedAt": "2026-06-27T00:05:59.200Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

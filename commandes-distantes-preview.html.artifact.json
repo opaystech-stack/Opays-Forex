@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "commandes-distantes-preview.html",
+  "entry": "commandes-distantes-preview.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-06-26T23:40:18.687Z",
+  "updatedAt": "2026-06-26T23:40:18.687Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

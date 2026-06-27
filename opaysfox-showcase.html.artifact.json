@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "OpaysFox — Gestion Forex Premium",
+  "entry": "opaysfox-showcase.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "primary": true,
+  "createdAt": "2026-06-26T20:26:48.220Z",
+  "updatedAt": "2026-06-26T20:26:48.234Z",
+  "sourceSkillId": "agent-browser",
+  "designSystemId": "apple",
+  "metadata": {
+    "identifier": "opaysfox-showcase",
+    "artifactType": "text/html",
+    "inferred": false
+  }
+}

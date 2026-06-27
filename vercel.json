@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "rewrites": [
+    { "source": "/((?!api|_next|assets|public|sw\\.js|manifest\\.json|version\\.json|favicon\\.svg|logo.*|hero.*|icons.*).*)", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/index.html",

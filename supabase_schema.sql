@@ -254,3 +254,88 @@ CREATE POLICY "Allow full access on loans" ON loans FOR ALL TO anon USING (true)
 
 DROP POLICY IF EXISTS "Allow full access on expenses" ON expenses;
 CREATE POLICY "Allow full access on expenses" ON expenses FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- ==========================================
+-- 7. Table des Dettes & Créances (Registre des dettes)
+-- Grand livre déclaratif distinct des prêts (loans) : aucun trigger de solde.
+--   type = 'receivable'  -> Ce qu'on te doit (créance)
+--   type = 'payable'     -> Ce que tu dois (dette)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS debts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    type VARCHAR(20) NOT NULL CHECK (type IN ('receivable', 'payable')),
+    counterparty_name VARCHAR(120),
+    amount DECIMAL(18, 4) NOT NULL CHECK (amount > 0),
+    currency VARCHAR(5) NOT NULL,
+    note TEXT,
+    status VARCHAR(20) DEFAULT 'pending' NOT NULL CHECK (status IN ('pending', 'settled')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    settled_at TIMESTAMP WITH TIME ZONE
+);
+
+ALTER TABLE debts ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow full access on debts" ON debts;
+CREATE POLICY "Allow full access on debts" ON debts FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- ==========================================
+-- 8. Relances clients WhatsApp (Modeles de message & Historique des relances)
+-- Modele_Message : gabarits reutilisables avec marqueurs {{variable}}
+-- Historique_Relance : journal des relances sortantes rattachees au client
+-- ==========================================
+
+-- A. Modeles de message reutilisables (Modele_Message)
+CREATE TABLE IF NOT EXISTS message_templates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(120) NOT NULL,
+    lang VARCHAR(2) NOT NULL DEFAULT 'fr' CHECK (lang IN ('fr', 'en')),
+    scenario VARCHAR(20) NOT NULL DEFAULT 'personalized'
+        CHECK (scenario IN ('recovery', 'announcement', 'personalized', 'custom')),
+    body TEXT NOT NULL,                       -- contient des marqueurs {{variable}}
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- B. Historique des relances par client (Historique_Relance)
+CREATE TABLE IF NOT EXISTS reminder_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+    loan_id UUID REFERENCES loans(id) ON DELETE SET NULL,           -- rattachement recouvrement
+    template_id UUID REFERENCES message_templates(id) ON DELETE SET NULL,
+    scenario VARCHAR(20) NOT NULL
+        CHECK (scenario IN ('recovery', 'announcement', 'personalized', 'custom')),
+    content TEXT NOT NULL,                    -- message effectivement envoye
+    trigger_source VARCHAR(10) NOT NULL DEFAULT 'manual'
+        CHECK (trigger_source IN ('manual', 'voice')),
+    status VARCHAR(10) NOT NULL DEFAULT 'sent'
+        CHECK (status IN ('sent', 'failed', 'queued')),
+    provider_message_id VARCHAR(120),         -- identifiant OpenWA si succes
+    error_reason TEXT,                         -- cause si echec
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_reminder_history_customer ON reminder_history(customer_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_message_templates_lang ON message_templates(lang, scenario);
+-- ------------------------------------------
+-- RLS : politiques coherentes avec les tables existantes (customers/loans/debts)
+-- Pour la V1 privee (mono-operateur), on autorise l'acces complet via la cle anon,
+-- a l'identique des autres tables de l'application.
+-- ------------------------------------------
+
+ALTER TABLE message_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reminder_history  ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "templates_all_anon" ON message_templates;
+CREATE POLICY "templates_all_anon" ON message_templates FOR ALL TO anon USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "reminders_all_anon" ON reminder_history;
+CREATE POLICY "reminders_all_anon" ON reminder_history FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- Note de securite (chemin d'evolution multi-utilisateurs) :
+-- Ces politiques reproduisent le modele V1 mono-operateur (acces complet via la cle anon).
+-- Si une isolation multi-utilisateurs devient necessaire, ajouter une colonne
+-- owner_id UUID sur message_templates et reminder_history (ainsi que sur les tables
+-- existantes), puis remplacer ces politiques par des regles d'isolation
+-- du type : USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id).
+-- Cette evolution doit etre appliquee globalement et de maniere coherente sur
+-- l'ensemble des tables de l'application.

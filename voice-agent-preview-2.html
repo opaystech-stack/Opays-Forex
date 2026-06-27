@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>OpaysFox — Assistant Vocal IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --accent: #4F46E5;
+  --accent-glow: rgba(79,70,229,0.35);
+  --cyan: #06b6d4;
+  --fg-dark: #0F172A;
+  --radius-pill: 980px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f8fafc;height:100vh;overflow:hidden;position:relative}
+
+/* ─── DASHBOARD ARRIÈRE-PLAN ─────────────────────────────── */
+.app-bg{padding:24px 20px;max-width:420px;margin:0 auto}
+.app-bg .patrimoine{text-align:center;margin-bottom:24px}
+.app-bg .patrimoine h2{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.app-bg .patrimoine .amount{font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;color:var(--fg-dark)}
+.wallets-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.wallet-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.wallet-card .icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:10px}
+.wallet-card .icon.mtn{background:linear-gradient(135deg,rgba(250,204,21,0.15),rgba(234,179,8,0.2));border:1px solid rgba(234,179,8,0.25)}
+.wallet-card .icon.airtel{background:linear-gradient(135deg,rgba(239,68,68,0.1),rgba(220,38,38,0.15));border:1px solid rgba(239,68,68,0.2)}
+.wallet-card .icon.usd{background:linear-gradient(135deg,rgba(34,197,94,0.1),rgba(22,163,74,0.15));border:1px solid rgba(34,197,94,0.2)}
+.wallet-card .icon.btc{background:linear-gradient(135deg,rgba(249,115,22,0.1),rgba(234,88,12,0.15));border:1px solid rgba(249,115,22,0.2)}
+.wallet-card .name{font-size:12px;color:#64748b;font-weight:500;margin-bottom:4px}
+.wallet-card .val{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:var(--fg-dark)}
+
+/* ─── OVERLAY VERRE DÉPOLI ───────────────────────────────── */
+.overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(248,250,252,0.55);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+
+.close-btn{
+  position:absolute;top:16px;right:16px;
+  width:36px;height:36px;border-radius:50%;border:none;
+  background:#fff;color:#475569;font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+.close-btn:hover{background:#f1f5f9;color:var(--fg-dark)}
+
+.status-pill{
+  position:absolute;top:20px;left:50%;transform:translateX(-50%);
+  padding:6px 16px;border-radius:var(--radius-pill);
+  background:rgba(79,70,229,0.12);
+  color:#fff;font-size:11px;font-weight:600;letter-spacing:0.8px;
+  background:var(--accent);
+}
+
+/* ─── MICRO + ONDES ──────────────────────────────────────── */
+.mic-container{position:relative;width:120px;height:120px;margin-bottom:28px}
+.mic-btn{
+  width:100%;height:100%;border-radius:50%;border:none;
+  background:var(--accent);color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;z-index:2;
+  box-shadow:0 8px 32px var(--accent-glow);
+  transition:transform .2s;
+}
+.mic-btn:active{transform:scale(0.93)}
+.mic-btn svg{width:44px;height:44px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.ring{
+  position:absolute;inset:-14px;border-radius:50%;
+  border:2px solid rgba(79,70,229,0.35);
+  animation:pulse 2.4s ease-out infinite;
+}
+.ring:nth-child(2){inset:-28px;animation-delay:0.8s;border-color:rgba(6,182,212,0.25)}
+.ring:nth-child(3){inset:-42px;animation-delay:1.6s;border-color:rgba(79,70,229,0.15)}
+@keyframes pulse{
+  0%{transform:scale(0.85);opacity:1}
+  100%{transform:scale(1.3);opacity:0}
+}
+
+/* ─── WAVEFORM ───────────────────────────────────────────── */
+.waveform{display:flex;align-items:center;gap:3px;height:44px;margin-bottom:24px}
+.waveform .bar{
+  width:4px;border-radius:4px;
+  background:linear-gradient(180deg,var(--accent),var(--cyan));
+  animation:wave 1s ease-in-out infinite alternate;
+}
+.waveform .bar:nth-child(1){height:12px;animation-delay:0s}
+.waveform .bar:nth-child(2){height:22px;animation-delay:.1s}
+.waveform .bar:nth-child(3){height:34px;animation-delay:.2s}
+.waveform .bar:nth-child(4){height:18px;animation-delay:.3s}
+.waveform .bar:nth-child(5){height:40px;animation-delay:.4s}
+.waveform .bar:nth-child(6){height:26px;animation-delay:.5s}
+.waveform .bar:nth-child(7){height:14px;animation-delay:.6s}
+.waveform .bar:nth-child(8){height:36px;animation-delay:.7s}
+.waveform .bar:nth-child(9){height:20px;animation-delay:.8s}
+.waveform .bar:nth-child(10){height:30px;animation-delay:.9s}
+.waveform .bar:nth-child(11){height:12px;animation-delay:1s}
+.waveform .bar:nth-child(12){height:38px;animation-delay:1.1s}
+@keyframes wave{
+  0%{transform:scaleY(0.3)}
+  100%{transform:scaleY(1)}
+}
+
+/* ─── TRANSCRIPTION ──────────────────────────────────────── */
+.transcript{text-align:center;max-width:300px}
+.transcript .label{font-size:12px;color:#64748b;font-weight:500;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+.transcript .text{font-size:22px;font-weight:300;letter-spacing:-0.3px;color:var(--fg-dark);line-height:1.4}
+
+/* ─── PROCESSING STATE ───────────────────────────────────── */
+.processing{display:none;flex-direction:column;align-items:center;gap:20px}
+.processing.active{display:flex}
+.listening-state.hidden{display:none}
+
+.spinner{
+  width:56px;height:56px;border-radius:50%;
+  border:3px solid transparent;
+  border-top-color:var(--accent);border-right-color:var(--cyan);
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.processing-text{font-size:15px;color:#475569;text-align:center;font-weight:400}
+
+/* ─── BOUTONS DE TEST ────────────────────────────────────── */
+.demo-tabs{
+  position:absolute;bottom:28px;
+  display:flex;gap:10px;
+}
+.demo-tabs button{
+  padding:7px 18px;border-radius:var(--radius-pill);
+  border:1px solid #e2e8f0;
+  background:rgba(255,255,255,0.7);color:#64748b;
+  font-size:12px;font-weight:500;cursor:pointer;
+  font-family:'Inter',sans-serif;
+  transition:all .2s;
+}
+.demo-tabs button:hover,.demo-tabs button.active{
+  background:#fff;color:var(--accent);border-color:rgba(79,70,229,0.3);
+}
+</style>
+</head>
+<body>
+
+<!-- Tableau de bord visible en arrière-plan -->
+<div class="app-bg">
+  <div class="patrimoine">
+    <h2>Patrimoine Total</h2>
+    <div class="amount">$12 847,50</div>
+  </div>
+  <div class="wallets-grid">
+    <div class="wallet-card">
+      <div class="icon mtn">📱</div>
+      <div class="name">MTN Mobile Money</div>
+      <div class="val">UGX 4 200 000</div>
+    </div>
+    <div class="wallet-card">
+      <div class="icon airtel">📱</div>
+      <div class="name">Airtel Money</div>
+      <div class="val">UGX 1 850 000</div>
+    </div>
+    <div class="wallet-card">
+      <div class="icon usd">💵</div>
+      <div class="name">Cash USD</div>
+      <div class="val">$3 420,00</div>
+    </div>
+    <div class="wallet-card">
+      <div class="icon btc">₿</div>
+      <div class="name">Bitcoin</div>
+      <div class="val">0.042 BTC</div>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay Assistant Vocal -->
+<div class="overlay">
+  <button class="close-btn">✕</button>
+  <div class="status-pill">ASSISTANT VOCAL</div>
+
+  <div class="listening-state" id="listeningState">
+    <div class="mic-container">
+      <div class="ring"></div>
+      <div class="ring"></div>
+      <div class="ring"></div>
+      <button class="mic-btn">
+        <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
+    </div>
+    <div class="waveform">
+      <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    </div>
+    <div class="transcript">
+      <div class="label">Transcription</div>
+      <div class="text">J'écoute...</div>
+    </div>
+  </div>
+
+  <div class="processing" id="processingState">
+    <div class="spinner"></div>
+    <div class="processing-text">Gemini analyse votre demande...</div>
+  </div>
+
+  <div class="demo-tabs">
+    <button class="active" onclick="showState('listening')">Écoute</button>
+    <button onclick="showState('processing')">Traitement</button>
+  </div>
+</div>
+
+<script>
+function showState(state){
+  const l=document.getElementById('listeningState');
+  const p=document.getElementById('processingState');
+  document.querySelectorAll('.demo-tabs button').forEach(b=>b.classList.remove('active'));
+  if(state==='listening'){l.classList.remove('hidden');p.classList.remove('active');document.querySelectorAll('.demo-tabs button')[0].classList.add('active')}
+  else{l.classList.add('hidden');p.classList.add('active');document.querySelectorAll('.demo-tabs button')[1].classList.add('active')}
+}
+</script>
+</body>
+</html>

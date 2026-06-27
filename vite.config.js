@@ -4,8 +4,13 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  esbuild: {
+    jsx: 'automatic',
+  },
   test: {
-    exclude: ['tests/**/*.spec.js', 'api/**', '**/node_modules/**'],
+    environment: 'jsdom',
+    globals: true,
+    testTimeout: 30000,
   },
   server: {
     host: '127.0.0.1',

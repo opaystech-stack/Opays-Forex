@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "Accès Restreint — Aperçu Premium",
+  "entry": "acces-restreint-preview-2.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "primary": true,
+  "createdAt": "2026-06-26T21:33:11.674Z",
+  "updatedAt": "2026-06-26T21:33:11.689Z",
+  "sourceSkillId": "agent-browser",
+  "designSystemId": "apple",
+  "metadata": {
+    "identifier": "acces-restreint-preview",
+    "artifactType": "text/html",
+    "inferred": false
+  }
+}

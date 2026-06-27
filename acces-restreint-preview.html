@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accès Restreint — OpaysFox</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:'SF Pro Text',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(145deg,#0f0f1a 0%,#1a1a2e 50%,#16162a 100%);padding:24px}
+@keyframes lockPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(79,70,229,0.25)}50%{transform:scale(1.06);box-shadow:0 0 0 14px rgba(79,70,229,0)}}
+@keyframes cardIn{from{opacity:0;transform:translateY(24px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes orbDrift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(14px,-10px) scale(1.1)}}
+.page-wrap{position:relative;width:100%;max-width:420px}
+.ar-orb{position:absolute;border-radius:50%;pointer-events:none}
+.ar-orb-1{top:-80px;right:-40px;width:240px;height:240px;background:radial-gradient(circle,rgba(99,102,241,0.18) 0%,transparent 70%);animation:orbDrift 8s ease-in-out infinite}
+.ar-orb-2{bottom:-60px;left:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(79,70,229,0.12) 0%,transparent 70%);animation:orbDrift 10s ease-in-out infinite reverse}
+.ar-card{position:relative;text-align:center;padding:44px 30px 34px;background:rgba(255,255,255,0.82);backdrop-filter:blur(28px) saturate(1.6);-webkit-backdrop-filter:blur(28px) saturate(1.6);border:1px solid rgba(255,255,255,0.45);border-radius:28px;box-shadow:0 1px 3px rgba(79,70,229,0.04),0 8px 24px rgba(79,70,229,0.06),0 32px 72px rgba(79,70,229,0.08),inset 0 1px 0 rgba(255,255,255,0.6);animation:cardIn 0.55s cubic-bezier(0.16,1,0.3,1) forwards;opacity:0}
+.eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#4F46E5;margin-bottom:18px;font-family:'SF Pro Text','Space Grotesk',system-ui,monospace}
+.lock-ring{width:64px;height:64px;border-radius:50%;margin:0 auto 20px;background:linear-gradient(145deg,rgba(99,102,241,0.12),rgba(79,70,229,0.05));border:1.5px solid rgba(99,102,241,0.18);display:flex;align-items:center;justify-content:center;animation:lockPulse 3s ease-in-out infinite}
+.lock-ring svg{color:#4F46E5}
+h2{margin:0 0 8px;font-size:22px;font-weight:700;color:#1a1a2e;font-family:'SF Pro Display','Space Grotesk',sans-serif;letter-spacing:-0.01em}
+.desc{font-size:14px;color:#64748b;line-height:1.6;margin-bottom:24px;max-width:320px;margin-left:auto;margin-right:auto}
+.status-box{padding:14px 16px;border-radius:14px;margin-bottom:24px;transition:all .2s ease}
+.status-box .label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#94a3b8;font-weight:700;margin-bottom:8px}
+.status-badge{display:inline-flex;align-items:center;gap:7px;font-weight:650;font-size:14px;padding:5px 12px;border-radius:8px}
+.ar-btn{width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:14px;font-weight:650;cursor:pointer;transition:transform .12s cubic-bezier(.4,0,.2,1),box-shadow .2s ease,filter .2s ease,background .2s ease,border-color .2s ease}
+.ar-btn:active{transform:scale(0.98)!important}
+.btn-pay{padding:14px 20px;border:none;font-size:15px;color:#fff;background:linear-gradient(135deg,#7C3AED 0%,#6366F1 30%,#4F46E5 70%,#4338CA 100%);box-shadow:0 4px 16px rgba(79,70,229,0.3),inset 0 1px 0 rgba(255,255,255,0.15);margin-bottom:10px}
+.btn-pay:hover{filter:brightness(1.08);box-shadow:0 8px 28px rgba(79,70,229,0.4),inset 0 1px 0 rgba(255,255,255,0.15)!important}
+.btn-admin{padding:12px 20px;background:transparent;border:1.5px solid rgba(99,102,241,0.22);font-size:14px;font-weight:600;color:#4F46E5;margin-bottom:10px}
+.btn-admin:hover{background:rgba(99,102,241,0.06);border-color:rgba(99,102,241,0.5)}
+.btn-out{padding:12px 20px;background:transparent;border:1.5px solid rgba(220,38,38,0.2);font-size:14px;font-weight:600;color:#DC2626}
+.btn-out:hover{background:rgba(220,38,38,0.06);border-color:rgba(220,38,38,0.5);color:#B91C1C}
+.trust{margin-top:22px;font-size:11px;color:#94a3b8;letter-spacing:0.02em;line-height:1.5}
+.tabs{display:flex;gap:6px;margin-bottom:18px;justify-content:center}
+.tab{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:rgba(99,102,241,0.06);color:#64748b;transition:all .2s ease}
+.tab.active{background:rgba(79,70,229,0.12);color:#4F46E5}
+@media(prefers-reduced-motion:reduce){.ar-card{animation:none;opacity:1}.lock-ring{animation:none!important}.ar-orb{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+  <div class="ar-orb ar-orb-1"></div>
+  <div class="ar-orb ar-orb-2"></div>
+  <div class="ar-card">
+    <span class="eyebrow">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+      Accès restreint
+    </span>
+    <div class="lock-ring">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <h2>Accès restreint</h2>
+    <p class="desc">Votre abonnement n'est pas actif. Veuillez effectuer le paiement pour accéder à l'ensemble des fonctionnalités.</p>
+
+    <!-- Status tabs demo -->
+    <div class="tabs">
+      <button class="tab active" onclick="showStatus('pending')">En attente</button>
+      <button class="tab" onclick="showStatus('valid')">Validé</button>
+      <button class="tab" onclick="showStatus('rejected')">Rejeté</button>
+    </div>
+
+    <!-- Status box -->
+    <div class="status-box" id="statusBox" style="background:rgba(245,158,11,0.08);border:1.5px solid rgba(245,158,11,0.3);box-shadow:0 2px 8px rgba(245,158,11,0.12)">
+      <span class="label">Statut de la preuve de paiement</span>
+      <span class="status-badge" id="statusBadge" style="color:#92400E;background:rgba(245,158,11,0.08)">
+        <svg id="statusIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="statusText">En attente de validation</span>
+      </span>
+    </div>
+
+    <!-- Buttons -->
+    <button class="ar-btn btn-pay">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      <span>Procéder au paiement</span>
+    </button>
+    <button class="ar-btn btn-admin">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+      <span>Administration Plateforme</span>
+    </button>
+    <button class="ar-btn btn-out">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <span>Se déconnecter</span>
+    </button>
+    <p class="trust">🔐 Connexion chiffrée · Données hébergées en Afrique de l'Est</p>
+  </div>
+</div>
+<script>
+const statuses={
+  pending:{bg:'rgba(245,158,11,0.08)',border:'rgba(245,158,11,0.3)',shadow:'rgba(245,158,11,0.12)',color:'#92400E',badge:'#F59E0B',text:'En attente de validation',icon:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'},
+  valid:{bg:'rgba(16,185,129,0.08)',border:'rgba(16,185,129,0.3)',shadow:'rgba(16,185,129,0.12)',color:'#065F46',badge:'#10B981',text:'Preuve validée',icon:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>'},
+  rejected:{bg:'rgba(239,68,68,0.08)',border:'rgba(239,68,68,0.3)',shadow:'rgba(239,68,68,0.12)',color:'#991B1B',badge:'#EF4444',text:'Preuve rejetée',icon:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'}
+};
+function showStatus(key){
+  const s=statuses[key],box=document.getElementById('statusBox'),badge=document.getElementById('statusBadge'),icon=document.getElementById('statusIcon'),txt=document.getElementById('statusText');
+  box.style.background=s.bg;box.style.border='1.5px solid '+s.border;box.style.boxShadow='0 2px 8px '+s.shadow;
+  badge.style.color=s.color;badge.style.background=s.bg;
+  icon.setAttribute('stroke',s.badge);icon.innerHTML=s.icon;
+  txt.textContent=s.text;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+</script>
+</body>
+</html>

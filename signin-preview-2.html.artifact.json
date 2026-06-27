@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "OpaysFox — Page Connexion (Aperçu)",
+  "entry": "signin-preview-2.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "primary": true,
+  "createdAt": "2026-06-26T21:55:20.495Z",
+  "updatedAt": "2026-06-26T21:55:20.520Z",
+  "sourceSkillId": "agent-browser",
+  "designSystemId": "apple",
+  "metadata": {
+    "identifier": "signin-preview",
+    "artifactType": "text/html",
+    "inferred": false
+  }
+}

@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>OpaysFox — Commandes WhatsApp</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --green:#15803D;--green-soft:rgba(21,128,61,0.08);
+  --indigo:#4F46E5;--indigo-soft:rgba(79,70,229,0.07);
+  --red:#DC2626;--border:#e5e7eb;--bg:#f3f4f6;
+  --text:#1a1a2e;--text-2:#374151;--text-muted:#6b7280;
+  --sheet-radius:22px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;height:100vh;overflow:hidden;position:relative}
+h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif}
+
+/* ═══ BACKGROUND: simulated dashboard ═══ */
+.bg-dashboard{position:absolute;inset:0;padding:80px 24px 24px;overflow:hidden;pointer-events:none}
+.bg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:700px;margin:0 auto}
+.bg-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,0.05)}
+.bg-card-title{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.3px;margin-bottom:6px}
+.bg-card-value{font-size:22px;font-weight:700;font-family:'Space Grotesk',sans-serif}
+.bg-card-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
+
+/* ═══ FLOATING SEARCH BAR ═══ */
+.search-bar{position:fixed;top:12px;left:12px;right:12px;z-index:100;background:#fff;border-radius:980px;padding:12px 18px;box-shadow:0 2px 12px rgba(0,0,0,0.10);display:flex;align-items:center;gap:10px;max-width:600px;margin:0 auto}
+.search-bar svg{flex-shrink:0;color:var(--text-muted)}
+.search-bar input{border:none;outline:none;font-size:14px;font-family:inherit;flex:1;color:var(--text);background:transparent}
+.search-bar input::placeholder{color:var(--text-muted)}
+.search-bar .avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--indigo),#7c3aed);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700}
+
+/* ═══ BOTTOM SHEET ═══ */
+.sheet{position:fixed;bottom:0;left:0;right:0;z-index:50;background:#fff;border-radius:var(--sheet-radius) var(--sheet-radius) 0 0;box-shadow:0 -4px 24px rgba(0,0,0,0.10);transition:height 0.4s cubic-bezier(0.25,0.8,0.25,1);overflow:hidden;display:flex;flex-direction:column}
+.sheet[data-pos="low"]{height:45vh}
+.sheet[data-pos="high"]{height:85vh}
+.sheet-handle{width:100%;padding:10px 0 6px;display:flex;justify-content:center;cursor:grab;flex-shrink:0;user-select:none}
+.sheet-handle::after{content:'';width:36px;height:4px;border-radius:3px;background:#d1d5db}
+.sheet-handle:active{cursor:grabbing}
+.sheet-content{flex:1;overflow-y:auto;padding:0 18px 18px;-webkit-overflow-scrolling:touch}
+
+/* ═══ SHEET HEADER ═══ */
+.sheet-title{font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-top:4px}
+.sheet-title svg{color:var(--indigo)}
+
+/* ═══ ORDER CARDS ═══ */
+.order-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:10px;cursor:pointer;transition:all 0.18s ease}
+.order-card:hover{box-shadow:0 4px 14px rgba(0,0,0,0.08);transform:translateY(-1px)}
+.order-card.active{border-color:var(--indigo);box-shadow:0 0 0 2px var(--indigo-soft),0 4px 14px rgba(0,0,0,0.08)}
+.order-card-header{display:flex;align-items:center;gap:10px}
+.wa-icon{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,rgba(37,211,102,0.12),rgba(37,211,102,0.04));border:1px solid rgba(37,211,102,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.order-meta{flex:1;min-width:0}
+.order-id{font-size:11px;font-weight:600;color:var(--text-muted);font-family:monospace}
+.order-phone{font-size:13px;font-weight:600;color:var(--text);display:block}
+.badge{display:inline-flex;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap}
+.badge-ai{background:rgba(59,130,246,0.10);color:#2563EB}
+.badge-warn{background:rgba(234,88,12,0.10);color:#C2410C}
+.order-text{font-size:12px;color:var(--text-2);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.order-date{font-size:11px;color:var(--text-muted);margin-top:3px}
+
+/* ═══ DETAIL VIEW ═══ */
+.detail-view{display:none}
+.detail-view.visible{display:block}
+.list-view.hidden{display:none}
+
+.btn-back{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--indigo);background:none;border:none;cursor:pointer;padding:6px 0;margin-bottom:12px}
+.btn-back:hover{text-decoration:underline}
+
+.section-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
+
+/* WhatsApp bubble */
+.wa-bubble-row{display:flex;gap:14px;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap}
+.wa-bubble{background:#DCF8C6;border-radius:0 12px 12px 12px;padding:13px 15px;font-size:13px;color:var(--text);line-height:1.5;max-width:300px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.wa-bubble::before{content:'';position:absolute;top:0;left:-7px;border-top:7px solid #DCF8C6;border-left:7px solid transparent}
+.wa-bubble .time{font-size:10px;color:var(--text-muted);text-align:right;margin-top:5px}
+.receipt-img{width:160px;height:120px;border-radius:12px;background:#f1f5f9;border:1px solid var(--border);box-shadow:0 8px 28px rgba(0,0,0,0.12);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10px;color:var(--text-muted)}
+
+/* Form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-group{margin-bottom:0}
+.form-label{display:block;font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.3px}
+.form-control{width:100%;padding:9px 12px;font-size:13px;border:1px solid var(--border);border-radius:10px;background:#f9fafb;color:var(--text);font-family:inherit;outline:none}
+.form-control:focus{border-color:var(--indigo)}
+textarea.form-control{resize:none}
+.form-group-full{margin-bottom:10px}
+
+/* Actions */
+.action-bar{display:flex;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);position:sticky;bottom:0;background:#fff;padding-bottom:env(safe-area-inset-bottom,8px)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:13px 16px;border-radius:12px;border:none;font-size:13px;font-weight:700;cursor:pointer;flex:1;transition:transform 0.15s,box-shadow 0.2s}
+.btn:active{transform:scale(0.96)}
+.btn-confirm{background:var(--green);color:#fff;box-shadow:0 2px 8px rgba(21,128,61,0.25)}
+.btn-confirm:hover{box-shadow:0 4px 14px rgba(21,128,61,0.35)}
+.btn-reject{background:var(--red);color:#fff;box-shadow:0 2px 8px rgba(220,38,38,0.18)}
+.btn-reject:hover{box-shadow:0 4px 14px rgba(220,38,38,0.28)}
+
+/* ═══ DESKTOP OVERRIDE ═══ */
+@media(min-width:768px){
+  .sheet{position:fixed;bottom:0;left:0;right:0;height:85vh!important;border-radius:var(--sheet-radius) var(--sheet-radius) 0 0}
+  .sheet-content{padding:0 28px 28px}
+  .desktop-split{display:grid;grid-template-columns:320px 1fr;gap:22px;align-items:start}
+  .list-view.hidden{display:block!important}
+  .detail-view{display:block!important}
+  .btn-back{display:none}
+  .wa-bubble{max-width:340px}
+}
+@media(max-width:767px){
+  .desktop-split{display:block}
+  .bg-grid{grid-template-columns:1fr 1fr}
+  .wa-bubble{max-width:100%}
+  .receipt-img{width:100%;height:100px}
+  .form-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ BACKGROUND DASHBOARD ═══ -->
+<div class="bg-dashboard">
+  <div class="bg-grid">
+    <div class="bg-card">
+      <div class="bg-card-title">Caisse USD</div>
+      <div class="bg-card-value">$12,450</div>
+      <div class="bg-card-sub">+$2,100 aujourd'hui</div>
+    </div>
+    <div class="bg-card">
+      <div class="bg-card-title">Caisse UGX</div>
+      <div class="bg-card-value">38.2M</div>
+      <div class="bg-card-sub">UGX disponible</div>
+    </div>
+    <div class="bg-card">
+      <div class="bg-card-title">Caisse EUR</div>
+      <div class="bg-card-value">€3,820</div>
+      <div class="bg-card-sub">Solde actuel</div>
+    </div>
+    <div class="bg-card">
+      <div class="bg-card-title">MoMo MTN</div>
+      <div class="bg-card-value">5.1M</div>
+      <div class="bg-card-sub">UGX flottant</div>
+    </div>
+    <div class="bg-card">
+      <div class="bg-card-title">Airtel Money</div>
+      <div class="bg-card-value">2.8M</div>
+      <div class="bg-card-sub">UGX flottant</div>
+    </div>
+    <div class="bg-card">
+      <div class="bg-card-title">Tx du jour</div>
+      <div class="bg-card-value">17</div>
+      <div class="bg-card-sub">transactions</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FLOATING SEARCH BAR ═══ -->
+<div class="search-bar">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  <input type="text" placeholder="Rechercher un client, une commande…"/>
+  <div class="avatar">JK</div>
+</div>
+
+<!-- ═══ BOTTOM SHEET ═══ -->
+<div class="sheet" id="sheet" data-pos="low">
+  <div class="sheet-handle" id="handle"></div>
+  <div class="sheet-content">
+
+    <!-- SHEET HEADER -->
+    <div class="sheet-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      Commandes WhatsApp
+    </div>
+
+    <div class="desktop-split">
+
+      <!-- LIST VIEW -->
+      <div class="list-view" id="listView">
+        <div class="order-card active" data-order="1" onclick="selectOrder(1)">
+          <div class="order-card-header">
+            <div class="wa-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+            <div class="order-meta">
+              <span class="order-id">#a3f8c012</span>
+              <span class="order-phone">+256 780 234 567</span>
+            </div>
+            <span class="badge badge-warn">Validation requise</span>
+          </div>
+          <div class="order-text">Envoi 500 USD vers MTN MoMo — Nakato Sarah</div>
+          <div class="order-date">27 juin 2026, 09:14</div>
+        </div>
+
+        <div class="order-card" data-order="2" onclick="selectOrder(2)">
+          <div class="order-card-header">
+            <div class="wa-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+            <div class="order-meta">
+              <span class="order-id">#b7e2d4a9</span>
+              <span class="order-phone">+256 704 891 023</span>
+            </div>
+            <span class="badge badge-ai">Analyse IA en cours</span>
+          </div>
+          <div class="order-text">Changer 200 EUR en UGX au taux du jour</div>
+          <div class="order-date">27 juin 2026, 08:52</div>
+        </div>
+
+        <div class="order-card" data-order="3" onclick="selectOrder(3)">
+          <div class="order-card-header">
+            <div class="wa-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+            <div class="order-meta">
+              <span class="order-id">#c4a91bf6</span>
+              <span class="order-phone">+256 752 445 012</span>
+            </div>
+            <span class="badge badge-warn">Validation requise</span>
+          </div>
+          <div class="order-text">Recharge Airtel Money 100,000 UGX</div>
+          <div class="order-date">27 juin 2026, 07:30</div>
+        </div>
+      </div>
+
+      <!-- DETAIL VIEW -->
+      <div class="detail-view" id="detailView">
+        <button class="btn-back" onclick="goBack()">← Retour aux commandes</button>
+
+        <div class="section-label">Reçu WhatsApp</div>
+        <div class="wa-bubble-row">
+          <div class="wa-bubble">
+            Bonjour OpaysFox,<br/>
+            J'envoie <strong>500 USD</strong> à <strong>Nakato Sarah</strong> via MTN MoMo.<br/>
+            Numéro : 0780 234 567<br/>
+            Voici le reçu de mon dépôt.
+            <div class="time">09:12 ✓✓</div>
+          </div>
+          <div class="receipt-img">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            receipt_500usd.jpg
+          </div>
+        </div>
+
+        <div class="section-label">Formulaire de validation</div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Client</label><input class="form-control" readonly value="Nakato Sarah"/></div>
+          <div class="form-group"><label class="form-label">Téléphone</label><input class="form-control" readonly value="+256 780 234 567"/></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Montant</label><input class="form-control" readonly value="500 USD"/></div>
+          <div class="form-group"><label class="form-label">Service</label><input class="form-control" readonly value="MTN Mobile Money"/></div>
+        </div>
+        <div class="form-group-full"><label class="form-label">Détails</label><textarea class="form-control" readonly rows="2">Envoi 500 USD vers MTN MoMo, bénéficiaire Nakato Sarah, n° 0780234567</textarea></div>
+
+        <div class="action-bar">
+          <button class="btn btn-confirm" id="btnConfirm">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Confirmer
+          </button>
+          <button class="btn btn-reject">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Rejeter
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const sheet = document.getElementById('sheet');
+const handle = document.getElementById('handle');
+const listView = document.getElementById('listView');
+const detailView = document.getElementById('detailView');
+const isMobile = () => window.innerWidth < 768;
+
+// Toggle sheet height on handle click
+handle.addEventListener('click', () => {
+  sheet.dataset.pos = sheet.dataset.pos === 'low' ? 'high' : 'low';
+});
+
+// Touch drag support
+let startY = 0, startH = 0;
+handle.addEventListener('touchstart', e => {
+  startY = e.touches[0].clientY;
+  startH = sheet.offsetHeight;
+  sheet.style.transition = 'none';
+});
+handle.addEventListener('touchmove', e => {
+  const dy = startY - e.touches[0].clientY;
+  const h = Math.min(Math.max(startH + dy, window.innerHeight * 0.3), window.innerHeight * 0.92);
+  sheet.style.height = h + 'px';
+});
+handle.addEventListener('touchend', () => {
+  sheet.style.transition = '';
+  const ratio = sheet.offsetHeight / window.innerHeight;
+  sheet.style.height = '';
+  sheet.dataset.pos = ratio > 0.6 ? 'high' : 'low';
+});
+
+// Order selection
+function selectOrder(id) {
+  document.querySelectorAll('.order-card').forEach(c => c.classList.remove('active'));
+  document.querySelector(`[data-order="${id}"]`).classList.add('active');
+  if (isMobile()) {
+    listView.classList.add('hidden');
+    detailView.classList.add('visible');
+    sheet.dataset.pos = 'high';
+  }
+}
+
+function goBack() {
+  listView.classList.remove('hidden');
+  detailView.classList.remove('visible');
+}
+
+// Desktop: show detail by default
+if (!isMobile()) detailView.classList.add('visible');
+
+// Double-click confirm
+const btnConfirm = document.getElementById('btnConfirm');
+let step = 0;
+btnConfirm.addEventListener('click', () => {
+  if (step === 0) {
+    btnConfirm.textContent = '⟡ Confirmer ?';
+    btnConfirm.style.background = '#166534';
+    step = 1;
+  } else {
+    btnConfirm.innerHTML = '✓ Confirmée';
+    btnConfirm.style.background = '#14532d';
+    btnConfirm.style.pointerEvents = 'none';
+  }
+});
+</script>
+</body>
+</html>

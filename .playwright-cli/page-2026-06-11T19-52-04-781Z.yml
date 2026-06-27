@@ -1,0 +1,166 @@
+- generic [ref=e50]:
+  - navigation [ref=e51]:
+    - generic [ref=e52]:
+      - generic [ref=e53]: Gestion Forex
+      - heading "OpaysFox" [level=2] [ref=e54]
+      - generic [ref=e55]: Démo
+    - generic [ref=e56]:
+      - button "Dashboard" [ref=e57] [cursor=pointer]:
+        - img [ref=e58]
+        - generic [ref=e63]: Dashboard
+      - button "Transactions" [ref=e64] [cursor=pointer]:
+        - img [ref=e65]
+        - generic [ref=e68]: Transactions
+      - button "Portefeuilles" [ref=e69] [cursor=pointer]:
+        - img [ref=e70]
+        - generic [ref=e72]: Portefeuilles
+      - button "Dépenses" [ref=e73] [cursor=pointer]:
+        - img [ref=e74]
+        - generic [ref=e77]: Dépenses
+      - button "Prêts" [ref=e78] [cursor=pointer]:
+        - img [ref=e79]
+        - generic [ref=e84]: Prêts
+      - button "Paramètres" [ref=e85] [cursor=pointer]:
+        - img [ref=e86]
+        - generic [ref=e89]: Paramètres
+  - generic [ref=e90]:
+    - banner [ref=e91]:
+      - generic [ref=e92]:
+        - generic [ref=e93]: Gestion Forex
+        - heading "OpaysFox" [level=1] [ref=e94]
+      - generic [ref=e95]:
+        - generic [ref=e96]: Démo
+        - button "Ouvrir le suivi des dettes" [ref=e97] [cursor=pointer]:
+          - img [ref=e98]
+        - button "Ouvrir les paramètres" [ref=e104] [cursor=pointer]:
+          - img [ref=e105]
+    - main [ref=e108]:
+      - generic [ref=e109]:
+        - generic [ref=e110]:
+          - generic [ref=e111]:
+            - generic [ref=e112]: Patrimoine Global
+            - generic [ref=e113]: 5 365,03USD
+            - paragraph [ref=e114]: Consolidation automatique en temps réel de toutes vos caisses et wallets.
+          - heading "Résumé d'aujourd'hui" [level=3] [ref=e116]
+          - generic [ref=e117]:
+            - generic [ref=e118]: Gains
+            - generic [ref=e119]:
+              - generic [ref=e120]:
+                - generic [ref=e121]: Gain du jour
+                - generic [ref=e122]: 2,67 $US
+              - generic [ref=e123]:
+                - generic [ref=e124]: Gain du mois
+                - generic [ref=e125]: 3,00 $US
+          - generic [ref=e126]:
+            - generic [ref=e127]:
+              - generic [ref=e128]: Bénéfice de Change
+              - generic [ref=e129]: +2,67 $US
+            - generic [ref=e130]:
+              - generic [ref=e131]: Dépenses Agence
+              - generic [ref=e132]: "-4,00 $US"
+          - generic [ref=e133]:
+            - generic [ref=e134]:
+              - generic [ref=e135]: "Bénéfice Net Kiosque :"
+              - generic [ref=e136]: "-1,33 $US"
+            - generic [ref=e137]:
+              - generic [ref=e138]: "Prélèvements Personnels :"
+              - generic [ref=e139]: 20,00 $US
+          - generic [ref=e140]:
+            - generic [ref=e141]:
+              - generic [ref=e142]: Dette active (Prêts)
+              - generic [ref=e143]: 816,67USD
+            - generic [ref=e145]: 2 actifs
+          - heading "Vos Caisses & Wallets" [level=3] [ref=e147]
+          - generic [ref=e148]:
+            - generic [ref=e149] [cursor=pointer]:
+              - generic [ref=e150]:
+                - generic [ref=e151]:
+                  - generic "Caisse USD Cash" [ref=e152]
+                  - generic [ref=e153]: Espèces
+                - img [ref=e154]
+              - generic [ref=e156]: 1 200,00 $US
+            - generic [ref=e157] [cursor=pointer]:
+              - generic [ref=e158]:
+                - generic [ref=e159]:
+                  - generic "Caisse UGX Cash" [ref=e160]
+                  - generic [ref=e161]: Espèces
+                - img [ref=e162]
+              - generic [ref=e164]: 3 650 000 UGX
+            - generic [ref=e165] [cursor=pointer]:
+              - generic [ref=e166]:
+                - generic [ref=e167]:
+                  - generic "Airtel Money RDC (USD)" [ref=e168]
+                  - generic [ref=e169]: Mobile Money
+                - img [ref=e170]
+              - generic [ref=e173]: 800,00 $US
+            - generic [ref=e174] [cursor=pointer]:
+              - generic [ref=e175]:
+                - generic [ref=e176]:
+                  - generic "M-Pesa Kenya (KES)" [ref=e177]
+                  - generic [ref=e178]: Mobile Money
+                - img [ref=e179]
+              - generic [ref=e182]: 35 000 KES
+            - generic [ref=e183] [cursor=pointer]:
+              - generic [ref=e184]:
+                - generic [ref=e185]:
+                  - generic "MTN Uganda (UGX)" [ref=e186]
+                  - generic [ref=e187]: Mobile Money
+                - img [ref=e188]
+              - generic [ref=e191]: 1 500 000 UGX
+            - generic [ref=e192] [cursor=pointer]:
+              - generic [ref=e193]:
+                - generic [ref=e194]:
+                  - generic "Caisse Euro Cash" [ref=e195]
+                  - generic [ref=e196]: Espèces
+                - img [ref=e197]
+              - generic [ref=e199]: 450 EUR
+            - generic [ref=e200] [cursor=pointer]:
+              - generic [ref=e201]:
+                - generic [ref=e202]:
+                  - generic "Orange Money Cameroun (FCFA)" [ref=e203]
+                  - generic [ref=e204]: Mobile Money
+                - img [ref=e205]
+              - generic [ref=e208]: 250 000 FCFA
+        - generic [ref=e209]:
+          - generic [ref=e210]:
+            - generic [ref=e211]:
+              - img [ref=e212]
+              - generic [ref=e215]: 1 brouillon(s) en attente
+            - generic [ref=e216]:
+              - generic "Cliquer pour modifier/valider" [ref=e217] [cursor=pointer]:
+                - generic [ref=e218]: Caisse ➡️ M-Pesa
+                - generic [ref=e219]: 50,00 $US ➡️ 6 400 KES
+                - generic [ref=e220]: 📱 Importé via WhatsApp - Client Joseph
+              - generic [ref=e221]:
+                - button "Modifier et valider ce brouillon" [ref=e222] [cursor=pointer]:
+                  - img [ref=e223]
+                - button "Valider immédiatement ce brouillon" [ref=e226] [cursor=pointer]:
+                  - img [ref=e227]
+                - button "Supprimer ce brouillon" [ref=e231] [cursor=pointer]:
+                  - img [ref=e232]
+          - heading "Recherche & Litiges" [level=3] [ref=e236]
+          - generic [ref=e238]:
+            - img [ref=e239]
+            - textbox "Rechercher par ID Transaction, Note..." [ref=e242]:
+              - /placeholder: "Rechercher par ID Transaction, Note... "
+          - generic [ref=e243]:
+            - generic [ref=e244] [cursor=pointer]:
+              - generic [ref=e245]:
+                - img [ref=e247]
+                - generic [ref=e250]:
+                  - generic [ref=e251]: Caisse USD Cash ➡️ Caisse UGX Cash
+                  - generic [ref=e252]: 19:48 • Client WhatsApp - Paul
+              - generic [ref=e253]:
+                - generic [ref=e254]: "-100,00 $US"
+                - generic [ref=e255]: +365 000 UGX
+                - generic [ref=e256]: "ID: TXN-A1293041"
+            - generic [ref=e257] [cursor=pointer]:
+              - generic [ref=e258]:
+                - img [ref=e260]
+                - generic [ref=e263]:
+                  - generic [ref=e264]: Airtel Money RDC (USD) ➡️ MTN Uganda (UGX)
+                  - generic [ref=e265]: 21:48 • Transfert Kinshasa - Kampala
+              - generic [ref=e266]:
+                - generic [ref=e267]: "-150,00 $US"
+                - generic [ref=e268]: +550 000 UGX
+                - generic [ref=e269]: "ID: TXN-M9847291"

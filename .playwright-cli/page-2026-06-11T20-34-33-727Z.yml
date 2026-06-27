@@ -1,0 +1,179 @@
+- generic [active] [ref=e1]:
+  - main [ref=e16]:
+    - generic [ref=e17]:
+      - generic [ref=e19]:
+        - generic [ref=e20]: Lancement Officiel 🚀
+        - heading "Gérez Votre Forex" [level=1] [ref=e22]
+        - heading "et Mobile Money" [level=1] [ref=e24]
+        - paragraph [ref=e25]: La plateforme tout-en-un pour les kiosques multi-devises. Suivi de trésorerie, comptabilité automatisée, IA vocale et relances WhatsApp — le tout dans une application web et mobile.
+        - generic [ref=e26]:
+          - link "Démarrer Gratuitement" [ref=e27] [cursor=pointer]:
+            - /url: "#/register"
+          - button "Voir les Tarifs" [ref=e28] [cursor=pointer]
+        - img "Tableau de bord Opays Forex" [ref=e31]
+      - img [ref=e33]
+    - generic [ref=e36]:
+      - generic [ref=e37]:
+        - text: Fonctionnalités
+        - heading "Tout Ce Dont Votre Kiosk a Besoin" [level=2] [ref=e38]
+        - paragraph [ref=e39]: Une suite complète d'outils conçue pour les kiosques de change et mobile money en Afrique.
+      - generic [ref=e40]:
+        - generic [ref=e41]:
+          - img [ref=e43]
+          - heading "Multi-Devises en Temps Réel" [level=3] [ref=e46]
+          - paragraph [ref=e47]: Gérez USD, UGX, EUR et toutes les devises africaines avec des taux de change mis à jour en temps réel. Conversion instantanée et suivi de trésorerie précis.
+        - generic [ref=e48]:
+          - img [ref=e50]
+          - heading "Intégration WhatsApp" [level=3] [ref=e52]
+          - paragraph [ref=e53]: Capturez automatiquement les transactions via WhatsApp. OCR intelligent par IA lit les reçus et messages vocaux pour alimenter votre comptabilité sans saisie manuelle.
+        - generic [ref=e54]:
+          - img [ref=e56]
+          - heading "Notes Vocales Intelligentes" [level=3] [ref=e59]
+          - paragraph [ref=e60]: Dictéez vos transactions en français ou en anglais. Notre IA Gemini transcrit, catégorise et enregistre automatiquement chaque opération dans votre livre de comptes.
+        - generic [ref=e61]:
+          - img [ref=e63]
+          - heading "Rapports & Analytiques" [level=3] [ref=e65]
+          - paragraph [ref=e66]: Tableaux de bord visuels avec graphiques de trésorerie, rapports de performance journaliers, et export PDF pour votre comptable. Toute votre activité en un coup d'œil.
+    - generic [ref=e68]:
+      - generic [ref=e69]:
+        - text: Tarification
+        - heading "Des Prix Simples, Pas de Surprises" [level=2] [ref=e70]
+        - paragraph [ref=e71]: Choisissez le plan qui correspond à vos besoins. Changez ou annulez à tout moment.
+      - generic [ref=e72]:
+        - generic [ref=e73]:
+          - heading "Starter" [level=3] [ref=e74]
+          - generic [ref=e75]:
+            - generic [ref=e76]: $5
+            - generic [ref=e77]: /mois
+          - paragraph [ref=e78]: Parfait pour démarrer avec un seul kiosque.
+          - list [ref=e80]:
+            - listitem [ref=e81]:
+              - img [ref=e82]
+              - generic [ref=e84]: 1 kiosque / utilisateur
+            - listitem [ref=e85]:
+              - img [ref=e86]
+              - generic [ref=e88]: Jusqu'à 500 transactions/mois
+            - listitem [ref=e89]:
+              - img [ref=e90]
+              - generic [ref=e92]: Devises de base (USD, UGX, EUR)
+            - listitem [ref=e93]:
+              - img [ref=e94]
+              - generic [ref=e96]: Rapports journaliers PDF
+            - listitem [ref=e97]:
+              - img [ref=e98]
+              - generic [ref=e100]: Support par email
+          - link "Choisir Starter" [ref=e101] [cursor=pointer]:
+            - /url: "#/register"
+        - generic [ref=e102]:
+          - generic [ref=e103]: RECOMMANDÉ
+          - heading "Pro" [level=3] [ref=e104]
+          - generic [ref=e105]:
+            - generic [ref=e106]: $10
+            - generic [ref=e107]: /mois
+          - paragraph [ref=e108]: Pour les kiosques actifs qui veulent automatiser.
+          - list [ref=e110]:
+            - listitem [ref=e111]:
+              - img [ref=e112]
+              - generic [ref=e114]: Tout du plan Starter
+            - listitem [ref=e115]:
+              - img [ref=e116]
+              - generic [ref=e118]: Kiosques illimités
+            - listitem [ref=e119]:
+              - img [ref=e120]
+              - generic [ref=e122]: Transactions illimitées
+            - listitem [ref=e123]:
+              - img [ref=e124]
+              - generic [ref=e126]: Agents IA Vocaux 🤖
+            - listitem [ref=e127]:
+              - img [ref=e128]
+              - generic [ref=e130]: Relances WhatsApp automatiques 📲
+            - listitem [ref=e131]:
+              - img [ref=e132]
+              - generic [ref=e134]: Rapports avancés & analytiques
+            - listitem [ref=e135]:
+              - img [ref=e136]
+              - generic [ref=e138]: Support prioritaire 24/7
+          - link "Choisir Pro" [ref=e139] [cursor=pointer]:
+            - /url: "#/register"
+        - generic [ref=e140]:
+          - heading "Lifetime" [level=3] [ref=e141]
+          - generic [ref=e143]: $50
+          - generic [ref=e144]: paiement unique
+          - paragraph [ref=e145]: Accès à vie, aucun frais récurrent.
+          - list [ref=e147]:
+            - listitem [ref=e148]:
+              - img [ref=e149]
+              - generic [ref=e151]: Tout du plan Pro
+            - listitem [ref=e152]:
+              - img [ref=e153]
+              - generic [ref=e155]: Accès à vie, sans abonnement
+            - listitem [ref=e156]:
+              - img [ref=e157]
+              - generic [ref=e159]: Toutes les futures mises à jour
+            - listitem [ref=e160]:
+              - img [ref=e161]
+              - generic [ref=e163]: Intégrations API complètes
+            - listitem [ref=e164]:
+              - img [ref=e165]
+              - generic [ref=e167]: Support VIP dédié
+          - link "Obtenir à Vie" [ref=e168] [cursor=pointer]:
+            - /url: "#/register"
+    - generic [ref=e170]:
+      - heading "Prêt à Transformer Votre Kiosque ?" [level=2] [ref=e171]
+      - paragraph [ref=e172]: Rejoignez des dizaines de kiosques forex en Afrique qui gagnent du temps et de l'argent chaque jour avec Opays Forex.
+      - generic [ref=e173]:
+        - link "Créer Mon Compte" [ref=e174] [cursor=pointer]:
+          - /url: "#/register"
+        - link "Nous Contacter" [ref=e175] [cursor=pointer]:
+          - /url: mailto:support@opaysforex.com
+    - generic [ref=e177]:
+      - generic [ref=e178]:
+        - generic [ref=e179]:
+          - link "Opays Forex FOREX" [ref=e180] [cursor=pointer]:
+            - /url: "#/"
+            - img "Opays Forex" [ref=e181]
+            - generic [ref=e182]: FOREX
+          - paragraph [ref=e183]: La solution forex et mobile money pour l'Afrique.
+        - generic [ref=e184]:
+          - heading "Produit" [level=4] [ref=e185]
+          - list [ref=e186]:
+            - listitem [ref=e187]:
+              - button "Fonctionnalités" [ref=e188] [cursor=pointer]
+            - listitem [ref=e189]:
+              - button "Tarifs" [ref=e190] [cursor=pointer]
+            - listitem [ref=e191]: API
+        - generic [ref=e192]:
+          - heading "Entreprise" [level=4] [ref=e193]
+          - list [ref=e194]:
+            - listitem [ref=e195]: À Propos
+            - listitem [ref=e196]: Blog
+            - listitem [ref=e197]: Carrières
+        - generic [ref=e198]:
+          - heading "Contact" [level=4] [ref=e199]
+          - list [ref=e200]:
+            - listitem [ref=e201]:
+              - link "support@opaysforex.com" [ref=e202] [cursor=pointer]:
+                - /url: mailto:support@opaysforex.com
+            - listitem [ref=e203]: "WhatsApp: +256 701 234 567"
+            - listitem [ref=e204]: Kampala, Ouganda
+          - generic [ref=e205]:
+            - link "Twitter" [ref=e206] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e207]
+            - link "LinkedIn" [ref=e209] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e210]
+            - link "GitHub" [ref=e214] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e215]
+      - generic [ref=e218]:
+        - paragraph [ref=e219]: © 2026 Opays Forex. Tous droits réservés.
+        - generic [ref=e220]:
+          - generic [ref=e221] [cursor=pointer]: Confidentialité
+          - generic [ref=e222]: ·
+          - generic [ref=e223] [cursor=pointer]: Conditions
+  - link "Kimi Kimi Agent" [ref=e225] [cursor=pointer]:
+    - /url: https://www.kimi.com/agent
+    - img "Kimi" [ref=e226]
+    - generic [ref=e227]: Kimi Agent
+    - img

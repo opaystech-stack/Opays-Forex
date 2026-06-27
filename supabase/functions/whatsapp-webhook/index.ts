@@ -6,6 +6,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Correction A2 — Encadrement des appels réseau externes par un timeout (Exigence 2.1)
+// Chaque fetch externe (téléchargement média, API Gemini) est encadré d'un AbortController
+// avec un délai configurable. Le minuteur est systématiquement nettoyé dans un `finally`.
+// En cas de dépassement, fetch lève une AbortError, traitée par l'appelant.
+async function fetchWithTimeout(
+  input: string,
+  init: RequestInit,
+  timeoutMs: number
+): Promise<Response> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(input, { ...init, signal: controller.signal })
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+// Détecte une erreur d'annulation provoquée par le dépassement du timeout (AbortController).
+function isTimeoutError(err: any): boolean {
+  return err?.name === 'AbortError' || err?.name === 'TimeoutError'
+}
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
@@ -13,9 +36,32 @@ serve(async (req) => {
   }
 
   try {
+    // Correction A1 — Vérification du WEBHOOK_SECRET (Exigences 1.3, 2.2, 14.1)
+    // Si WEBHOOK_SECRET est configuré, on exige un secret correspondant fourni
+    // soit via l'en-tête 'x-webhook-secret', soit via le paramètre de requête '?secret='.
+    // Sinon (non configuré) : avertissement journalisé + comportement nominal inchangé (rétro-compatibilité).
+    const webhookSecret = Deno.env.get('WEBHOOK_SECRET')
+    if (webhookSecret) {
+      const url = new URL(req.url)
+      const providedSecret = req.headers.get('x-webhook-secret') || url.searchParams.get('secret')
+      if (!providedSecret || providedSecret !== webhookSecret) {
+        console.warn("Webhook authentication failed: missing or invalid secret.")
+        return new Response(
+          JSON.stringify({ success: false, reason: 'unauthorized' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+        )
+      }
+    } else {
+      console.warn("WEBHOOK_SECRET is not configured: webhook authentication is disabled (backward-compatible mode).")
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || ""
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ""
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY') || ""
+
+    // Correction A2 — Délais de timeout configurables (défaut 10 000 ms) (Exigence 2.1)
+    const mediaTimeoutMs = Number(Deno.env.get('MEDIA_TIMEOUT_MS')) || 10000
+    const geminiTimeoutMs = Number(Deno.env.get('GEMINI_TIMEOUT_MS')) || 10000
 
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error("Missing Supabase credentials in Edge Function environment.")
@@ -41,7 +87,9 @@ serve(async (req) => {
     if (!base64Data && mediaUrl) {
       try {
         console.log(`Downloading media from URL: ${mediaUrl}`)
-        const imgRes = await fetch(mediaUrl)
+        // Correction A2 — timeout sur le téléchargement média. Le média est en repli souple :
+        // tout échec (y compris un timeout) retombe sur le traitement texte seul.
+        const imgRes = await fetchWithTimeout(mediaUrl, {}, mediaTimeoutMs)
         if (imgRes.ok) {
           const arrayBuffer = await imgRes.arrayBuffer()
           const uint8 = new Uint8Array(arrayBuffer)
@@ -52,7 +100,12 @@ serve(async (req) => {
           base64Data = btoa(binary)
         }
       } catch (err) {
-        console.error("Failed to download media file:", err)
+        // Repli souple : on journalise 'media_download_failed' et on poursuit en texte seul.
+        if (isTimeoutError(err)) {
+          console.error(`media_download_failed: timeout after ${mediaTimeoutMs}ms`, err)
+        } else {
+          console.error("media_download_failed:", err)
+        }
       }
     }
 
@@ -62,8 +115,15 @@ serve(async (req) => {
       .select('*')
       .eq('is_active', true)
 
+    // Correction A3 — Portefeuille inconnu (cas métier, Exigences 2.3, 2.4)
+    // Aucun portefeuille actif n'est un cas métier traitable, pas une panne serveur :
+    // on renvoie 422 (Unprocessable Entity) sans interrompre les requêtes ultérieures.
     if (wErr || !wallets || wallets.length === 0) {
-      throw new Error("Failed to fetch wallets or no active wallets found: " + (wErr?.message || "empty"))
+      console.warn("no_matching_wallet: failed to fetch wallets or no active wallets found", wErr?.message || "empty")
+      return new Response(
+        JSON.stringify({ success: false, reason: 'no_matching_wallet' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 422 }
+      )
     }
 
     // Fetch exchange rates for profit calculation
@@ -111,37 +171,77 @@ Règles de sélection :
     }
 
     console.log("Calling Gemini API...")
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts }],
-          generationConfig: { responseMimeType: 'application/json' }
-        })
+    // Correction A2 — timeout sur l'appel Gemini. Contrairement au média (repli souple),
+    // un dépassement de délai côté Gemini est une panne maîtrisée → réponse 504.
+    let geminiRes: Response
+    try {
+      geminiRes = await fetchWithTimeout(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts }],
+            generationConfig: { responseMimeType: 'application/json' }
+          })
+        },
+        geminiTimeoutMs
+      )
+    } catch (err) {
+      if (isTimeoutError(err)) {
+        console.error(`Gemini API call timed out after ${geminiTimeoutMs}ms`)
+        return new Response(
+          JSON.stringify({ success: false, reason: 'timeout' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 504 }
+        )
       }
-    )
+      // Correction A4 — Panne Gemini en amont (injoignable, non-timeout) → 502 (Exigence 2.4)
+      console.error("gemini_upstream: Gemini API unreachable", err)
+      return new Response(
+        JSON.stringify({ success: false, reason: 'gemini_upstream' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 502 }
+      )
+    }
 
+    // Correction A4 — Réponse HTTP non-OK de Gemini → 502 (Exigence 2.4)
     if (!geminiRes.ok) {
       const errText = await geminiRes.text()
-      throw new Error(`Gemini API error: ${geminiRes.statusText} - ${errText}`)
+      console.error(`gemini_upstream: Gemini API error ${geminiRes.status} ${geminiRes.statusText} - ${errText}`)
+      return new Response(
+        JSON.stringify({ success: false, reason: 'gemini_upstream' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 502 }
+      )
     }
 
     const geminiJson = await geminiRes.json()
     const textResponse = geminiJson.candidates?.[0]?.content?.parts?.[0]?.text
+    // Correction A4/A6 — Réponse Gemini vide → 422 non analysable (Exigence 2.4)
     if (!textResponse) {
-      throw new Error("Empty response from Gemini API.")
+      console.warn("gemini_unparseable: empty response from Gemini API")
+      return new Response(
+        JSON.stringify({ success: false, reason: 'gemini_unparseable' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 422 }
+      )
     }
 
-    // Clean markdown wrap if present
-    let cleanedText = textResponse.trim()
-    if (cleanedText.startsWith('```')) {
-      cleanedText = cleanedText.replace(/^```json\s*/i, '').replace(/```$/, '')
+    // Correction A6 — Parsing JSON protégé (retrait markdown + try/catch).
+    // JSON.parse ne doit jamais remonter au catch global (500) : une réponse
+    // non analysable est un cas métier → 422 (Exigence 2.4).
+    let parsed: any
+    try {
+      let cleanedText = textResponse.trim()
+      if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```json\s*/i, '').replace(/```$/, '')
+      }
+      console.log("Parsed Gemini text response:", cleanedText)
+      parsed = JSON.parse(cleanedText)
+    } catch (parseErr) {
+      console.warn("gemini_unparseable: failed to parse Gemini JSON response", parseErr)
+      return new Response(
+        JSON.stringify({ success: false, reason: 'gemini_unparseable' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 422 }
+      )
     }
-
-    console.log("Parsed Gemini text response:", cleanedText)
-    const parsed = JSON.parse(cleanedText)
 
     // Resolve matched Wallet IDs
     const matchedSource = wallets.find((w: any) => 
@@ -153,8 +253,13 @@ Règles de sélection :
       parsed.destWalletName?.toLowerCase().includes(w.name.toLowerCase())
     )
 
+    // Correction A3 — Résolution source/dest impossible (cas métier, Exigences 2.3, 2.4) → 422
     if (!matchedSource || !matchedDest) {
-      throw new Error(`Could not resolve matched wallets: source=${parsed.sourceWalletName}, dest=${parsed.destWalletName}`)
+      console.warn(`no_matching_wallet: could not resolve matched wallets: source=${parsed.sourceWalletName}, dest=${parsed.destWalletName}`)
+      return new Response(
+        JSON.stringify({ success: false, reason: 'no_matching_wallet' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 422 }
+      )
     }
 
     const sAmt = parseFloat(parsed.sourceAmount) || 0

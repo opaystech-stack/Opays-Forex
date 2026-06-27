@@ -1,0 +1,51 @@
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - img "Opays Forex" [ref=e7]
+    - generic [ref=e8]: FOREX
+  - heading "Créer un Compte" [level=1] [ref=e9]
+  - paragraph [ref=e10]: Remplissez le formulaire pour commencer.
+  - generic [ref=e11]:
+    - generic [ref=e12]:
+      - generic [ref=e13]: Nom complet
+      - generic [ref=e14]:
+        - img [ref=e15]
+        - textbox "Votre nom complet" [ref=e18]
+    - generic [ref=e19]:
+      - generic [ref=e20]: Nom du kiosque / entreprise
+      - generic [ref=e21]:
+        - img [ref=e22]
+        - 'textbox "ex: Kampala Forex Exchange" [ref=e26]'
+    - generic [ref=e27]:
+      - generic [ref=e28]: Email
+      - generic [ref=e29]:
+        - img [ref=e30]
+        - textbox "votre@email.com" [ref=e33]
+    - generic [ref=e34]:
+      - generic [ref=e35]: Téléphone (WhatsApp)
+      - generic [ref=e36]:
+        - img [ref=e37]
+        - textbox "+256 7XX XXX XXX" [ref=e39]
+    - generic [ref=e40]:
+      - generic [ref=e41]: Mot de passe
+      - generic [ref=e42]:
+        - img [ref=e43]
+        - textbox "Min. 8 caractères" [ref=e46]
+        - button "Afficher" [ref=e47]
+    - generic [ref=e48]:
+      - generic [ref=e49]: Confirmer le mot de passe
+      - generic [ref=e50]:
+        - img [ref=e51]
+        - textbox "••••••••" [ref=e54]
+        - button "Afficher" [ref=e55]
+    - generic [ref=e56] [cursor=pointer]:
+      - checkbox "J'accepte les Conditions d'utilisation et la Politique de confidentialité" [ref=e57]
+      - generic [ref=e58]: J'accepte les Conditions d'utilisation et la Politique de confidentialité
+    - button "Créer Mon Compte" [ref=e59]
+  - generic [ref=e62]: OU
+  - button "Continuer avec Google" [ref=e63]:
+    - img [ref=e64]
+    - text: Continuer avec Google
+  - paragraph [ref=e69]:
+    - text: Déjà un compte ?
+    - link "Se connecter" [ref=e70] [cursor=pointer]:
+      - /url: /login

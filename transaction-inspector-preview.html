@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>OpaysFox — Inspecteur de Preuve Transaction</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --indigo: #4F46E5;
+  --indigo-light: rgba(79,70,229,0.08);
+  --indigo-medium: rgba(79,70,229,0.15);
+  --slate-900: #0F172A;
+  --slate-700: #334155;
+  --slate-500: #64748B;
+  --slate-300: #CBD5E1;
+  --slate-200: #E2E8F0;
+  --slate-100: #F1F5F9;
+  --slate-50: #F8FAFC;
+  --white: #FFFFFF;
+  --green: #10B981;
+  --red: #EF4444;
+  --cyan: #06B6D4;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--slate-50);
+  color: var(--slate-900);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── APP BACKGROUND (simulated transaction list) ─── */
+.app-bg {
+  padding: 16px;
+  padding-bottom: 120px;
+}
+.app-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.app-header h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px; font-weight: 700; color: var(--slate-900);
+}
+.app-header .badge {
+  background: var(--indigo-light); color: var(--indigo);
+  font-size: 12px; font-weight: 600; padding: 4px 10px;
+  border-radius: 20px;
+}
+.tx-list { display: flex; flex-direction: column; gap: 10px; }
+.tx-card {
+  background: var(--white); border-radius: 14px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+  border: 1px solid var(--slate-200);
+}
+.tx-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+.tx-card.active { border-color: var(--indigo); box-shadow: 0 0 0 2px rgba(79,70,229,0.15); }
+.tx-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.tx-icon.mtn { background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); }
+.tx-icon.airtel { background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); }
+.tx-icon.cash { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
+.tx-info { flex:1; min-width:0; }
+.tx-info .name { font-weight: 600; font-size: 14px; color: var(--slate-900); }
+.tx-info .meta { font-size: 12px; color: var(--slate-500); margin-top: 2px; }
+.tx-amount { text-align: right; }
+.tx-amount .value { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 14px; }
+.tx-amount .value.credit { color: var(--green); }
+.tx-amount .value.debit { color: var(--red); }
+.tx-amount .time { font-size: 11px; color: var(--slate-500); margin-top: 2px; }
+
+/* ─── DRAWER OVERLAY ─── */
+.drawer-overlay {
+  position: fixed; inset: 0; z-index: 900;
+  background: rgba(15,23,42,0.3);
+  backdrop-filter: blur(4px);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+/* ─── PRIMARY DRAWER ─── */
+.drawer {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
+  background: var(--white);
+  border-radius: 24px 24px 0 0;
+  max-height: 92vh;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.32,0.72,0,1);
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.12);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.drawer.open { transform: translateY(0); }
+
+.drawer-handle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: var(--slate-300); margin: 10px auto 0;
+}
+.drawer-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--slate-100);
+}
+.drawer-header h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 17px; font-weight: 700; color: var(--slate-900);
+}
+.drawer-close {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--slate-100); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--slate-700); font-size: 16px;
+  transition: background 0.15s;
+}
+.drawer-close:hover { background: var(--slate-200); }
+
+.drawer-body {
+  flex: 1; overflow-y: auto; padding: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ─── PROOF METADATA ─── */
+.proof-section { margin-bottom: 20px; }
+.proof-section-title {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--slate-500); margin-bottom: 10px;
+}
+.tx-id-row {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--slate-100); border-radius: 10px; padding: 10px 14px;
+  margin-bottom: 16px;
+}
+.tx-id-value {
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  font-weight: 500; color: var(--slate-900); flex: 1;
+  word-break: break-all;
+}
+.copy-btn {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: var(--white); border: 1px solid var(--slate-200);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--indigo); font-size: 14px;
+  transition: all 0.15s;
+}
+.copy-btn:hover { background: var(--indigo-light); }
+.copy-btn.copied { background: var(--green); color: white; border-color: var(--green); }
+
+/* ─── DETAILS TABLE ─── */
+.details-table {
+  width: 100%; border-collapse: collapse;
+  border: 1px solid var(--slate-200); border-radius: 12px;
+  overflow: hidden;
+}
+.details-table tr { border-bottom: 1px solid var(--slate-200); }
+.details-table tr:last-child { border-bottom: none; }
+.details-table td {
+  padding: 10px 14px; font-size: 13px; vertical-align: top;
+}
+.details-table td:first-child {
+  color: var(--slate-500); font-weight: 500; width: 110px;
+  background: var(--slate-50);
+}
+.details-table td:last-child { color: var(--slate-900); font-weight: 500; }
+.account-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--indigo-light); color: var(--indigo);
+  font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 6px;
+}
+.account-tag.credit { background: rgba(16,185,129,0.1); color: #059669; }
+
+/* ─── RECEIPT IMAGE ─── */
+.receipt-container {
+  background: var(--slate-50); border-radius: 14px;
+  border: 1px solid var(--slate-200); padding: 12px;
+  position: relative; cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.receipt-container:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.receipt-img {
+  width: 100%; border-radius: 10px; display: block;
+  background: linear-gradient(180deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+  min-height: 280px; position: relative;
+  overflow: hidden;
+}
+.receipt-img .mock-receipt {
+  padding: 20px; font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--slate-700); line-height: 1.8;
+}
+.receipt-img .mock-receipt .r-header {
+  text-align: center; font-weight: 700; font-size: 13px;
+  color: var(--slate-900); margin-bottom: 12px;
+  padding-bottom: 8px; border-bottom: 1px dashed var(--slate-300);
+}
+.receipt-img .mock-receipt .r-line {
+  display: flex; justify-content: space-between;
+}
+.expand-btn {
+  position: absolute; top: 20px; right: 20px;
+  width: 34px; height: 34px; border-radius: 10px;
+  background: rgba(255,255,255,0.9); border: 1px solid var(--slate-200);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--slate-700); font-size: 16px;
+  backdrop-filter: blur(4px);
+  transition: all 0.15s;
+}
+.expand-btn:hover { background: var(--white); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+/* ─── LIGHTBOX ─── */
+.lightbox {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(15,23,42,0.85);
+  backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+  padding: 20px;
+}
+.lightbox.open { opacity: 1; pointer-events: all; }
+.lightbox-content {
+  max-width: 100%; max-height: 90vh;
+  background: var(--white); border-radius: 16px;
+  overflow: auto; padding: 16px;
+  transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+}
+.lightbox.open .lightbox-content { transform: scale(1); }
+.lightbox-close {
+  position: absolute; top: 16px; right: 16px;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
+  color: white; font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.lightbox-close:hover { background: rgba(255,255,255,0.25); }
+.lightbox-receipt {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; color: var(--slate-700); line-height: 2;
+  padding: 24px; min-width: 300px;
+}
+.lightbox-receipt .r-header {
+  text-align: center; font-weight: 700; font-size: 15px;
+  color: var(--slate-900); margin-bottom: 16px;
+  padding-bottom: 10px; border-bottom: 1px dashed var(--slate-300);
+}
+.lightbox-receipt .r-line { display: flex; justify-content: space-between; }
+
+/* ─── STATUS BADGE ─── */
+.status-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 600; padding: 4px 10px;
+  border-radius: 20px;
+}
+.status-badge.success { background: rgba(16,185,129,0.1); color: #059669; }
+.status-badge.pending { background: rgba(245,158,11,0.1); color: #D97706; }
+
+/* ─── TOAST ─── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--slate-900); color: white; padding: 10px 20px;
+  border-radius: 10px; font-size: 13px; font-weight: 500;
+  opacity: 0; transition: all 0.3s ease; z-index: 3000;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- ═══ SIMULATED APP BACKGROUND ═══ -->
+<div class="app-bg">
+  <div class="app-header">
+    <h1>Transactions</h1>
+    <span class="badge">7 aujourd'hui</span>
+  </div>
+  <div class="tx-list">
+    <div class="tx-card active" onclick="openDrawer()">
+      <div class="tx-icon mtn">📱</div>
+      <div class="tx-info">
+        <div class="name">Nakamura Grace</div>
+        <div class="meta">MTN → Caisse USD</div>
+      </div>
+      <div class="tx-amount">
+        <div class="value credit">+$120.00</div>
+        <div class="time">14:32</div>
+      </div>
+    </div>
+    <div class="tx-card" onclick="openDrawer()">
+      <div class="tx-icon airtel">📱</div>
+      <div class="tx-info">
+        <div class="name">Ochieng Robert</div>
+        <div class="meta">Airtel → Cash UGX</div>
+      </div>
+      <div class="tx-amount">
+        <div class="value debit">-450,000 UGX</div>
+        <div class="time">13:15</div>
+      </div>
+    </div>
+    <div class="tx-card" onclick="openDrawer()">
+      <div class="tx-icon cash">💵</div>
+      <div class="tx-info">
+        <div class="name">Kato Emmanuel</div>
+        <div class="meta">Cash USD → MTN</div>
+      </div>
+      <div class="tx-amount">
+        <div class="value debit">-$85.00</div>
+        <div class="time">11:48</div>
+      </div>
+    </div>
+    <div class="tx-card">
+      <div class="tx-icon mtn">📱</div>
+      <div class="tx-info">
+        <div class="name">Amina Fatima</div>
+        <div class="meta">MTN → Cash UGX</div>
+      </div>
+      <div class="tx-amount">
+        <div class="value credit">+780,000 UGX</div>
+        <div class="time">10:22</div>
+      </div>
+    </div>
+    <div class="tx-card">
+      <div class="tx-icon airtel">📱</div>
+      <div class="tx-info">
+        <div class="name">Ssempala David</div>
+        <div class="meta">Airtel → Caisse USD</div>
+      </div>
+      <div class="tx-amount">
+        <div class="value credit">+$200.00</div>
+        <div class="time">09:05</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DRAWER OVERLAY ═══ -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+
+<!-- ═══ TRANSACTION INSPECTOR DRAWER ═══ -->
+<div class="drawer" id="drawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-header">
+    <h2>Inspecteur de preuve</h2>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body">
+    <!-- Status -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <span class="status-badge success">● Confirmée</span>
+      <span style="font-size:12px;color:var(--slate-500);">27 juin 2026 · 14:32:07</span>
+    </div>
+
+    <!-- TX ID -->
+    <div class="proof-section">
+      <div class="proof-section-title">Identifiant opérateur</div>
+      <div class="tx-id-row">
+        <span class="tx-id-value">TXN-MTN-2026062714320789456</span>
+        <button class="copy-btn" id="copyBtn" onclick="copyTxId()">📋</button>
+      </div>
+    </div>
+
+    <!-- Details Table -->
+    <div class="proof-section">
+      <div class="proof-section-title">Détails de la transaction</div>
+      <table class="details-table">
+        <tr><td>Date</td><td>27/06/2026</td></tr>
+        <tr><td>Heure</td><td>14:32:07 EAT</td></tr>
+        <tr><td>Client</td><td>Nakamura Grace</td></tr>
+        <tr><td>Montant</td><td style="font-family:'JetBrains Mono',monospace;font-weight:700;">$120.00</td></tr>
+        <tr><td>Taux</td><td style="font-family:'JetBrains Mono',monospace;">1 USD = 3,750 UGX</td></tr>
+        <tr><td>Débité</td><td><span class="account-tag">MTN MoMo</span> 450,000 UGX</td></tr>
+        <tr><td>Crédité</td><td><span class="account-tag credit">Caisse USD</span> $120.00</td></tr>
+        <tr><td>Opérateur</td><td>MTN Uganda</td></tr>
+      </table>
+    </div>
+
+    <!-- Receipt Image -->
+    <div class="proof-section">
+      <div class="proof-section-title">Reçu d'origine</div>
+      <div class="receipt-container" onclick="openLightbox()">
+        <button class="expand-btn">⛶</button>
+        <div class="receipt-img">
+          <div class="mock-receipt">
+            <div class="r-header">MTN MOBILE MONEY<br><span style="font-weight:400;font-size:11px;">Transaction Receipt</span></div>
+            <div class="r-line"><span>Trans ID:</span><span>789456321</span></div>
+            <div class="r-line"><span>Date:</span><span>27/06/2026 14:32</span></div>
+            <div class="r-line"><span>From:</span><span>0772***456</span></div>
+            <div class="r-line"><span>To:</span><span>OpaysFox Agent</span></div>
+            <div class="r-line"><span>Amount:</span><span>450,000 UGX</span></div>
+            <div class="r-line"><span>Fee:</span><span>2,200 UGX</span></div>
+            <div class="r-line"><span>Balance:</span><span>1,230,000 UGX</span></div>
+            <div style="margin-top:12px;text-align:center;border-top:1px dashed var(--slate-300);padding-top:8px;font-size:10px;color:var(--slate-500);">Thank you for using MTN MoMo</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LIGHTBOX ═══ -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <button class="lightbox-close" onclick="closeLightbox(event)">✕</button>
+  <div class="lightbox-content" onclick="event.stopPropagation()">
+    <div class="lightbox-receipt">
+      <div class="r-header">MTN MOBILE MONEY<br><span style="font-weight:400;font-size:12px;">Transaction Receipt</span></div>
+      <div class="r-line"><span>Transaction ID:</span><span>789456321</span></div>
+      <div class="r-line"><span>Date:</span><span>27/06/2026</span></div>
+      <div class="r-line"><span>Time:</span><span>14:32:07</span></div>
+      <div class="r-line"><span>Sender:</span><span>0772***456 (Nakamura Grace)</span></div>
+      <div class="r-line"><span>Receiver:</span><span>OpaysFox Agent</span></div>
+      <div class="r-line"><span>Amount:</span><span>450,000 UGX</span></div>
+      <div class="r-line"><span>Fee:</span><span>2,200 UGX</span></div>
+      <div class="r-line"><span>New Balance:</span><span>1,230,000 UGX</span></div>
+      <div class="r-line"><span>Status:</span><span style="color:#059669;font-weight:700;">SUCCESSFUL</span></div>
+      <div style="margin-top:16px;text-align:center;border-top:1px dashed var(--slate-300);padding-top:12px;font-size:11px;color:var(--slate-500);">Thank you for using MTN Mobile Money<br>Customer Care: 100</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast">ID copié !</div>
+
+<script>
+function openDrawer() {
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+}
+function copyTxId() {
+  const id = 'TXN-MTN-2026062714320789456';
+  navigator.clipboard.writeText(id).catch(()=>{});
+  const btn = document.getElementById('copyBtn');
+  btn.classList.add('copied');
+  btn.textContent = '✓';
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(()=>{ toast.classList.remove('show'); btn.classList.remove('copied'); btn.textContent='📋'; }, 2000);
+}
+function openLightbox() {
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox(e) {
+  if(e.target === document.getElementById('lightbox') || e.currentTarget.classList.contains('lightbox-close')) {
+    document.getElementById('lightbox').classList.remove('open');
+  }
+}
+// Auto-open drawer for preview
+setTimeout(()=> openDrawer(), 600);
+</script>
+</body>
+</html>

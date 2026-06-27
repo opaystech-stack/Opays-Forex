@@ -1,0 +1,36 @@
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: Gestion Forex
+      - heading "OpaysFox" [level=2] [ref=e7]
+    - generic [ref=e8]:
+      - button "Dashboard" [ref=e9] [cursor=pointer]:
+        - img [ref=e10]
+        - generic [ref=e15]: Dashboard
+      - button "Transactions" [ref=e16] [cursor=pointer]:
+        - img [ref=e17]
+        - generic [ref=e20]: Transactions
+      - button "Portefeuilles" [ref=e21] [cursor=pointer]:
+        - img [ref=e22]
+        - generic [ref=e24]: Portefeuilles
+      - button "Dépenses" [ref=e25] [cursor=pointer]:
+        - img [ref=e26]
+        - generic [ref=e29]: Dépenses
+      - button "Prêts" [ref=e30] [cursor=pointer]:
+        - img [ref=e31]
+        - generic [ref=e36]: Prêts
+      - button "Paramètres" [ref=e37] [cursor=pointer]:
+        - img [ref=e38]
+        - generic [ref=e41]: Paramètres
+  - generic [ref=e42]:
+    - banner [ref=e43]:
+      - generic [ref=e44]:
+        - generic [ref=e45]: Gestion Forex
+        - heading "OpaysFox" [level=1] [ref=e46]
+      - generic [ref=e47]:
+        - button "Ouvrir le suivi des dettes" [ref=e48] [cursor=pointer]:
+          - img [ref=e49]
+        - button "Ouvrir les paramètres" [ref=e55] [cursor=pointer]:
+          - img [ref=e56]
+    - main [ref=e59]:
+      - generic [ref=e60]: Chargement de la page…

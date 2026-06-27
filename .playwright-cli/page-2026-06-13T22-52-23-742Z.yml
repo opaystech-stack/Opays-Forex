@@ -1,0 +1,172 @@
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e5]:
+      - link "Opays Forex OpaysFox" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img "Opays Forex" [ref=e7]
+        - generic [ref=e8]: OpaysFox
+      - generic [ref=e9]:
+        - button "Fonctionnalités" [ref=e10] [cursor=pointer]
+        - button "Tarifs" [ref=e11] [cursor=pointer]
+        - button "Contact" [ref=e12] [cursor=pointer]
+      - generic [ref=e13]:
+        - group "Changer de langue" [ref=e14]:
+          - button "FR" [pressed] [ref=e15] [cursor=pointer]
+          - button "EN" [ref=e16] [cursor=pointer]
+        - link "Commencer" [ref=e17] [cursor=pointer]:
+          - /url: /register
+  - main [ref=e18]:
+    - generic [ref=e19]:
+      - generic [ref=e21]:
+        - generic [ref=e22]: Lancement Officiel 🚀
+        - heading "Gérez Votre Forex" [level=1] [ref=e24]
+        - heading "et Mobile Money" [level=1] [ref=e26]
+        - paragraph [ref=e27]: La plateforme tout-en-un pour les agences multi-devises. Suivi de trésorerie, comptabilité automatisée, IA vocale et relances WhatsApp — le tout dans une application web et mobile.
+        - generic [ref=e28]:
+          - link "Démarrer Gratuitement" [ref=e29] [cursor=pointer]:
+            - /url: /register
+          - button "Voir les Tarifs" [ref=e30] [cursor=pointer]
+        - img "Tableau de bord Opays Forex" [ref=e33]
+      - img [ref=e35]
+    - generic [ref=e38]:
+      - generic [ref=e39]:
+        - text: Fonctionnalités
+        - heading "Tout Ce Dont Votre Agence a Besoin" [level=2] [ref=e40]
+        - paragraph [ref=e41]: Une suite complète d'outils conçue pour les agences de change et mobile money en Afrique.
+      - generic [ref=e42]:
+        - generic [ref=e43]:
+          - img [ref=e45]
+          - heading "Multi-Devises en Temps Réel" [level=3] [ref=e48]
+          - paragraph [ref=e49]: Gérez USD, UGX, EUR et toutes les devises africaines avec des taux de change mis à jour en temps réel. Conversion instantanée et suivi de trésorerie précis.
+        - generic [ref=e50]:
+          - img [ref=e52]
+          - heading "Intégration WhatsApp" [level=3] [ref=e54]
+          - paragraph [ref=e55]: Capturez automatiquement les transactions via WhatsApp. OCR intelligent par IA lit les reçus et messages vocaux pour alimenter votre comptabilité sans saisie manuelle.
+        - generic [ref=e56]:
+          - img [ref=e58]
+          - heading "Notes Vocales Intelligentes" [level=3] [ref=e61]
+          - paragraph [ref=e62]: Dictéez vos transactions en français ou en anglais. Notre IA Gemini transcrit, catégorise et enregistre automatiquement chaque opération dans votre livre de comptes.
+        - generic [ref=e63]:
+          - img [ref=e65]
+          - heading "Rapports & Analytiques" [level=3] [ref=e67]
+          - paragraph [ref=e68]: Tableaux de bord visuels avec graphiques de trésorerie, rapports de performance journaliers, et export PDF pour votre comptable. Toute votre activité en un coup d'œil.
+    - generic [ref=e70]:
+      - generic [ref=e71]:
+        - text: Tarification
+        - heading "Des Prix Simples, Pas de Surprises" [level=2] [ref=e72]
+        - paragraph [ref=e73]: Choisissez le plan qui correspond à vos besoins. Changez ou annulez à tout moment.
+      - generic [ref=e74]:
+        - generic [ref=e75]:
+          - heading "Starter" [level=3] [ref=e76]
+          - generic [ref=e77]:
+            - generic [ref=e78]: $5
+            - generic [ref=e79]: /mois
+          - paragraph [ref=e80]: Parfait pour démarrer avec une seule agence.
+          - list [ref=e82]:
+            - listitem [ref=e83]:
+              - img [ref=e84]
+              - generic [ref=e86]: 1 agence / utilisateur
+            - listitem [ref=e87]:
+              - img [ref=e88]
+              - generic [ref=e90]: Jusqu'à 500 transactions/mois
+            - listitem [ref=e91]:
+              - img [ref=e92]
+              - generic [ref=e94]: Devises de base (USD, UGX, EUR)
+            - listitem [ref=e95]:
+              - img [ref=e96]
+              - generic [ref=e98]: Rapports journaliers PDF
+            - listitem [ref=e99]:
+              - img [ref=e100]
+              - generic [ref=e102]: Support par email
+          - link "Choisir Starter" [ref=e103] [cursor=pointer]:
+            - /url: /register
+        - generic [ref=e104]:
+          - generic [ref=e105]: RECOMMANDÉ
+          - heading "Pro" [level=3] [ref=e106]
+          - generic [ref=e107]:
+            - generic [ref=e108]: $10
+            - generic [ref=e109]: /mois
+          - paragraph [ref=e110]: Pour les agences actives qui veulent automatiser.
+          - list [ref=e112]:
+            - listitem [ref=e113]:
+              - img [ref=e114]
+              - generic [ref=e116]: Tout du plan Starter
+            - listitem [ref=e117]:
+              - img [ref=e118]
+              - generic [ref=e120]: Agences illimitées
+            - listitem [ref=e121]:
+              - img [ref=e122]
+              - generic [ref=e124]: Transactions illimitées
+            - listitem [ref=e125]:
+              - img [ref=e126]
+              - generic [ref=e128]: Agents IA Vocaux 🤖
+            - listitem [ref=e129]:
+              - img [ref=e130]
+              - generic [ref=e132]: Relances WhatsApp automatiques 📲
+            - listitem [ref=e133]:
+              - img [ref=e134]
+              - generic [ref=e136]: Rapports avancés & analytiques
+            - listitem [ref=e137]:
+              - img [ref=e138]
+              - generic [ref=e140]: Support prioritaire 24/7
+          - link "Choisir Pro" [ref=e141] [cursor=pointer]:
+            - /url: /register
+        - generic [ref=e142]:
+          - heading "Lifetime" [level=3] [ref=e143]
+          - generic [ref=e145]: $50
+          - generic [ref=e146]: paiement unique
+          - paragraph [ref=e147]: Accès à vie, aucun frais récurrent.
+          - list [ref=e149]:
+            - listitem [ref=e150]:
+              - img [ref=e151]
+              - generic [ref=e153]: Tout du plan Pro
+            - listitem [ref=e154]:
+              - img [ref=e155]
+              - generic [ref=e157]: Accès à vie, sans abonnement
+            - listitem [ref=e158]:
+              - img [ref=e159]
+              - generic [ref=e161]: Toutes les futures mises à jour
+            - listitem [ref=e162]:
+              - img [ref=e163]
+              - generic [ref=e165]: Intégrations API complètes
+            - listitem [ref=e166]:
+              - img [ref=e167]
+              - generic [ref=e169]: Support VIP dédié
+          - link "Obtenir à Vie" [ref=e170] [cursor=pointer]:
+            - /url: /register
+    - generic [ref=e172]:
+      - heading "Prêt à Transformer Votre Agence ?" [level=2] [ref=e173]
+      - paragraph [ref=e174]: Rejoignez des dizaines d'agences forex en Afrique qui gagnent du temps et de l'argent chaque jour avec Opays Forex.
+      - generic [ref=e175]:
+        - link "Créer Mon Compte" [ref=e176] [cursor=pointer]:
+          - /url: /register
+        - link "Nous Contacter" [ref=e177] [cursor=pointer]:
+          - /url: mailto:support@opaysforex.com
+    - generic [ref=e179]:
+      - generic [ref=e180]:
+        - generic [ref=e181]:
+          - link "Opays Forex OpaysFox" [ref=e182] [cursor=pointer]:
+            - /url: /
+            - img "Opays Forex" [ref=e183]
+            - generic [ref=e184]: OpaysFox
+          - paragraph [ref=e185]: La solution forex et mobile money pour l'Afrique.
+        - generic [ref=e186]:
+          - heading "Entreprise" [level=4] [ref=e187]
+          - list [ref=e188]:
+            - listitem [ref=e189]:
+              - link "À Propos" [ref=e190] [cursor=pointer]:
+                - /url: https://www.opays.io/
+        - generic [ref=e191]:
+          - heading "Contact" [level=4] [ref=e192]
+          - list [ref=e193]:
+            - listitem [ref=e194]:
+              - link "opaystech@gmail.com" [ref=e195] [cursor=pointer]:
+                - /url: mailto:opaystech@gmail.com
+                - img [ref=e196]
+                - text: opaystech@gmail.com
+            - listitem [ref=e199]:
+              - link "+243 983 819398" [ref=e200] [cursor=pointer]:
+                - /url: https://wa.me/243983819398
+                - img [ref=e201]
+                - text: +243 983 819398
+      - paragraph [ref=e204]: © 2026 Opays Forex. Tous droits réservés.

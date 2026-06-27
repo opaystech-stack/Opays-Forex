@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "wallets-preview.html",
+  "entry": "wallets-preview.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-06-26T22:45:12.703Z",
+  "updatedAt": "2026-06-26T22:45:12.703Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

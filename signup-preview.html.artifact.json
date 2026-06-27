@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "signup-preview.html",
+  "entry": "signup-preview.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-06-26T22:02:32.608Z",
+  "updatedAt": "2026-06-26T22:02:32.608Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

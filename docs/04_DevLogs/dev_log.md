@@ -58,3 +58,31 @@
     *   Mise en cache et persistance de la session WhatsApp (dossier `./sessions`) pour éviter de devoir re-scanner le QR code.
     *   Guide complet rédigé dans `whatsapp-gateway/README.md` décrivant les prérequis système, les variables d'environnement, le branchement webhook et les étapes d'appairage.
 
+
+## 2026-06-11 - Finalisation SaaS (devises, dettes, gains, contraste, stabilité mobile)
+
+### Jalons
+*   **Isolation de l'espace public** : confirmation que les gardes `PublicOnlyRoute`/`PrivateRoute` (react-router) empêchent un utilisateur authentifié de revenir sur la page d'accueil marketing ou les pages d'auth (`/`, `/login`, `/register` → `/app`), y compris par URL directe ou bouton précédent.
+*   **Registre de devises centralisé** : création de `src/utils/currencies.js` (USD, EUR, UGX, KES, TZS, BIF, CDF, FCFA) comme source de vérité unique, et du composant réutilisable `src/components/CurrencySelect.jsx`. Toutes les devises sont **toujours sélectionnables** (jamais désactivées), avec avertissement non bloquant si un taux manque. Intégré dans `Wallets.jsx` (remplacement de la liste codée en dur, retrait de RWF) et `Debts.jsx`. Libellés i18n fr/en ajoutés (FCFA précise BCEAO/BEAC).
+*   **Suivi des dettes & créances** : nouvelle page `src/pages/Debts.jsx` (« Ce qu'on te doit » / « Ce que tu dois »), grand livre déclaratif distinct des prêts, persistance via `AppContext` (`createDebt`, `updateDebtStatus`, `getDebtTotals`, `MOCK_DEBTS`, clé `forex_debts`) et table Supabase `debts` ajoutée à `supabase_schema.sql`. Bouton dédié `debts-fab` placé en haut à droite, à côté du bouton Paramètres.
+*   **Suivi des gains** : helpers purs `sumDailyProfit`/`sumMonthlyProfit` dans `src/utils/finance.js` (brouillons exclus, pertes incluses) et bloc « Gains » (jour + mois) dans le `Dashboard`.
+*   **Contraste & accessibilité** : découverte que toute la couche de styles applicatifs (`.btn`, `.mobile-navbar`, `.card`, etc.) et ses variables CSS étaient absentes. Réintroduction d'une feuille de style complète dans `src/index.css` avec une palette de boutons (`src/styles/buttonPalette.js`) respectant WCAG ≥ 4,5:1 dans tous les états (actif et désactivé, sans dégradation par opacité).
+*   **Stabilité mobile** : barre de navigation inférieure `position: fixed` (barre latérale sur desktop ≥ 900px), `overflow-x: hidden`, réservation d'espace pour la barre, unités `100dvh` pour éviter le tremblement au clavier.
+*   **Garde de démarrage** : en production sans configuration Supabase, écran d'erreur bloquant (`BootGuard`).
+
+### Tests
+*   Ajout de `fast-check` + `@testing-library/react` (config Vitest `jsdom`/`globals`, esbuild JSX automatique).
+*   15 propriétés de correction couvertes (registre, conversion, gains, dettes, contraste) + tests d'exemple. Suite complète verte (`npm test` : 25 tests). `npm run build` OK.
+
+## 2026-06-27 - Alignement Design System Open Design & Stabilité des Tests
+
+### Jalons
+*   **Alignement de la page Coordonnées de Paiement (`/paiement`)** :
+    *   Refonte complète de [Paiement.jsx](file:///c:/LAPOSTE/Projets/FOREX/src/pages/Paiement.jsx) selon le prototype `paiement-redesign.html` d'Open Design.
+    *   Intégration d'une structure en grille à 2 colonnes, de cartes individuelles avec dégradés subtils, d'indicateurs d'étapes verticaux reliés en continu et d'une zone de glisser-déposer de fichier stylisée.
+    *   Bouton interactif de copie dynamique avec message temporaire de confirmation ("Copié !").
+*   **Mock local autonome** :
+    *   Ajout de coordonnées fictives par défaut (`VITE_PAY_*`) dans le fichier [.env](file:///c:/LAPOSTE/Projets/FOREX/.env) pour assurer l'affichage automatique des cartes de démonstration sans dépendances externes.
+*   **Stabilisation de Vitest sous forte charge** :
+    *   Ajout de `testTimeout: 30000` (30 secondes) dans [vite.config.js](file:///c:/LAPOSTE/Projets/FOREX/vite.config.js) pour fiabiliser l'exécution des tests d'intégration Vitest en cas d'engorgement système.
+    *   Validation complète de la suite de tests (**476 tests sur 476 validés OK**).

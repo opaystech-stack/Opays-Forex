@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "acces-restreint-preview.html",
+  "entry": "acces-restreint-preview.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-06-26T21:32:41.838Z",
+  "updatedAt": "2026-06-26T21:32:41.838Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

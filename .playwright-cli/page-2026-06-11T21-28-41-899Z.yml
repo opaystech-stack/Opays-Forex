@@ -1,0 +1,39 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e7]:
+    - generic [ref=e8]:
+      - img "Opays Forex" [ref=e9]
+      - generic [ref=e10]: FOREX
+    - heading "Se Connecter" [level=1] [ref=e11]
+    - paragraph [ref=e12]: Entrez vos identifiants pour continuer.
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - generic [ref=e15]: Email
+        - generic [ref=e16]:
+          - img [ref=e17]
+          - textbox "votre@email.com" [ref=e20]
+      - generic [ref=e21]:
+        - generic [ref=e22]: Mot de passe
+        - generic [ref=e23]:
+          - img [ref=e24]
+          - textbox "••••••••" [ref=e27]
+          - button "Afficher" [ref=e28] [cursor=pointer]
+      - generic [ref=e29]:
+        - generic [ref=e30] [cursor=pointer]:
+          - checkbox "Se souvenir de moi" [ref=e31]
+          - generic [ref=e32]: Se souvenir de moi
+        - link "Mot de passe oublié ?" [ref=e33] [cursor=pointer]:
+          - /url: "#/login"
+      - button "Se Connecter" [ref=e34] [cursor=pointer]
+    - generic [ref=e39]: OU
+    - button "Continuer avec Google" [ref=e40] [cursor=pointer]:
+      - img [ref=e41]
+      - text: Continuer avec Google
+    - paragraph [ref=e46]:
+      - text: Pas encore de compte ?
+      - link "Créer un compte" [ref=e47] [cursor=pointer]:
+        - /url: "#/register"
+  - link "Kimi Kimi Agent" [ref=e49] [cursor=pointer]:
+    - /url: https://www.kimi.com/agent
+    - img "Kimi" [ref=e50]
+    - generic [ref=e51]: Kimi Agent
+    - img

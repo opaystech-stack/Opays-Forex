@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "voice-agent-preview.html",
+  "entry": "voice-agent-preview.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-06-26T23:04:52.618Z",
+  "updatedAt": "2026-06-26T23:04:52.618Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

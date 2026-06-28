@@ -124,6 +124,7 @@ CREATE TABLE IF NOT EXISTS transactions (
   fee DECIMAL(24, 8) DEFAULT 0,
   fee_wallet_id UUID REFERENCES wallets(id) ON DELETE SET NULL,
   profit_usd DECIMAL(24, 8) DEFAULT 0,
+  service_amount DECIMAL(24, 8) DEFAULT 0,
   type VARCHAR(32) NOT NULL DEFAULT 'exchange', -- exchange, deposit, withdrawal, transfer
   status VARCHAR(32) NOT NULL DEFAULT 'completed', -- draft, pending, completed, cancelled
   transaction_id TEXT,
@@ -275,6 +276,155 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 
 CREATE INDEX IF NOT EXISTS idx_audit_logs_agency ON audit_logs(agency_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at DESC);
+
+-- Dettes & créances (registre déclaratif ; aucun impact direct sur les soldes)
+CREATE TABLE IF NOT EXISTS debts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  agency_id UUID NOT NULL REFERENCES agencies(id) ON DELETE CASCADE,
+  type VARCHAR(16) NOT NULL, -- receivable | payable
+  counterparty_name TEXT,
+  amount DECIMAL(24, 8) NOT NULL,
+  currency VARCHAR(8) NOT NULL,
+  note TEXT,
+  status VARCHAR(16) NOT NULL DEFAULT 'pending', -- pending | settled
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  settled_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_debts_agency ON debts(agency_id);
+
+-- Modèles de message (WhatsApp / relances)
+CREATE TABLE IF NOT EXISTS message_templates (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  agency_id UUID NOT NULL REFERENCES agencies(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  lang VARCHAR(8) DEFAULT 'fr',
+  scenario VARCHAR(32) DEFAULT 'personalized',
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_message_templates_agency ON message_templates(agency_id);
+
+-- Historique des relances
+CREATE TABLE IF NOT EXISTS reminder_history (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  agency_id UUID NOT NULL REFERENCES agencies(id) ON DELETE CASCADE,
+  customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
+  loan_id UUID REFERENCES loans(id) ON DELETE SET NULL,
+  template_id UUID REFERENCES message_templates(id) ON DELETE SET NULL,
+  scenario VARCHAR(32),
+  content TEXT,
+  trigger_source VARCHAR(16) DEFAULT 'manual', -- manual | voice
+  status VARCHAR(16) DEFAULT 'sent', -- sent | failed | queued
+  provider_message_id TEXT,
+  error_reason TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_reminder_history_agency ON reminder_history(agency_id);
+
+-- États d'activation des modules fonctionnels par agence
+CREATE TABLE IF NOT EXISTS module_states (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  agency_id UUID NOT NULL REFERENCES agencies(id) ON DELETE CASCADE,
+  module_key VARCHAR(48) NOT NULL,
+  enabled BOOLEAN NOT NULL DEFAULT false,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(agency_id, module_key)
+);
+CREATE INDEX IF NOT EXISTS idx_module_states_agency ON module_states(agency_id);
+
+-- Habilitations (droits) de modules accordées par la plateforme
+CREATE TABLE IF NOT EXISTS module_entitlements (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  agency_id UUID NOT NULL REFERENCES agencies(id) ON DELETE CASCADE,
+  module_key VARCHAR(48) NOT NULL,
+  granted BOOLEAN NOT NULL DEFAULT false,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(agency_id, module_key)
+);
+CREATE INDEX IF NOT EXISTS idx_module_entitlements_agency ON module_entitlements(agency_id);
+
+-- Réservations de billets d'avion (module additionnel)
+CREATE TABLE IF NOT EXISTS flight_bookings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  agency_id UUID NOT NULL REFERENCES agencies(id) ON DELETE CASCADE,
+  customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
+  passenger_name TEXT,
+  route TEXT,
+  flight_at TIMESTAMPTZ,
+  amount DECIMAL(24, 8),
+  cost DECIMAL(24, 8),
+  currency VARCHAR(8),
+  profit_usd DECIMAL(24, 8) DEFAULT 0,
+  status VARCHAR(16) DEFAULT 'pending',
+  note TEXT,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_flight_bookings_agency ON flight_bookings(agency_id);
+
+-- Fichiers téléversés (preuves, flyers) — binaires sur volume, métadonnées en base
+CREATE TABLE IF NOT EXISTS uploads (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  agency_id UUID NOT NULL REFERENCES agencies(id) ON DELETE CASCADE,
+  owner_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  kind VARCHAR(32) DEFAULT 'receipt',
+  original_name TEXT,
+  mime VARCHAR(128),
+  size BIGINT,
+  path TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_uploads_agency ON uploads(agency_id);
+
+-- Liens de commande à distance (jetons)
+CREATE TABLE IF NOT EXISTS order_links (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  agency_id UUID NOT NULL REFERENCES agencies(id) ON DELETE CASCADE,
+  token TEXT UNIQUE NOT NULL,
+  revoked BOOLEAN NOT NULL DEFAULT false,
+  expires_at TIMESTAMPTZ,
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_order_links_agency ON order_links(agency_id);
+
+-- Catalogue des méthodes de transfert (par agence ; agency_id NULL = défaut global)
+CREATE TABLE IF NOT EXISTS transfer_methods (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  agency_id UUID REFERENCES agencies(id) ON DELETE CASCADE,
+  label TEXT NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  is_permanent BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_transfer_methods_agency ON transfer_methods(agency_id);
+
+-- Catalogue des fournisseurs d'abonnement (par agence ; agency_id NULL = défaut)
+CREATE TABLE IF NOT EXISTS subscription_providers (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  agency_id UUID REFERENCES agencies(id) ON DELETE CASCADE,
+  label TEXT NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_subscription_providers_agency ON subscription_providers(agency_id);
+
+-- Invitations de collaborateurs (membres d'agence)
+CREATE TABLE IF NOT EXISTS agency_invitations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  agency_id UUID NOT NULL REFERENCES agencies(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  role VARCHAR(32) NOT NULL DEFAULT 'caissier',
+  token TEXT UNIQUE,
+  status VARCHAR(16) NOT NULL DEFAULT 'en_attente', -- en_attente | acceptee | expiree
+  invited_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ,
+  accepted_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_agency_invitations_agency ON agency_invitations(agency_id);
 
 -- Seed default currencies per agency (trigger)
 CREATE OR REPLACE FUNCTION seed_agency_currencies()

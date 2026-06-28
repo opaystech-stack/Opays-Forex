@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { configDefaults } from 'vitest/config'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -11,6 +12,9 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     testTimeout: 30000,
+    // Les tests e2e Playwright (testDir ./tests) ont leur propre exécuteur :
+    // on les exclut de la collecte Vitest pour éviter les erreurs de collecte.
+    exclude: [...configDefaults.exclude, 'tests/**'],
   },
   server: {
     host: '127.0.0.1',

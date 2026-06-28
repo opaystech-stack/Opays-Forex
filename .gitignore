@@ -34,3 +34,11 @@ test-results/
 playwright-report/
 tests/screenshots/
 playwright/.cache/
+
+# Fichiers de sauvegarde / brouillons d'éditeur
+*.bak
+*.backup.*
+
+# Sorties et configs de test temporaires (ne pas versionner)
+vitest-*.json
+vitest-out.txt

@@ -35,11 +35,10 @@
     --color-cyan-glow: rgba(14, 116, 144, 0.30);
     --color-orange: #C2410C;
     --color-orange-glow: rgba(194, 65, 12, 0.30);
-    /* HSL Premium Colors */
-    --color-primary: hsl(244deg 63% 56%);
-    --color-green: hsl(142deg 71% 29%);
+    /* Statuts — source unique de vérité, alignée sur la Charte_Graphique et
+       src/styles/buttonPalette.js (pas de redéfinition en double). */
+    --color-green: #15803D;
     --color-red: hsl(0deg 72% 49%);
-    --color-orange: hsl(21deg 89% 40%);
     --border-color: hsl(214deg 30% 90%);
     --bg-light: hsl(210deg 38% 97%);
     --text-secondary: hsl(215deg 22% 34%);
@@ -246,10 +245,10 @@
   filter: blur(40px);
   opacity: 0.12;
 }
-.sphere-1 { width: 240px; height: 240px; background: #4F46E5; top: 8%; left: -60px; }
-.sphere-2 { width: 200px; height: 200px; background: #0E7490; bottom: 12%; right: -40px; }
+.sphere-1 { width: 240px; height: 240px; background: var(--indigo-strong); top: 8%; left: -60px; }
+.sphere-2 { width: 200px; height: 200px; background: var(--color-cyan); bottom: 12%; right: -40px; }
 .sphere-3 { width: 160px; height: 160px; background: #7C3AED; top: 40%; right: 10%; }
-.sphere-4 { width: 180px; height: 180px; background: #4F46E5; bottom: 30%; left: 5%; }
+.sphere-4 { width: 180px; height: 180px; background: var(--indigo-strong); bottom: 30%; left: 5%; }
 .dashboard-layout, .page-content > * { position: relative; z-index: 1; }
 
 /* --- Navigation principale : barre inférieure fixe (R8.1) --------------- */
@@ -418,15 +417,15 @@
   border: none;
   cursor: pointer;
   color: #FFFFFF;
-  background: #4F46E5;
+  background: var(--indigo-strong);
   transition: background 0.18s ease;
 }
 .settings-fab:hover,
 .clients-fab:hover,
-.debts-fab:hover { background: #4338CA; }
-.debts-fab { background: #0E7490; }
+.debts-fab:hover { background: var(--indigo-deep); }
+.debts-fab { background: var(--color-cyan); }
 .debts-fab:hover { background: #0B5F75; }
-.clients-fab { background: #0E7490; }
+.clients-fab { background: var(--color-cyan); }
 .clients-fab:hover { background: #0B5F75; }
 
 /* Bouton « Agent vocal » : cohérent avec les fab (paire 'fab' de BUTTON_PALETTE) */
@@ -441,13 +440,13 @@
   border: none;
   cursor: pointer;
   color: #FFFFFF;
-  background: #4F46E5;
+  background: var(--indigo-strong);
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
   transition: background 0.18s ease;
 }
-.voice-agent-btn:hover { background: #4338CA; }
+.voice-agent-btn:hover { background: var(--indigo-deep); }
 
 /* Mobile : cluster en haut à droite, icône seule pour gagner de la place,
    bouton adjacent à Paramètres sans chevauchement (libellé via aria-label). */
@@ -494,9 +493,9 @@
   cursor: pointer;
   transition: background 0.18s ease, color 0.18s ease;
 }
-.toggle-button.active { background: #4F46E5; color: #FFFFFF; }
-.toggle-button.active.business { background: #0E7490; color: #FFFFFF; }
-.toggle-button.active.personal { background: #C2410C; color: #FFFFFF; }
+.toggle-button.active { background: var(--indigo-strong); color: #FFFFFF; }
+.toggle-button.active.business { background: var(--color-cyan); color: #FFFFFF; }
+.toggle-button.active.personal { background: var(--color-orange); color: #FFFFFF; }
 
 /* Boutons d'action sur les brouillons */
 .draft-btn {
@@ -511,8 +510,8 @@
   color: #FFFFFF;
   transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
-.draft-btn.edit { background: rgba(79, 70, 229, 0.12); color: #4338CA; }
-.draft-btn.confirm { background: #15803D; }
+.draft-btn.edit { background: rgba(79, 70, 229, 0.12); color: var(--indigo-deep); }
+.draft-btn.confirm { background: var(--color-green); }
 .draft-btn.reject { background: #DC2626; }
 .draft-btn:hover { transform: scale(1.1); box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
 
@@ -597,7 +596,7 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   background: rgba(79, 70, 229, 0.12);
-  color: #4338CA;
+  color: var(--indigo-deep);
   border: 1px solid rgba(79, 70, 229, 0.25);
   padding: 3px 8px;
   border-radius: 10px;
@@ -705,7 +704,7 @@
 }
 .drafts-header {
   display: flex; align-items: center; gap: 8px; font-size: 13px;
-  font-weight: 700; color: #C2410C; margin-bottom: 10px;
+  font-weight: 700; color: var(--color-orange); margin-bottom: 10px;
 }
 .draft-card { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #FFFFFF; border: 1px solid #FED7AA; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }
 .draft-info { display: flex; flex-direction: column; gap: 2px; cursor: pointer; min-width: 0; }
@@ -719,9 +718,9 @@
 .ledger-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 14px; }
 .ledger-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .ledger-icon-box { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0; color: #FFFFFF; }
-.ledger-icon-box.exchange { background: #4F46E5; }
-.ledger-icon-box.expense-bus { background: #0E7490; }
-.ledger-icon-box.expense-perso { background: #C2410C; }
+.ledger-icon-box.exchange { background: var(--indigo-strong); }
+.ledger-icon-box.expense-bus { background: var(--color-cyan); }
+.ledger-icon-box.expense-perso { background: var(--color-orange); }
 .ledger-details { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .ledger-title { font-size: 13px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ledger-subtitle { font-size: 11px; color: var(--text-secondary); }
@@ -751,7 +750,7 @@
 .receipt-remove-btn { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border-radius: 50%; background: rgba(0,0,0,0.6); color: #FFFFFF; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
 /* --- Écran d'authentification (overlay de chargement) ------------------- */
-.auth-overlay { position: fixed; inset: 0; z-index: 200; background: linear-gradient(160deg, #0A1628 0%, #1E3A5F 60%, #4F46E5 100%); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.auth-overlay { position: fixed; inset: 0; z-index: 200; background: linear-gradient(160deg, #0A1628 0%, #1E3A5F 60%, var(--indigo-strong) 100%); display: flex; align-items: center; justify-content: center; padding: 24px; }
 .auth-header { text-align: center; margin-bottom: 20px; }
 .auth-subtitle { display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #93C5FD; }
 .auth-title { font-size: 26px; font-weight: 800; color: #FFFFFF; margin: 4px 0 0; }
@@ -1070,12 +1069,12 @@
   letter-spacing: 0.01em;
 }
 .btn-primary {
-  background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
+  background: linear-gradient(135deg, var(--indigo-strong) 0%, var(--indigo-deep) 100%);
   border: none;
   box-shadow: 0 4px 14px rgba(79, 70, 229, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 .btn-primary:hover {
-  background: linear-gradient(135deg, #4338CA 0%, #1E40AF 100%);
+  background: linear-gradient(135deg, var(--indigo-deep) 0%, #1E40AF 100%);
   box-shadow: 0 8px 22px rgba(79, 70, 229, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.16);
   transform: translateY(-1px);
 }
@@ -1101,17 +1100,17 @@
   width: 44px;
   height: 44px;
   border-radius: 13px;
-  background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
+  background: linear-gradient(135deg, var(--indigo-strong) 0%, var(--indigo-deep) 100%);
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 .clients-fab,
 .debts-fab {
-  background: linear-gradient(135deg, #0E7490 0%, #0B5F75 100%);
+  background: linear-gradient(135deg, var(--color-cyan) 0%, #0B5F75 100%);
   box-shadow: 0 4px 12px rgba(14, 116, 144, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 .voice-agent-btn {
   height: 44px;
-  background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
+  background: linear-gradient(135deg, var(--indigo-strong) 0%, var(--indigo-deep) 100%);
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 @media (max-width: 767.98px) {
@@ -1147,7 +1146,7 @@ select.form-control { cursor: pointer; }
 /* --- Bascules : cible ≥44px, état actif en dégradé ------------------------- */
 .toggle-button { min-height: 44px; }
 .toggle-button.active {
-  background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
+  background: linear-gradient(135deg, var(--indigo-strong) 0%, var(--indigo-deep) 100%);
   box-shadow: 0 2px 8px rgba(79, 70, 229, 0.22);
 }
 
@@ -1598,7 +1597,7 @@ select.form-control { cursor: pointer; }
 }
 .barchart__fill {
   width: 100%; border-radius: 8px;
-  background: linear-gradient(180deg, #a78bfa 0%, #6366f1 40%, #4338CA 100%);
+  background: linear-gradient(180deg, #a78bfa 0%, #6366f1 40%, var(--indigo-deep) 100%);
   transition: height 0.3s ease;
 }
 .barchart__label { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
@@ -1636,11 +1635,11 @@ select.form-control { cursor: pointer; }
 
 /* Boutons primaires */
 .btn-primary {
-  background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
+  background: linear-gradient(135deg, var(--indigo-strong) 0%, var(--indigo-deep) 100%);
   box-shadow: 0 4px 14px rgba(79, 70, 229, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 .btn-primary:hover {
-  background: linear-gradient(135deg, #4338CA 0%, #3730A3 100%);
+  background: linear-gradient(135deg, var(--indigo-deep) 0%, #3730A3 100%);
   box-shadow: 0 8px 22px rgba(79, 70, 229, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 .btn-primary:hover { box-shadow: 0 6px 20px var(--primary-blue-glow); }
@@ -1651,11 +1650,11 @@ select.form-control { cursor: pointer; }
 .settings-fab,
 .clients-fab,
 .voice-agent-btn {
-  background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
+  background: linear-gradient(135deg, var(--indigo-strong) 0%, var(--indigo-deep) 100%);
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 .settings-fab:hover,
-.voice-agent-btn:hover { background: linear-gradient(135deg, #4338CA 0%, #3730A3 100%); }
+.voice-agent-btn:hover { background: linear-gradient(135deg, var(--indigo-deep) 0%, #3730A3 100%); }
 
 /* Navigation : onglet actif (barre du bas mobile + sidebar desktop) */
 .navbar-tab.active,
@@ -1666,14 +1665,14 @@ select.form-control { cursor: pointer; }
 
 /* Bascules (toggle) */
 .toggle-button.active {
-  background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
+  background: linear-gradient(135deg, var(--indigo-strong) 0%, var(--indigo-deep) 100%);
   box-shadow: 0 2px 8px rgba(79, 70, 229, 0.22);
 }
 
 /* Badges, brouillons, icônes de registre, cartes actives */
 .mock-badge { background: var(--indigo-soft); color: var(--indigo-strong); border-color: var(--indigo-border); }
 .draft-btn.edit { background: var(--indigo-soft); color: var(--indigo-strong); }
-.ledger-icon-box.exchange { background: #4F46E5; }
+.ledger-icon-box.exchange { background: var(--indigo-strong); }
 .gain-box { background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(14, 116, 144, 0.08)); }
 .wallet-card.active { box-shadow: 0 0 0 3px var(--indigo-soft); }
 .fx-card.active { box-shadow: 0 0 0 3px var(--indigo-soft); }
@@ -2007,7 +2006,7 @@ select.form-control { cursor: pointer; }
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: #15803D;
+  background: var(--color-green);
   color: #ffffff;
   border: none;
   display: flex;
@@ -2461,7 +2460,7 @@ select.form-control { cursor: pointer; }
   color: var(--indigo-strong) !important;
 }
 
-.landing-reset .text-\[\#4F46E5\] {
+.landing-reset .text-\[\var(--indigo-strong)\] {
   color: var(--indigo-strong) !important;
 }
 
@@ -2483,7 +2482,7 @@ select.form-control { cursor: pointer; }
   box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04) !important;
 }
 
-.landing-reset .bg-gradient-to-b.from-\[\#0D1526\].border-\[\#4F46E5\] {
+.landing-reset .bg-gradient-to-b.from-\[\#0D1526\].border-\[\var(--indigo-strong)\] {
   border-color: var(--indigo-strong) !important;
   box-shadow: 0 8px 30px rgba(79, 70, 229, 0.1) !important;
 }
@@ -2518,33 +2517,33 @@ select.form-control { cursor: pointer; }
 }
 
 /* Keep white text for buttons with solid background */
-.landing-reset .bg-\[\#4F46E5\],
-.landing-reset .bg-gradient-to-r.from-\[\#4F46E5\],
-.landing-reset nav .bg-\[\#4F46E5\],
-.landing-reset footer .bg-\[\#4F46E5\],
-.landing-reset a.bg-\[\#4F46E5\] {
+.landing-reset .bg-\[\var(--indigo-strong)\],
+.landing-reset .bg-gradient-to-r.from-\[\var(--indigo-strong)\],
+.landing-reset nav .bg-\[\var(--indigo-strong)\],
+.landing-reset footer .bg-\[\var(--indigo-strong)\],
+.landing-reset a.bg-\[\var(--indigo-strong)\] {
   background: var(--indigo-strong) !important;
   color: #ffffff !important;
   border: none !important;
 }
 
-.landing-reset .bg-\[\#4F46E5\]:hover,
-.landing-reset .bg-gradient-to-r.from-\[\#4F46E5\]:hover,
-.landing-reset a.bg-\[\#4F46E5\]:hover {
+.landing-reset .bg-\[\var(--indigo-strong)\]:hover,
+.landing-reset .bg-gradient-to-r.from-\[\var(--indigo-strong)\]:hover,
+.landing-reset a.bg-\[\var(--indigo-strong)\]:hover {
   background: var(--indigo-deep) !important;
   color: #ffffff !important;
 }
 
 /* Outline CTA buttons */
-.landing-reset a.border-\[\#1A2642\]:not(.bg-\[\#4F46E5\]),
-.landing-reset button.border-\[\#1A2642\]:not(.bg-\[\#4F46E5\]) {
+.landing-reset a.border-\[\#1A2642\]:not(.bg-\[\var(--indigo-strong)\]),
+.landing-reset button.border-\[\#1A2642\]:not(.bg-\[\var(--indigo-strong)\]) {
   border-color: var(--border-color) !important;
   background: #ffffff !important;
   color: var(--text-primary) !important;
 }
 
-.landing-reset a.border-\[\#1A2642\]:not(.bg-\[\#4F46E5\]):hover,
-.landing-reset button.border-\[\#1A2642\]:not(.bg-\[\#4F46E5\]):hover {
+.landing-reset a.border-\[\#1A2642\]:not(.bg-\[\var(--indigo-strong)\]):hover,
+.landing-reset button.border-\[\#1A2642\]:not(.bg-\[\var(--indigo-strong)\]):hover {
   border-color: var(--indigo-strong) !important;
   background: var(--indigo-soft) !important;
   color: var(--indigo-strong) !important;

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import translations from '../i18n';
 import { supabase } from '../services/supabase';
+import { getDataBackend, apiProvider } from '../services/dataProvider';
 import {
   calculateLoanRepaymentUSD,
   convertToUSD,
@@ -36,6 +37,7 @@ import { validateSubscription } from '../utils/subscriptionValidation';
 import { validateFlightBooking, computeFlightProfit } from '../utils/flightBooking';
 import { DEFAULT_PROVIDERS, TRANSFER_METHOD_OTHER } from '../utils/catalogs';
 import { generateOrderToken } from '../utils/orderToken';
+import { computeDebtTotals } from '../utils/debts';
 
 // Helpers de repli mock localStorage (mode démo / sans Supabase). Définis au
 // niveau module afin d'être accessibles depuis tous les handlers (createOrderLink,
@@ -385,6 +387,12 @@ export const AppProvider = ({ children }) => {
     import.meta.env.VITE_SUPABASE_ANON_KEY &&
     supabase !== null;
 
+  // Backend de données sélectionné (Lot L0). Stable pour la durée de vie du
+  // provider. Défaut rétro-compatible : 'supabase' si clés présentes, sinon
+  // 'mock'. 'api' route vers le backend Fastify (cookie JWT httpOnly).
+  const dataBackend = getDataBackend();
+  const isApiBackend = dataBackend === 'api';
+
   const getAppBaseUrl = useCallback(() => {
     const candidates = [
       import.meta.env.VITE_APP_URL,
@@ -449,6 +457,48 @@ export const AppProvider = ({ children }) => {
   const fetchData = useCallback(async (showLoading = false) => {
     if (showLoading) {
       setLoading(true);
+    }
+
+    // --- Backend API Fastify (Lot L1/L3) : chargement via apiProvider --------
+    // L'isolation par agence est appliquée côté serveur (cookie JWT) ; le
+    // client ne transmet jamais d'agency_id.
+    if (isApiBackend) {
+      if (!authChecked) return;
+      if (!user || user?.isDemo) { setLoading(false); return; }
+      try {
+        const [wl, tx] = await Promise.all([
+          apiProvider.wallets.list(),
+          apiProvider.transactions.list({ limit: 200 }),
+        ]);
+        setWallets(wl);
+        setTransactions(tx);
+        // Lectures secondaires tolérantes (chaque entité isolée pour ne pas
+        // casser le chargement global si une table est absente).
+        try { setRates(await apiProvider.rates.list()); } catch (e) { console.warn('API rates indisponibles:', e?.message); }
+        try { setCustomers(await apiProvider.customers.list()); } catch (e) { console.warn('API customers indisponibles:', e?.message); }
+        try { setExpenses(await apiProvider.expenses.list()); } catch (e) { console.warn('API expenses indisponibles:', e?.message); }
+        try { setLoans(await apiProvider.loans.list()); } catch (e) { console.warn('API loans indisponibles:', e?.message); }
+        try { setDebts(await apiProvider.debts.list()); } catch (e) { console.warn('API debts indisponibles:', e?.message); }
+        try { setTemplates(await apiProvider.templates.list()); } catch (e) { console.warn('API templates indisponibles:', e?.message); }
+        try { setReminderHistory(await apiProvider.reminders.list()); } catch (e) { console.warn('API reminders indisponibles:', e?.message); }
+        try { setModuleStates(await apiProvider.modules.states()); } catch (e) { console.warn('API module states indisponibles:', e?.message); }
+        try { setModuleEntitlements(await apiProvider.modules.entitlements()); } catch (e) { console.warn('API module entitlements indisponibles:', e?.message); }
+        try { setFlightBookings(await apiProvider.flightBookings.list()); } catch (e) { console.warn('API flight bookings indisponibles:', e?.message); }
+        try { setOrderLinks(await apiProvider.orderLinks.list()); } catch (e) { console.warn('API order links indisponibles:', e?.message); }
+        try { setTransferMethods(await apiProvider.transferMethods.list()); } catch (e) { console.warn('API transfer methods indisponibles:', e?.message); }
+        try { setSubscriptionProviders(await apiProvider.subscriptionProviders.list()); } catch (e) { console.warn('API subscription providers indisponibles:', e?.message); }
+        try { setInvitations(await apiProvider.invitations.list()); } catch (e) { console.warn('API invitations indisponibles:', e?.message); }
+        try { setEmployees(await apiProvider.members.list()); } catch (e) { console.warn('API members indisponibles:', e?.message); }
+        setIsUsingMock(false);
+        setAccessError(null);
+      } catch (err) {
+        const denied = handleRlsDenial(err, 'fetchData:api');
+        if (denied) { setLoading(false); return; }
+        console.error('Erreur API Fastify (fetchData):', err);
+      } finally {
+        setLoading(false);
+      }
+      return;
     }
 
     // If session check hasn't finished, wait
@@ -669,11 +719,22 @@ export const AppProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [hasCredentials, authChecked, user, handleRlsDenial]);
+  }, [hasCredentials, authChecked, user, handleRlsDenial, isApiBackend]);
 
   // Listen to Supabase Auth Changes
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
+    // --- Backend API Fastify : session restaurée depuis le cookie JWT -------
+    if (isApiBackend) {
+      let active = true;
+      apiProvider.auth.getSession().then((sessionUser) => {
+        if (!active) return;
+        setUser((prev) => (prev?.isDemo ? prev : sessionUser));
+        setAuthChecked(true);
+      });
+      return () => { active = false; };
+    }
+
     if (!supabase) {
       setAuthChecked(true);
       setLoading(false);
@@ -700,6 +761,11 @@ export const AppProvider = ({ children }) => {
 
   // Sign up with email/password and optional user metadata
   const signUp = async (email, password, metadata = {}) => {
+    if (isApiBackend) {
+      const res = await apiProvider.auth.signUp(email, password, metadata);
+      if (res.success && res.user) { setUser(res.user); setAuthChecked(true); }
+      return res;
+    }
     if (!supabase) return { success: false, error: 'Supabase non configuré' };
     try {
       const { data, error } = await supabase.auth.signUp({ 
@@ -719,6 +785,11 @@ export const AppProvider = ({ children }) => {
 
   // Sign in with email/password
   const signIn = async (email, password) => {
+    if (isApiBackend) {
+      const res = await apiProvider.auth.signIn(email, password);
+      if (res.success && res.user) { setUser(res.user); setAuthChecked(true); }
+      return res;
+    }
     if (!supabase) return { success: false, error: 'Supabase non configuré' };
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -731,6 +802,11 @@ export const AppProvider = ({ children }) => {
 
   // Sign in with Google OAuth
   const signInWithGoogle = async () => {
+    // OAuth Google non couvert par le backend Fastify (arbitrage projet) :
+    // erreur non bloquante explicite plutôt qu'un échec réseau opaque.
+    if (isApiBackend) {
+      return { success: false, error: "Connexion Google indisponible avec le backend API. Utilisez l'e-mail et le mot de passe." };
+    }
     if (!supabase) return { success: false, error: 'Supabase non configuré' };
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -748,6 +824,11 @@ export const AppProvider = ({ children }) => {
 
   // Sign out
   const logOut = async () => {
+    if (isApiBackend && !user?.isDemo) {
+      await apiProvider.auth.signOut();
+      setUser(null);
+      return { success: true };
+    }
     if (!supabase || user?.isDemo) {
       setUser(null);
       return { success: true };
@@ -868,6 +949,22 @@ export const AppProvider = ({ children }) => {
     const validation = validateProofSubmission({ mode, file });
     if (!validation.ok) {
       return { success: false, error: validation.message, code: validation.code };
+    }
+
+    // Backend API Fastify (L4) : téléversement via volume Dokploy, jamais Supabase.
+    if (isApiBackend) {
+      if (!user) return { success: false, error: 'Utilisateur non authentifié' };
+      try {
+        const uploaded = await apiProvider.storage.upload(file, 'payment_proof');
+        const recuPath = uploaded?.id ? `uploads/${uploaded.id}` : buildReceiptPath(user.id, file.name);
+        return {
+          success: true,
+          data: buildProofRecord({ userId: user.id, mode, reference, recuPath }),
+        };
+      } catch (err) {
+        console.error('Échec du téléversement via API:', err?.message || err);
+        return { success: false, error: err?.message || String(err), code: 'error_upload' };
+      }
     }
 
     // Mode démo ou Supabase non configuré : succès simulé, aucun appel réseau.
@@ -1059,6 +1156,19 @@ export const AppProvider = ({ children }) => {
 
     const { enriched, wallets: nextWallets } = prep;
 
+    if (isApiBackend) {
+      try {
+        const created = await apiProvider.transactions.create(enriched);
+        await fetchData();
+        return { success: true, data: created };
+      } catch (err) {
+        const denied = handleRlsDenial(err, 'addTransaction:api');
+        if (denied) return denied;
+        console.error('Erreur API Fastify (addTransaction):', err);
+        return { success: false, error: err.message };
+      }
+    }
+
     if (isUsingMock) {
       const newTxn = { id: 't_' + Date.now(), ...enriched, timestamp: new Date().toISOString() };
       const updatedTxns = [newTxn, ...transactions];
@@ -1110,6 +1220,19 @@ export const AppProvider = ({ children }) => {
 
     const { enriched, wallets: nextWallets } = prep;
 
+    if (isApiBackend) {
+      try {
+        const confirmed = await apiProvider.transactions.confirmDraft(draftId);
+        await fetchData();
+        return { success: true, data: confirmed };
+      } catch (err) {
+        const denied = handleRlsDenial(err, 'confirmDraft:api');
+        if (denied) return denied;
+        console.error('Erreur API Fastify (confirmDraft):', err);
+        return { success: false, error: err.message };
+      }
+    }
+
     if (isUsingMock) {
       const confirmedTxn = { ...draft, ...enriched };
       const updatedTxns = transactions.map((t) => (t.id === draftId ? confirmedTxn : t));
@@ -1154,6 +1277,19 @@ export const AppProvider = ({ children }) => {
       is_active: wallet.is_active !== undefined ? wallet.is_active : true
     };
 
+    if (isApiBackend) {
+      try {
+        const created = await apiProvider.wallets.create(formattedWallet);
+        await fetchData();
+        return { success: true, data: created };
+      } catch (err) {
+        const denied = handleRlsDenial(err, 'createWallet:api');
+        if (denied) return denied;
+        console.error('Erreur API Fastify (createWallet):', err);
+        return { success: false, error: err.message };
+      }
+    }
+
     if (isUsingMock) {
       const newWallet = {
         id: 'w_' + Date.now(),
@@ -1181,6 +1317,18 @@ export const AppProvider = ({ children }) => {
 
   // Update an existing wallet
   const updateWallet = async (id, updates) => {
+    if (isApiBackend) {
+      try {
+        const updated = await apiProvider.wallets.update(id, updates);
+        await fetchData();
+        return { success: true, data: updated };
+      } catch (err) {
+        const denied = handleRlsDenial(err, 'updateWallet:api');
+        if (denied) return denied;
+        console.error('Erreur API Fastify (updateWallet):', err);
+        return { success: false, error: err.message };
+      }
+    }
     if (isUsingMock) {
       const updatedWallets = wallets.map(w => 
         w.id === id ? { ...w, ...updates, updated_at: new Date().toISOString() } : w
@@ -1345,6 +1493,20 @@ export const AppProvider = ({ children }) => {
 
   // Save exchange rates for the day
   const updateRates = async (newRates) => {
+    if (isApiBackend) {
+      try {
+        await apiProvider.rates.upsert(
+          (newRates || []).map((nr) => ({ currency: nr.currency, rate_to_usd: parseFloat(nr.rate_to_usd) }))
+        );
+        await fetchData();
+        return { success: true };
+      } catch (err) {
+        const denied = handleRlsDenial(err, 'updateRates:api');
+        if (denied) return denied;
+        console.error('Erreur API Fastify (updateRates):', err);
+        return { success: false, error: err.message };
+      }
+    }
     if (isUsingMock) {
       // Merge new rates into current rates
       const updatedRates = [...rates];
@@ -1650,6 +1812,19 @@ export const AppProvider = ({ children }) => {
       status: 'pending',
     };
 
+    if (isApiBackend) {
+      try {
+        const created = await apiProvider.debts.create(record);
+        await fetchData();
+        return { success: true, data: created };
+      } catch (err) {
+        const denied = handleRlsDenial(err, 'createDebt:api');
+        if (denied) return denied;
+        console.error('Erreur API Fastify (createDebt):', err);
+        return { success: false, error: err.message };
+      }
+    }
+
     if (isUsingMock) {
       const newDebt = { id: 'd_' + Date.now(), ...record, created_at: new Date().toISOString(), settled_at: null };
       const updated = [newDebt, ...debts];
@@ -1673,6 +1848,19 @@ export const AppProvider = ({ children }) => {
   // Met à jour le statut d'une dette ('settled' immédiat, idempotent).
   const updateDebtStatus = async (debtId, newStatus) => {
     const settledAt = newStatus === 'settled' ? new Date().toISOString() : null;
+
+    if (isApiBackend) {
+      try {
+        await apiProvider.debts.updateStatus(debtId, newStatus);
+        await fetchData();
+        return { success: true };
+      } catch (err) {
+        const denied = handleRlsDenial(err, 'updateDebtStatus:api');
+        if (denied) return denied;
+        console.error('Erreur API Fastify (updateDebtStatus):', err);
+        return { success: false, error: err.message };
+      }
+    }
 
     if (isUsingMock) {
       let found = false;
@@ -1706,16 +1894,8 @@ export const AppProvider = ({ children }) => {
   };
 
   // Totaux séparés des créances et dettes en attente (dans leur devise + en USD).
-  const getDebtTotals = () => {
-    const pending = debts.filter((d) => d.status === 'pending');
-    const receivableUSD = pending
-      .filter((d) => d.type === 'receivable')
-      .reduce((acc, d) => acc + convertToUSD(d.amount, d.currency, rates), 0);
-    const payableUSD = pending
-      .filter((d) => d.type === 'payable')
-      .reduce((acc, d) => acc + convertToUSD(d.amount, d.currency, rates), 0);
-    return { receivableUSD, payableUSD };
-  };
+  // Délègue à la logique pure `computeDebtTotals` (testée isolément).
+  const getDebtTotals = () => computeDebtTotals(debts, rates);
 
   // ==========================================
   // MESSAGE TEMPLATES CRUD (Modèles de message)
@@ -1760,6 +1940,19 @@ export const AppProvider = ({ children }) => {
       body,
     };
 
+    if (isApiBackend) {
+      try {
+        const created = await apiProvider.templates.create(record);
+        await fetchData();
+        return { success: true, data: created };
+      } catch (err) {
+        const denied = handleRlsDenial(err, 'createTemplate:api');
+        if (denied) return denied;
+        console.error('Erreur API Fastify (createTemplate):', err);
+        return { success: false, error: err.message };
+      }
+    }
+
     if (isUsingMock) {
       const now = new Date().toISOString();
       const newTemplate = { id: 'tpl_' + Date.now(), ...record, created_at: now, updated_at: now };
@@ -1783,6 +1976,18 @@ export const AppProvider = ({ children }) => {
 
   // Met à jour un modèle existant (rafraîchit updated_at).
   const updateTemplate = async (id, updates) => {
+    if (isApiBackend) {
+      try {
+        await apiProvider.templates.update(id, updates);
+        await fetchData();
+        return { success: true };
+      } catch (err) {
+        const denied = handleRlsDenial(err, 'updateTemplate:api');
+        if (denied) return denied;
+        console.error('Erreur API Fastify (updateTemplate):', err);
+        return { success: false, error: err.message };
+      }
+    }
     if (isUsingMock) {
       let found = false;
       const updated = templates.map((t) => {
@@ -1816,6 +2021,18 @@ export const AppProvider = ({ children }) => {
 
   // Supprime un modèle de message.
   const deleteTemplate = async (id) => {
+    if (isApiBackend) {
+      try {
+        await apiProvider.templates.remove(id);
+        await fetchData();
+        return { success: true };
+      } catch (err) {
+        const denied = handleRlsDenial(err, 'deleteTemplate:api');
+        if (denied) return denied;
+        console.error('Erreur API Fastify (deleteTemplate):', err);
+        return { success: false, error: err.message };
+      }
+    }
     if (isUsingMock) {
       const updated = templates.filter((t) => t.id !== id);
       setTemplates(updated);
@@ -1860,6 +2077,18 @@ export const AppProvider = ({ children }) => {
       provider_message_id: entry?.provider_message_id || null,
       error_reason: entry?.error_reason || null,
     };
+
+    if (isApiBackend) {
+      try {
+        const created = await apiProvider.reminders.create(record);
+        if (created) setReminderHistory((prev) => [created, ...prev]);
+        return { success: true, data: created };
+      } catch (err) {
+        // Résilience : ne jamais bloquer l'envoi sur un échec de journalisation.
+        console.warn('Journalisation relance via API échouée (non bloquant):', err?.message);
+        return { success: false, error: err.message };
+      }
+    }
 
     if (isUsingMock) {
       try {
@@ -2131,6 +2360,23 @@ export const AppProvider = ({ children }) => {
     }
 
     const next = { ...moduleStates, [moduleKey]: wantEnabled };
+
+    if (isApiBackend) {
+      try {
+        await apiProvider.modules.setState(moduleKey, wantEnabled);
+        setModuleStates(next);
+        return { success: true };
+      } catch (err) {
+        const denied = handleRlsDenial(err, 'setModuleEnabled:api');
+        if (denied) return denied;
+        console.error('Erreur API Fastify (setModuleEnabled):', err);
+        return {
+          success: false,
+          error: "Échec de l'enregistrement de l'état du module. Veuillez réessayer.",
+          persistError: true,
+        };
+      }
+    }
 
     if (isUsingMock) {
       setModuleStates(next);
@@ -2461,6 +2707,18 @@ export const AppProvider = ({ children }) => {
 
   const createOrderLink = async (expiresInHours = 24) => {
     if (!hasPermission('services.vendre')) return permissionDeniedResult();
+    if (isApiBackend) {
+      try {
+        const link = await apiProvider.orderLinks.create(expiresInHours);
+        if (link) setOrderLinks((prev) => [link, ...prev]);
+        return { success: true, link };
+      } catch (err) {
+        const denied = handleRlsDenial(err, 'createOrderLink:api');
+        if (denied) return denied;
+        console.error('Erreur API Fastify (createOrderLink):', err);
+        return { success: false, error: err.message };
+      }
+    }
     const token = generateOrderToken();
     const expiresAt = expiresInHours
       ? new Date(Date.now() + expiresInHours * 60 * 60 * 1000).toISOString()
@@ -2503,6 +2761,18 @@ export const AppProvider = ({ children }) => {
 
   const revokeOrderLink = async (id) => {
     if (!hasPermission('services.vendre')) return permissionDeniedResult();
+    if (isApiBackend) {
+      try {
+        await apiProvider.orderLinks.revoke(id);
+        setOrderLinks((prev) => prev.map((l) => (l.id === id ? { ...l, revoked: true } : l)));
+        return { success: true };
+      } catch (err) {
+        const denied = handleRlsDenial(err, 'revokeOrderLink:api');
+        if (denied) return denied;
+        console.error('Erreur API Fastify (revokeOrderLink):', err);
+        return { success: false, error: err.message };
+      }
+    }
     if (!supabase || user?.isDemo) {
       const current = readMock('forex_order_links', []);
       const next = current.map(l => l.id === id ? { ...l, revoked: true } : l);

@@ -1,0 +1,83 @@
+# =============================================================================
+# OpaysFox — Espace Admin Unifié (Directus + Hermes Agent)
+# -----------------------------------------------------------------------------
+# Déploiement Dokploy. Se branche sur la base PostgreSQL EXISTANTE d'OpaysFox
+# (la même que l'API Fastify), via les variables DB_* / DATABASE_URL.
+#
+# - directus : interface d'administration / CRM (RBAC, UI, REST/GraphQL, Flows)
+#   introspectée sur le schéma existant (transactions, customers, agencies, ...).
+# - hermes   : service Node exécutant les 3 agents IA (Comptable, CRM, Sécurité)
+#   orchestrés par cron, connectés à la même base Postgres.
+#
+# NOTE : aucun service postgres n'est défini ici — on RÉUTILISE la base Dokploy
+# d'OpaysFox pour éviter toute divergence de données. Renseignez le réseau /
+# l'hôte de cette base dans .env (voir .env.example).
+# =============================================================================
+
+services:
+  directus:
+    image: directus/directus:11
+    restart: unless-stopped
+    ports:
+      - "${DIRECTUS_PORT:-8055}:8055"
+    volumes:
+      - directus_uploads:/directus/uploads
+      - directus_extensions:/directus/extensions
+    environment:
+      KEY: ${DIRECTUS_KEY}
+      SECRET: ${DIRECTUS_SECRET}
+      ADMIN_EMAIL: ${DIRECTUS_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${DIRECTUS_ADMIN_PASSWORD}
+      PUBLIC_URL: ${DIRECTUS_PUBLIC_URL:-http://localhost:8055}
+
+      # --- Connexion à la base PostgreSQL EXISTANTE d'OpaysFox ---
+      DB_CLIENT: pg
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_SSL: ${DB_SSL:-false}
+
+      # Sécurité : Directus introspecte le schéma mais on désactive la création
+      # de comptes publics et on impose des cookies sûrs en production.
+      ACCESS_TOKEN_TTL: "15m"
+      REFRESH_TOKEN_TTL: "7d"
+      REFRESH_TOKEN_COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      REFRESH_TOKEN_COOKIE_SAME_SITE: "lax"
+      CORS_ENABLED: "true"
+      CORS_ORIGIN: ${ADMIN_CORS_ORIGIN:-true}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8055/server/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  hermes:
+    build: ./hermes
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      DB_SSL: ${DB_SSL:-false}
+      TZ: ${TZ:-Africa/Kinshasa}
+
+      # Agents (planification cron, surchargeable)
+      CRON_ACCOUNTANT: ${CRON_ACCOUNTANT:-0 22 * * *}
+      CRON_CRM: ${CRON_CRM:-0 9 * * *}
+      CRON_SECURITY: ${CRON_SECURITY:-0 * * * *}
+      CRM_INACTIVITY_DAYS: ${CRM_INACTIVITY_DAYS:-15}
+
+      # Intégrations optionnelles (relances WhatsApp via Gemini)
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
+      WHATSAPP_GATEWAY_URL: ${WHATSAPP_GATEWAY_URL:-}
+      WHATSAPP_API_SECRET: ${WHATSAPP_API_SECRET:-}
+
+      # Sécurité : exécution à blanc par défaut (aucune écriture/envoi réel).
+      DRY_RUN: ${HERMES_DRY_RUN:-true}
+    depends_on:
+      - directus
+
+volumes:
+  directus_uploads:
+  directus_extensions:

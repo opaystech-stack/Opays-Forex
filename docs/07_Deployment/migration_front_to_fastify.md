@@ -343,3 +343,32 @@ Valider ensemble : (a) l'option de nommage (A/B), (b) le périmètre OAuth, (c) 
 stratégie de stockage (volume Dokploy vs MinIO). Sur accord, je formalise le
 **lot L0** (abstraction + flag) en spec d'implémentation testée, sans toucher au
 comportement actuel.
+
+---
+
+## 10. Espace Admin Unifié (post-migration) — `admin-stack/`
+
+Une fois la stack Fastify + Postgres en place, l'**Espace Admin Unifié** est
+fourni par le dossier `admin-stack/` (déployable sur Dokploy), branché sur la
+**même base PostgreSQL** (aucune base parallèle) :
+
+- **Directus** (`directus/directus:11`) : UI admin / CRM / RBAC introspectée sur
+  le schéma existant — fiches clients 360°, validation des abonnements et des
+  preuves de paiement, activation/désactivation des modules premium par agence.
+  Rôles et filtres d'isolation par `agency_id` documentés dans
+  `admin-stack/directus/permissions.md`.
+- **Hermes Agent** (service Node + `node-cron`) : 3 agents IA branchés sur
+  Postgres —
+  - *Comptable* (clôture quotidienne, bénéfice USD, mémo → `closing_memos`),
+  - *CRM* (récence > 15 j, relances WhatsApp via Gemini → `reminder_history`),
+  - *Sécurité* (anomalies `audit_logs` → `security_alerts`).
+  Garde `HERMES_DRY_RUN=true` par défaut (aucune écriture/envoi tant que non
+  validé).
+
+Choix d'outil : **Directus** retenu (se branche sur un Postgres existant, RBAC
+fin, Flows). Alternative : **NocoDB**. **PocketBase** écarté (base SQLite propre,
+ne se connecte pas à un Postgres externe). Guide complet : `admin-stack/README.md`.
+
+Collections financières en **lecture seule** côté admin : toute mutation
+monétaire reste pilotée par l'API Fastify (recalcul serveur R4/R5), préservant
+l'intégrité et l'étanchéité R1/R2.

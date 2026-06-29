@@ -1,29 +1,31 @@
-// Mock Supabase client — toutes les méthodes retournent des promesses vides.
-// Utilisé quand VITE_DATA_BACKEND=mock. Le backend API (Fastify :3001)
-// gère la persistance réelle en production.
+// Mock Supabase client universel — un Proxy qui capture TOUS les appels
+// et retourne des promesses vides pour éviter tout crash JS.
+// Utilisé quand VITE_DATA_BACKEND=mock.
 
-const noopResolve = (data = {}) => Promise.resolve({ data, error: null });
-const emptyArray = () => noopResolve([]);
-const emptyRecord = () => noopResolve({});
+const noopResolve = (data) => Promise.resolve({ data: data ?? null, error: null });
 
-// Build a chainable query builder
-function query() {
-  return {
-    select: () => ({
-      order: () => emptyArray(),
-      eq: () => ({ single: () => emptyRecord(), order: () => emptyArray() }),
-      limit: () => emptyArray(),
-      maybeSingle: () => emptyRecord(),
-    }),
-    insert: () => ({ select: () => noopResolve({}) }),
-    update: () => ({ eq: () => ({ select: () => noopResolve({}) }) }),
-    delete: () => ({ eq: () => noopResolve({}) }),
-    upsert: () => ({ select: () => noopResolve({}) }),
-  };
+// Proxy magique : toute propriété/méthode appelée retourne un nouveau Proxy
+// chainable qui finit par une promesse résolue vide.
+function createMockProxy() {
+  return new Proxy(noopResolve([]), {
+    get(target, prop) {
+      if (prop === 'then' || prop === 'catch' || prop === 'finally') {
+        return target[prop]; // laisser les promesses fonctionner
+      }
+      if (prop === 'subscribe') {
+        return () => ({ unsubscribe: () => {} });
+      }
+      // Toute autre propriété → retourne un nouveau proxy chainable
+      return createMockProxy();
+    },
+    apply(target, thisArg, args) {
+      return createMockProxy();
+    },
+  });
 }
 
 const mock = {
-  from: () => query(),
+  from: () => createMockProxy(),
   auth: {
     getSession: () => Promise.resolve({ data: { session: null } }),
     onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
@@ -34,11 +36,7 @@ const mock = {
     resetPasswordForEmail: () => Promise.resolve({ error: null }),
   },
   storage: {
-    from: () => ({
-      upload: () => Promise.resolve({ error: null }),
-      getPublicUrl: () => ({ data: { publicUrl: '' } }),
-      remove: () => Promise.resolve({ error: null }),
-    }),
+    from: () => createMockProxy(),
   },
   functions: {
     invoke: () => Promise.resolve({ data: null, error: null }),

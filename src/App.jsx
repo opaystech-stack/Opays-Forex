@@ -10,6 +10,7 @@ import FloatingSearchBar from './components/FloatingSearchBar';
 import SlidingBottomSheet from './components/SlidingBottomSheet';
 import ProfileDrawer from './components/ProfileDrawer';
 import WhatsAppFab from './components/WhatsAppFab';
+import { getDataBackend } from './services/dataProvider';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Transactions = lazy(() => import('./pages/Transactions'));
@@ -833,10 +834,11 @@ function AppContent() {
   );
 }
 
-// Garde de démarrage : en production, exige une configuration Supabase (R5.9).
+// Garde de démarrage : en production, exige une configuration Supabase si le backend est supabase (R5.9).
 function BootGuard({ children }) {
   const { hasCredentials } = useApp();
-  if (import.meta.env.PROD && !hasCredentials) {
+  const backend = getDataBackend();
+  if (import.meta.env.PROD && backend === 'supabase' && !hasCredentials) {
     return (
       <div className="config-error-overlay">
         <div className="config-error-card">

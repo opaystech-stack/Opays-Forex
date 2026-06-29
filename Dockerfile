@@ -8,10 +8,11 @@ RUN npm run build
 
 # Stage 2: Build backend
 FROM node:22-alpine AS backend-builder
-WORKDIR /app/api
+WORKDIR /app
 COPY api/package.json api/package-lock.json ./
-RUN npm ci --omit=dev
-COPY api/ .
+RUN npm install --omit=dev
+COPY api/ api/
+COPY src/ src/
 
 # Stage 3: Runtime (Nginx + Node API via supervisord)
 FROM nginx:stable-alpine
@@ -28,13 +29,15 @@ RUN apk add --no-cache nodejs npm supervisor curl \
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=frontend-builder /app/dist /usr/share/nginx/html
 COPY --from=backend-builder /app/api /app/api
+COPY --from=backend-builder /app/src /app/src
+COPY --from=backend-builder /app/node_modules /app/api/node_modules
 
 # Supervisor config
 RUN mkdir -p /etc/supervisor.d
 COPY supervisord.conf /etc/supervisor.d/supervisord.conf
 
 # Healthcheck on Nginx root (API may take longer to start; separate API monitoring via /api/health once warm)
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=5 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget -qO- http://127.0.0.1:80/ || exit 1
 
 EXPOSE 80

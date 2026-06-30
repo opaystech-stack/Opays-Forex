@@ -15,6 +15,9 @@ export default defineConfig({
     // Les tests e2e Playwright (testDir ./tests) ont leur propre exécuteur :
     // on les exclut de la collecte Vitest pour éviter les erreurs de collecte.
     exclude: [...configDefaults.exclude, 'tests/**'],
+    env: {
+      VITE_DATA_BACKEND: 'mock',
+    },
   },
   server: {
     host: '127.0.0.1',

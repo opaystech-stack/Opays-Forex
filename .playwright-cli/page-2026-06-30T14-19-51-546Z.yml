@@ -1,0 +1,7 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]: OpaysFox
+    - heading "Initialisation..." [level=1] [ref=e4]
+  - generic [ref=e5]:
+    - img [ref=e6]
+    - generic [ref=e8]: Vérification de la session en cours

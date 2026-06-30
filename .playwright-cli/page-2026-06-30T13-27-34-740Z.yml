@@ -1,0 +1,68 @@
+- generic [ref=e3]:
+  - generic [ref=e5]:
+    - img "Opays Forex" [ref=e6]
+    - generic [ref=e7]: OpaysFox
+    - heading "Rejoignez Opays Forex !" [level=2] [ref=e8]
+    - paragraph [ref=e9]: Créez votre compte et commencez à gérer votre agence comme un pro.
+    - generic [ref=e10]:
+      - generic [ref=e11]:
+        - generic [ref=e12]: ✓
+        - text: 14 jours d'essai gratuit
+      - generic [ref=e13]:
+        - generic [ref=e14]: ✓
+        - text: Pas de carte bancaire requise
+      - generic [ref=e15]:
+        - generic [ref=e16]: ✓
+        - text: Annulation à tout moment
+  - generic [ref=e17]:
+    - group "Changer de langue" [ref=e19]:
+      - button "FR" [pressed] [ref=e20] [cursor=pointer]
+      - button "EN" [ref=e21] [cursor=pointer]
+    - generic [ref=e22]:
+      - heading "Créer un Compte" [level=1] [ref=e23]
+      - paragraph [ref=e24]: Remplissez le formulaire pour commencer.
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - generic [ref=e27]: Nom complet
+          - generic [ref=e28]:
+            - img
+            - textbox "Votre nom complet" [ref=e29]
+        - generic [ref=e30]:
+          - generic [ref=e31]: Nom de l'agence / entreprise
+          - generic [ref=e32]:
+            - img
+            - 'textbox "ex: Kampala Forex Exchange" [ref=e33]'
+        - generic [ref=e34]:
+          - generic [ref=e35]: Email
+          - generic [ref=e36]:
+            - img
+            - textbox "votre@email.com" [ref=e37]
+        - generic [ref=e38]:
+          - generic [ref=e39]: Téléphone (WhatsApp)
+          - generic [ref=e40]:
+            - img
+            - textbox "+256 7XX XXX XXX" [ref=e41]
+        - generic [ref=e42]:
+          - generic [ref=e43]: Mot de passe
+          - generic [ref=e44]:
+            - img
+            - textbox "Min. 8 caractères" [ref=e45]
+            - button "Afficher" [ref=e46] [cursor=pointer]
+        - generic [ref=e47]:
+          - generic [ref=e48]: Confirmer le mot de passe
+          - generic [ref=e49]:
+            - img
+            - textbox "••••••••" [ref=e50]
+            - button "Afficher" [ref=e51] [cursor=pointer]
+        - generic [ref=e52] [cursor=pointer]:
+          - checkbox "J'accepte les Conditions d'utilisation et la Politique de confidentialité" [ref=e53]
+          - generic [ref=e54]: J'accepte les Conditions d'utilisation et la Politique de confidentialité
+        - button "Créer Mon Compte" [ref=e55] [cursor=pointer]
+      - generic [ref=e60]: OU
+      - button "Continuer avec Google" [ref=e61] [cursor=pointer]:
+        - img [ref=e62]
+        - generic [ref=e67]: Continuer avec Google
+      - paragraph [ref=e68]:
+        - text: Déjà un compte ?
+        - link "Se connecter" [ref=e69] [cursor=pointer]:
+          - /url: /login

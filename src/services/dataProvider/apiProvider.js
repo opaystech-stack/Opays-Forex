@@ -68,6 +68,14 @@ export const apiProvider = {
         error: res?.error || null,
       };
     },
+    async signInWithGoogle(accessToken) {
+      const res = await authApi.googleLogin(accessToken);
+      return {
+        success: !!res?.success,
+        user: res?.success ? toAppUser(res.user) : null,
+        error: res?.error || null,
+      };
+    },
     async signOut() {
       try {
         await authApi.logout();

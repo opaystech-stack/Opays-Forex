@@ -802,11 +802,63 @@ export const AppProvider = ({ children }) => {
 
   // Sign in with Google OAuth
   const signInWithGoogle = async () => {
-    // OAuth Google non couvert par le backend Fastify (arbitrage projet) :
-    // erreur non bloquante explicite plutôt qu'un échec réseau opaque.
+    // --- Backend API Fastify : authentification via Google Identity Services ------
     if (isApiBackend) {
-      return { success: false, error: "Connexion Google indisponible avec le backend API. Utilisez l'e-mail et le mot de passe." };
+      return new Promise((resolve) => {
+        const loadGsiScript = () => {
+          return new Promise((resolveScript) => {
+            if (window.google?.accounts?.oauth2) {
+              resolveScript(true);
+              return;
+            }
+            const script = document.createElement('script');
+            script.src = 'https://accounts.google.com/gsi/client';
+            script.async = true;
+            script.defer = true;
+            script.onload = () => resolveScript(true);
+            script.onerror = () => resolveScript(false);
+            document.body.appendChild(script);
+          });
+        };
+
+        loadGsiScript().then((success) => {
+          if (!success) {
+            resolve({ success: false, error: 'Impossible de charger le service Google.' });
+            return;
+          }
+
+          try {
+            const client = window.google.accounts.oauth2.initTokenClient({
+              client_id: '234409145334-fdvn7490d4avgf4ud437abmps192j2cd.apps.googleusercontent.com',
+              scope: 'email profile openid',
+              callback: async (tokenResponse) => {
+                if (tokenResponse.error) {
+                  resolve({ success: false, error: tokenResponse.error_description || 'Authentification annulée.' });
+                  return;
+                }
+                try {
+                  const accessToken = tokenResponse.access_token;
+                  const result = await apiProvider.auth.signInWithGoogle(accessToken);
+                  if (result.success) {
+                    setUser(result.user);
+                    setAuthChecked(true);
+                    resolve({ success: true });
+                  } else {
+                    resolve({ success: false, error: result.error });
+                  }
+                } catch (e) {
+                  resolve({ success: false, error: e.message || 'Authentification Google échouée.' });
+                }
+              },
+            });
+            client.requestAccessToken();
+          } catch (err) {
+            resolve({ success: false, error: err.message || 'Erreur d\'initialisation Google OAuth.' });
+          }
+        });
+      });
     }
+
     if (!supabase) return { success: false, error: 'Supabase non configuré' };
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({

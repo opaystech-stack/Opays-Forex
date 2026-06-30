@@ -121,6 +121,90 @@ export default async function authRoutes(app, opts) {
     return { success: true, user: mapUser(result.rows[0]) };
   });
 
+  // Google OAuth Login
+  app.post('/google-login', async (request, reply) => {
+    const { accessToken } = request.body;
+    if (!accessToken) {
+      return reply.status(400).send({ success: false, error: 'accessToken is required' });
+    }
+
+    try {
+      // Verify access token and fetch user details from Google UserInfo endpoint
+      const googleRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      if (!googleRes.ok) {
+        return reply.status(400).send({ success: false, error: 'Invalid Google token' });
+      }
+
+      const googleUser = await googleRes.json();
+      const email = googleUser.email;
+      const firstName = googleUser.given_name || '';
+      const lastName = googleUser.family_name || '';
+
+      if (!email) {
+        return reply.status(400).send({ success: false, error: 'Email not provided by Google' });
+      }
+
+      // Check if user exists in database
+      let result = await app.pg.query('SELECT * FROM users WHERE email = $1', [email]);
+      let user = result.rows[0];
+
+      if (!user) {
+        // Auto-create user and a default agency for them
+        const agencyName = `${firstName || 'Opays'}'s Agency`;
+        const client = await app.pg.connect();
+        try {
+          await client.query('BEGIN');
+          const agencyRes = await client.query(
+            'INSERT INTO agencies (name) VALUES ($1) RETURNING id',
+            [agencyName]
+          );
+          const agencyId = agencyRes.rows[0].id;
+
+          const randomPassword = Math.random().toString(36).slice(-16);
+          const hash = await bcrypt.hash(randomPassword, 10);
+
+          const newUserRes = await client.query(
+            'INSERT INTO users (email, password_hash, first_name, last_name, role, agency_id, email_verified) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+            [email, hash, firstName, lastName, 'agency_admin', agencyId, true]
+          );
+          user = newUserRes.rows[0];
+
+          await client.query('UPDATE agencies SET owner_id = $1 WHERE id = $2', [user.id, agencyId]);
+          await client.query('COMMIT');
+        } catch (e) {
+          await client.query('ROLLBACK');
+          throw e;
+        } finally {
+          client.release();
+        }
+      }
+
+      if (!user.is_active) {
+        return reply.status(403).send({ success: false, error: 'Account disabled' });
+      }
+
+      await app.pg.query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [user.id]);
+
+      const token = app.jwt.sign({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        agency_id: user.agency_id,
+      });
+
+      reply.setCookie('token', token, { path: '/', httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 86400 });
+      return { success: true, user: mapUser(user), token };
+
+    } catch (err) {
+      app.log.error(err);
+      return reply.status(500).send({ success: false, error: 'Google authentication failed' });
+    }
+  });
+
   // Switch active agency
   app.put('/switch-agency', { preHandler: [app.authenticate] }, async (request, reply) => {
     const { agencyId } = request.body;

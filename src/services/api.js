@@ -47,6 +47,7 @@ export const authApi = {
   login: (body) => apiClient.post('/auth/login', body),
   me: () => apiClient.get('/auth/me'),
   logout: () => apiClient.post('/auth/logout', {}),
+  googleLogin: (accessToken) => apiClient.post('/auth/google-login', { accessToken }),
 };
 
 export const dashboardApi = {

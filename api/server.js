@@ -160,10 +160,22 @@ app.decorate('requireAccess', async (request, reply) => {
   // Un superadmin (Editeur_Plateforme) n'est jamais soumis à l'essai.
   if (request.user?.role === 'superadmin') return;
   try {
-    const { rows } = await app.pg.query(
-      'SELECT created_at, paid_access, paid_access_until FROM users WHERE id = $1',
-      [request.user.id]
-    );
+    // Defensive: if paid_access columns haven't been migrated yet in prod,
+    // fall back to a base query and derive the verdict from created_at only.
+    let rows;
+    try {
+      ({ rows } = await app.pg.query(
+        'SELECT created_at, paid_access, paid_access_until FROM users WHERE id = $1',
+        [request.user.id]
+      ));
+    } catch (colErr) {
+      app.log.warn('[requireAccess] paid_access columns missing, falling back: ' + colErr.message);
+      const fallback = await app.pg.query(
+        'SELECT created_at FROM users WHERE id = $1',
+        [request.user.id]
+      );
+      rows = fallback.rows.map(r => ({ ...r, paid_access: false, paid_access_until: null }));
+    }
     if (rows.length === 0) {
       return reply.status(401).send({ success: false, error: 'Unauthorized' });
     }

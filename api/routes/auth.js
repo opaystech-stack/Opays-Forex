@@ -112,10 +112,23 @@ export default async function authRoutes(app, opts) {
 
   // Me
   app.get('/me', { preHandler: [app.authenticate] }, async (request) => {
-    const result = await app.pg.query(
-      'SELECT id, email, first_name, last_name, role, agency_id, is_active, created_at, paid_access, paid_access_until FROM users WHERE id = $1',
-      [request.user.id]
-    );
+    // Defensive SELECT: if the Z4 migration (paid_access columns) has not yet
+    // been applied to the production database, fall back gracefully via COALESCE
+    // so the API does not crash with a 500 / 42703 (column not found).
+    let result;
+    try {
+      result = await app.pg.query(
+        'SELECT id, email, first_name, last_name, role, agency_id, is_active, created_at, paid_access, paid_access_until FROM users WHERE id = $1',
+        [request.user.id]
+      );
+    } catch (colErr) {
+      // Column does not exist yet — fall back to base columns only.
+      app.log.warn('[/me] paid_access columns missing, falling back to base query: ' + colErr.message);
+      result = await app.pg.query(
+        'SELECT id, email, first_name, last_name, role, agency_id, is_active, created_at FROM users WHERE id = $1',
+        [request.user.id]
+      );
+    }
     if (result.rows.length === 0) {
       return { success: false, error: 'User not found' };
     }

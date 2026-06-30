@@ -220,3 +220,7 @@ export const userApi = {
   switchAgency: (agencyId) => apiClient.put('/auth/switch-agency', { agencyId }),
   createAgency: (name) => apiClient.post('/auth/create-agency', { name }),
 };
+
+export const geminiApi = {
+  proxy: (payload) => apiClient.post('/gemini/proxy', payload),
+};

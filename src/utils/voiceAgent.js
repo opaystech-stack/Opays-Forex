@@ -1,4 +1,6 @@
 // Module logique d'agent vocal/IA réutilisable (extrait de Transactions.jsx).
+import { getDataBackend } from '../services/dataProvider';
+import { geminiApi } from '../services/api';
 //
 // Objectif : factoriser la logique aujourd'hui inline dans `Transactions.jsx`
 // pour la partager entre la page Transactions et le bouton « Agent vocal »
@@ -208,6 +210,29 @@ export const validateMediaInput = ({ mimeType, sizeBytes } = {}) => {
 // d'erreur, permettant à l'appelant de basculer en Mode_Simule.
 // Retourne le texte de réponse (data.text) en cas de succès.
 export const callGeminiWithTimeout = ({ supabase, payload, timeoutMs = DEFAULT_GEMINI_TIMEOUT_MS }) => {
+  const backend = getDataBackend();
+  if (backend === 'api') {
+    const controller = new AbortController();
+    let timeoutId;
+
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => {
+        controller.abort();
+        reject(new Error(`Délai passé (${timeoutMs} ms)`));
+      }, timeoutMs);
+    });
+
+    const invokePromise = geminiApi.proxy(payload)
+      .then((res) => {
+        if (!res?.success) throw new Error(res?.error || 'Erreur Gemini');
+        return res.text;
+      });
+
+    return Promise.race([invokePromise, timeoutPromise]).finally(() => {
+      clearTimeout(timeoutId);
+    });
+  }
+
   if (!supabase) {
     return Promise.reject(new Error('Supabase non configuré'));
   }
@@ -218,7 +243,7 @@ export const callGeminiWithTimeout = ({ supabase, payload, timeoutMs = DEFAULT_G
   const timeoutPromise = new Promise((_, reject) => {
     timeoutId = setTimeout(() => {
       controller.abort();
-      reject(new Error(`Délai dépassé (${timeoutMs} ms)`));
+      reject(new Error(`Délai passé (${timeoutMs} ms)`));
     }, timeoutMs);
   });
 

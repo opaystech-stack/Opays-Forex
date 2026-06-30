@@ -30,6 +30,7 @@ import orderLinkRoutes from './routes/order-links.js';
 import transferMethodRoutes from './routes/transfer-methods.js';
 import subscriptionProviderRoutes from './routes/subscription-providers.js';
 import invitationRoutes from './routes/invitations.js';
+import geminiRoutes from './routes/gemini.js';
 import { resolveTenant } from './lib/tenant.js';
 import { computeAccessVerdict } from './lib/access.js';
 
@@ -225,6 +226,7 @@ await app.register(orderLinkRoutes, { prefix: '/api/order-links' });
 await app.register(transferMethodRoutes, { prefix: '/api/transfer-methods' });
 await app.register(subscriptionProviderRoutes, { prefix: '/api/subscription-providers' });
 await app.register(invitationRoutes, { prefix: '/api/invitations' });
+await app.register(geminiRoutes, { prefix: '/api/gemini' });
 
 const port = process.env.PORT || 3001;
 const host = process.env.HOST || '0.0.0.0';

@@ -53,6 +53,7 @@ export default async function authRoutes(app, opts) {
       const user = userRes.rows[0];
       if (agencyId) {
         await client.query('UPDATE agencies SET owner_id = $1 WHERE id = $2', [user.id, agencyId]);
+        await autoEnableAllModules(client, agencyId);
       }
 
       await client.query('COMMIT');
@@ -192,6 +193,7 @@ export default async function authRoutes(app, opts) {
           user = newUserRes.rows[0];
 
           await client.query('UPDATE agencies SET owner_id = $1 WHERE id = $2', [user.id, agencyId]);
+          await autoEnableAllModules(client, agencyId);
           await client.query('COMMIT');
         } catch (e) {
           await client.query('ROLLBACK');
@@ -247,6 +249,7 @@ export default async function authRoutes(app, opts) {
     const { rows } = await app.pg.query('INSERT INTO agencies (name, slug, email, owner_id, is_active) VALUES ($1, $2, $3, $4, true) RETURNING id', [name, slug, request.user.email, request.user.id]);
     const newAgencyId = rows[0].id;
     await app.pg.query('UPDATE users SET agency_id = $1 WHERE id = $2', [newAgencyId, request.user.id]);
+    await autoEnableAllModules(app.pg, newAgencyId);
     const token = app.jwt.sign({
       id: request.user.id,
       email: request.user.email,
@@ -288,4 +291,27 @@ function mapUser(row) {
     trialEndsAt: verdict.trialEndsAt,
     paidAccess: verdict.paidAccess,
   };
+}
+
+async function autoEnableAllModules(pgClient, agencyId) {
+  const optionalModules = ['prets', 'dettes', 'taux_service', 'publication_whatsapp', 'commande_distance'];
+  const additionalModules = ['transfert_argent', 'abonnements', 'billets_avion'];
+
+  for (const mod of additionalModules) {
+    await pgClient.query(
+      `INSERT INTO module_entitlements (agency_id, module_key, granted)
+       VALUES ($1, $2, true)
+       ON CONFLICT (agency_id, module_key) DO UPDATE SET granted = true`,
+      [agencyId, mod]
+    );
+  }
+
+  for (const mod of [...optionalModules, ...additionalModules]) {
+    await pgClient.query(
+      `INSERT INTO module_states (agency_id, module_key, enabled)
+       VALUES ($1, $2, true)
+       ON CONFLICT (agency_id, module_key) DO UPDATE SET enabled = true`,
+      [agencyId, mod]
+    );
+  }
 }

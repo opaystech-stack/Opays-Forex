@@ -132,12 +132,12 @@ export default function SignIn() {
             </motion.div>
           )}
 
-          <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
             {/* Email */}
             <div>
-              <label className="block text-[13px] font-medium text-[#334155] mb-1.5">{t('auth.signin.email_label')}</label>
+              <label className="block text-[13px] font-medium text-slate-600 mb-2">{t('auth.signin.email_label')}</label>
               <div className="relative">
-                <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8] pointer-events-none" />
+                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
                   type="email"
                   value={email}
@@ -145,16 +145,16 @@ export default function SignIn() {
                   placeholder={t('auth.signin.email_placeholder')}
                   required
                   autoComplete="email"
-                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-[15px] text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#4F46E5] focus:ring-[3px] focus:ring-[#4F46E5]/10 transition-all duration-200"
+                  className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-[15px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#4F46E5] focus:ring-[3px] focus:ring-[#4F46E5]/10 transition-all duration-200"
                 />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-[13px] font-medium text-[#334155] mb-1.5">{t('auth.signin.password_label')}</label>
+              <label className="block text-[13px] font-medium text-slate-600 mb-2">{t('auth.signin.password_label')}</label>
               <div className="relative">
-                <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8] pointer-events-none" />
+                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
@@ -162,12 +162,12 @@ export default function SignIn() {
                   placeholder={t('auth.signin.password_placeholder')}
                   required
                   autoComplete="current-password"
-                  className="w-full pl-11 pr-20 py-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-[15px] text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#4F46E5] focus:ring-[3px] focus:ring-[#4F46E5]/10 transition-all duration-200"
+                  className="w-full pl-12 pr-20 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-[15px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#4F46E5] focus:ring-[3px] focus:ring-[#4F46E5]/10 transition-all duration-200"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[12px] font-medium text-[#64748B] hover:text-[#4F46E5] transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-slate-500 hover:text-[#4F46E5] transition-colors"
                 >
                   {showPassword ? t('auth.hide') : t('auth.show')}
                 </button>
@@ -175,7 +175,7 @@ export default function SignIn() {
             </div>
 
             {/* Remember + Forgot */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mt-1">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -183,9 +183,9 @@ export default function SignIn() {
                   onChange={(e) => setRemember(e.target.checked)}
                   className="w-4 h-4 rounded border-slate-300 text-[#4F46E5] focus:ring-[#4F46E5]"
                 />
-                <span className="text-[13px] text-slate-500">{t('auth.signin.remember')}</span>
+                <span className="text-[13px] text-slate-500 font-medium">{t('auth.signin.remember')}</span>
               </label>
-              <button type="button" className="text-[13px] font-medium text-[#4F46E5] hover:text-[#4338CA] transition-colors">
+              <button type="button" className="text-[13px] font-semibold text-[#4F46E5] hover:text-[#4338CA] transition-colors">
                 {t('auth.signin.forgot')}
               </button>
             </div>
@@ -194,7 +194,7 @@ export default function SignIn() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 rounded-xl text-[15px] font-semibold text-white flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.97] disabled:opacity-60"
+              className="w-full py-4 mt-2 rounded-xl text-[16px] font-bold text-white flex items-center justify-center gap-2 transition-all duration-150 hover:bg-[#4338CA] active:scale-[0.98] disabled:opacity-60 shadow-sm"
               style={{ background: '#4F46E5' }}
             >
               {loading ? (
@@ -212,12 +212,12 @@ export default function SignIn() {
           </form>
 
           {/* Divider */}
-          <div className="relative my-5">
+          <div className="relative my-7">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#E2E8F0]" />
+              <div className="w-full border-t border-slate-200" />
             </div>
             <div className="relative flex justify-center">
-              <span className="bg-white px-3 text-xs text-[#94A3B8]">{t('auth.or')}</span>
+              <span className="bg-white px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('auth.or')}</span>
             </div>
           </div>
 
@@ -226,7 +226,7 @@ export default function SignIn() {
             type="button"
             onClick={handleGoogle}
             disabled={googleLoading}
-            className="w-full py-3 rounded-xl border border-[#E2E8F0] bg-white text-[14px] font-medium text-[#334155] flex items-center justify-center gap-2.5 hover:bg-[#F8FAFC] hover:border-[#CBD5E1] transition-all duration-150 active:scale-[0.98]"
+            className="w-full py-3.5 rounded-xl border border-slate-200 bg-white text-[15px] font-semibold text-slate-700 flex items-center justify-center gap-3 transition-all duration-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm active:scale-[0.985]"
           >
             {googleLoading ? (
               <svg className="animate-spin h-5 w-5 text-slate-400" viewBox="0 0 24 24">
@@ -234,7 +234,7 @@ export default function SignIn() {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
             ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24">
+              <svg width="20" height="20" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
@@ -248,15 +248,15 @@ export default function SignIn() {
           <button
             type="button"
             onClick={() => { loginAsDemo(); navigate('/app'); }}
-            className="w-full py-3 mt-3 rounded-xl border border-dashed border-[#CBD5E1] bg-transparent text-[14px] font-medium text-[#64748B] hover:border-[#94A3B8] hover:text-[#475569] hover:bg-[#F8FAFC] transition-all duration-150 active:scale-[0.98]"
+            className="w-full py-3.5 mt-3.5 rounded-xl border border-dashed border-slate-300 bg-transparent text-[15px] font-semibold text-slate-500 hover:border-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all duration-200 active:scale-[0.985]"
           >
             {t('auth.signin.demo')}
           </button>
 
           {/* Sign Up Link */}
-          <p className="mt-6 text-center text-[13px] text-slate-500">
+          <p className="mt-8 text-center text-[14px] text-slate-500 font-medium">
             {t('auth.signin.no_account')}{' '}
-            <a href="/register" className="font-semibold text-[#4F46E5] hover:text-[#4338CA] transition-colors">
+            <a href="/register" className="font-bold text-[#4F46E5] hover:text-[#4338CA] hover:underline transition-colors">
               {t('auth.signin.create_account')}
             </a>
           </p>

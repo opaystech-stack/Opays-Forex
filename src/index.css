@@ -86,6 +86,13 @@
     --radius: 0.625rem;
     --radius-card: 17px;
     --radius-btn: 12px;
+
+    /* Hauteur de la barre de navigation inferieure mobile. Referencee par
+       .mobile-navbar (height), .app-container/.dashboard-layout (padding-bottom
+       de reserve) et .whatsapp-fab (bottom). Sans cette definition, var(--navbar-
+       height) etait vide et cassait notamment le positionnement du FAB WhatsApp
+       (projete en haut de l'ecran). */
+    --navbar-height: 64px;
   }
 
   html {

@@ -36,7 +36,7 @@ const Abonnements = lazy(() => import('./pages/Abonnements'));
 const Billets = lazy(() => import('./pages/Billets'));
 const CommandesDistantes = lazy(() => import('./pages/CommandesDistantes'));
 
-import { Loader2, Settings, Users, Mic, ShieldAlert, Shield, ChevronRight, Tv, Plane, ClipboardList, SendHorizonal, Sliders } from 'lucide-react';
+import { Loader2, Settings, Users, Mic, ShieldAlert, Shield, ChevronRight, Tv, Plane, ClipboardList, SendHorizonal, Sliders, Coins } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useT } from './i18n';
 

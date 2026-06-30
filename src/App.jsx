@@ -72,6 +72,13 @@ function MoreMenuPage({ setActiveTab, hasPermission, isModuleEnabled }) {
       show: true,
     },
     {
+      id: 'loans',
+      label: t('nav.loans') || 'Prêts',
+      icon: Coins,
+      description: 'Gérer les prêts accordés ou reçus',
+      show: true,
+    },
+    {
       id: 'employes',
       label: t('nav.employes') || 'Employés',
       icon: Users,

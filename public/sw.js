@@ -41,6 +41,11 @@ self.addEventListener('fetch', (e) => {
 
   const url = new URL(e.request.url);
 
+  // Skip API requests (always go directly to the network)
+  if (url.pathname.startsWith('/api')) {
+    return;
+  }
+
   // For HTML navigation: ALWAYS network-first
   // This ensures new versions are always picked up
   if (e.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {

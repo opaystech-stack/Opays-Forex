@@ -895,6 +895,19 @@ export const AppProvider = ({ children }) => {
       return;
     }
 
+    if (isApiBackend) {
+      setProfilAcces({
+        id: user.id,
+        user_id: user.id,
+        role: user.role === 'superadmin' ? 'admin' : (user.role === 'agency_admin' ? 'admin' : 'user'),
+        acces_autorise: user.isActive ?? true,
+        createdAt: user.createdAt,
+        created_at: user.createdAt,
+      });
+      setProfileStatus('ready');
+      return;
+    }
+
     setProfileStatus('loading');
 
     // Garde de délai 10 s (R2.4) : le timeout rejette pour forcer le refus.

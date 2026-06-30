@@ -10,15 +10,23 @@
 // Plafond de chargement du Profil_Accès, en millisecondes (Exigence 2.4).
 export const LOAD_TIMEOUT_MS = 10000;
 
-// Vrai uniquement si un profil a été chargé avec succès ET que son champ
-// `acces_autorise` vaut strictement `true`. Toute autre situation (profil nul,
-// champ absent, valeur falsy ou non booléenne) refuse l'accès (Exigences 2.1, 2.2).
-//
-// Retourne un booléen.
 export const isAccessGranted = (profile) => {
   if (!profile || typeof profile !== 'object') {
     return false;
   }
+
+  // 30 days free trial check based on profile creation date
+  const createdDate = profile.created_at || profile.createdAt || profile.date_creation;
+  if (createdDate) {
+    const createdTime = new Date(createdDate).getTime();
+    if (!isNaN(createdTime)) {
+      const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+      if (Date.now() - createdTime < thirtyDaysInMs) {
+        return true; // Trial active: grant access
+      }
+    }
+  }
+
   return profile.acces_autorise === true;
 };
 

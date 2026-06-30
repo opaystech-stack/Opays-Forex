@@ -172,9 +172,13 @@ export default async function authRoutes(app, opts) {
         const client = await app.pg.connect();
         try {
           await client.query('BEGIN');
+          // `agencies.slug` est UNIQUE NOT NULL : on genere un slug (sinon
+          // l'INSERT echoue avec une violation NOT NULL et la connexion Google
+          // renvoie 500).
+          const slug = `${(firstName || 'opays').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'agency'}-${Date.now().toString(36)}`;
           const agencyRes = await client.query(
-            'INSERT INTO agencies (name) VALUES ($1) RETURNING id',
-            [agencyName]
+            'INSERT INTO agencies (name, slug, email, is_active) VALUES ($1, $2, $3, true) RETURNING id',
+            [agencyName, slug, email]
           );
           const agencyId = agencyRes.rows[0].id;
 

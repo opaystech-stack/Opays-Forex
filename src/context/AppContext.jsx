@@ -523,6 +523,18 @@ export const AppProvider = ({ children }) => {
         try { setSubscriptionProviders(await apiProvider.subscriptionProviders.list()); } catch (e) { console.warn('API subscription providers indisponibles:', e?.message); }
         try { setInvitations(await apiProvider.invitations.list()); } catch (e) { console.warn('API invitations indisponibles:', e?.message); }
         try { setEmployees(await apiProvider.members.list()); } catch (e) { console.warn('API members indisponibles:', e?.message); }
+        // Contexte agence (Lot multi-agences) : indispensable pour deriver le
+        // role Proprietaire_Agence, les permissions et l'etat de l'agence. Sans
+        // cela, currentAgency restait null en mode API ("Aucune agence active")
+        // et le menu se reduisait aux seuls items toujours visibles.
+        try {
+          const mineAgency = await apiProvider.agencies.mine();
+          if (mineAgency) setCurrentAgency(mineAgency);
+        } catch (e) { console.warn('API agence courante indisponible:', e?.message); }
+        try {
+          const myAgencies = await apiProvider.agencies.myList();
+          if (Array.isArray(myAgencies) && myAgencies.length) setPlatformAgencies(myAgencies);
+        } catch (e) { console.warn('API liste agences indisponible:', e?.message); }
         setIsUsingMock(false);
         setAccessError(null);
       } catch (err) {
@@ -2672,6 +2684,23 @@ export const AppProvider = ({ children }) => {
   };
 
   const createAgency = async (name) => {
+    if (isApiBackend) {
+      try {
+        const res = await apiProvider.auth.createAgency(name);
+        if (!res.success) return { success: false, error: res.error || "Échec de la création de l'agence." };
+        // L'agence active a changé côté serveur (cookie ré-émis) : on rafraîchit
+        // la session puis toutes les données (agence courante incluse).
+        try {
+          const sess = await apiProvider.auth.getSession();
+          if (sess && sess !== SESSION_UNKNOWN) setUser(sess);
+        } catch { /* la session sera resynchronisée au prochain bootstrap */ }
+        await fetchData();
+        return { success: true };
+      } catch (err) {
+        console.error('Erreur API Fastify (createAgency):', err);
+        return { success: false, error: err.message };
+      }
+    }
     if (isUsingMock) {
       const newAgency = {
         id: `agency_${Date.now()}`,

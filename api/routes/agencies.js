@@ -8,7 +8,25 @@ export default async function(app, _opts) {
   app.get('/mine', async (req) => {
     if (!req.user.agency_id) return { success: false, error: 'No agency' };
     const { rows } = await app.pg.query('SELECT * FROM agencies WHERE id = $1 LIMIT 1', [req.user.agency_id]);
-    return { success: true, data: rows[0] ? { id: rows[0].id, name: rows[0].name, slug: rows[0].slug, currencyCode: rows[0].currency_code, settings: rows[0].settings } : null };
+    const r = rows[0];
+    // On expose owner_id et un `state` (derive de is_active) car le client en a
+    // besoin pour deriver le role Proprietaire_Agence et l'etat de l'agence
+    // (AgencyGate / permissions). Sans owner_id ni state, le menu et les droits
+    // restaient vides en mode API.
+    return {
+      success: true,
+      data: r
+        ? {
+            id: r.id,
+            name: r.name,
+            slug: r.slug,
+            owner_id: r.owner_id,
+            state: r.is_active === false ? 'suspendue' : 'active',
+            currencyCode: r.currency_code,
+            settings: r.settings,
+          }
+        : null,
+    };
   });
   app.get('/my-list', async (req) => {
     const { rows } = await app.pg.query(

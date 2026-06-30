@@ -25,6 +25,8 @@ import {
   subscriptionProviderApi,
   invitationApi,
   employeeApi,
+  agencyApi,
+  userApi,
 } from '../api';
 import {
   toSnakeWallet,
@@ -116,6 +118,29 @@ export const apiProvider = {
         /* déconnexion best-effort : on efface l'état local quoi qu'il arrive */
       }
       return { success: true };
+    },
+    // Cree une nouvelle agence pour l'utilisateur courant et la rend active
+    // (POST /api/auth/create-agency met a jour agency_id + re-emet le cookie).
+    async createAgency(name) {
+      const res = await userApi.createAgency(name);
+      return { success: !!res?.success, error: res?.error || null };
+    },
+    // Change l'agence active (PUT /api/auth/switch-agency).
+    async switchAgency(agencyId) {
+      const res = await userApi.switchAgency(agencyId);
+      return { success: !!res?.success, error: res?.error || null };
+    },
+  },
+
+  // Agences de l'utilisateur courant (contexte multi-agences cote API).
+  agencies: {
+    async mine() {
+      const res = await agencyApi.mine();
+      return res?.success ? res.data : null;
+    },
+    async myList() {
+      const res = await agencyApi.myList();
+      return res?.data || [];
     },
   },
 

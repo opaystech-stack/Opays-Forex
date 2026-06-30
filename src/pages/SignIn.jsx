@@ -93,14 +93,14 @@ export default function SignIn() {
         initial={{ opacity: 0, x: 30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
-        className="flex-1 min-w-0 relative flex items-center justify-center px-5 py-8 sm:p-12 lg:p-16 bg-white"
+        className="flex-1 min-w-0 relative flex flex-col p-6 sm:p-12 lg:p-16 bg-white overflow-y-auto"
       >
         {/* LangToggle */}
         <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10">
           <LangToggle variant="light" />
         </div>
 
-        <div className="w-full max-w-[400px]">
+        <div className="w-full max-w-[400px] my-auto py-6">
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-2.5 mb-8">
             <img
@@ -194,7 +194,7 @@ export default function SignIn() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 mt-2 rounded-xl text-[16px] font-bold text-white flex items-center justify-center gap-2 transition-all duration-150 hover:bg-[#4338CA] active:scale-[0.98] disabled:opacity-60 shadow-sm"
+              className="w-full py-4 mt-4 rounded-xl text-[16px] font-bold text-white flex items-center justify-center gap-2 transition-all duration-150 hover:bg-[#4338CA] active:scale-[0.98] disabled:opacity-60 shadow-sm"
               style={{ background: '#4F46E5' }}
             >
               {loading ? (
@@ -212,7 +212,7 @@ export default function SignIn() {
           </form>
 
           {/* Divider */}
-          <div className="relative my-7">
+          <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-slate-200" />
             </div>
@@ -248,13 +248,13 @@ export default function SignIn() {
           <button
             type="button"
             onClick={() => { loginAsDemo(); navigate('/app'); }}
-            className="w-full py-3.5 mt-3.5 rounded-xl border border-dashed border-slate-300 bg-transparent text-[15px] font-semibold text-slate-500 hover:border-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all duration-200 active:scale-[0.985]"
+            className="w-full py-3.5 mt-4 rounded-xl border border-dashed border-slate-300 bg-transparent text-[15px] font-semibold text-slate-500 hover:border-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all duration-200 active:scale-[0.985]"
           >
             {t('auth.signin.demo')}
           </button>
 
           {/* Sign Up Link */}
-          <p className="mt-8 text-center text-[14px] text-slate-500 font-medium">
+          <p className="mt-10 mb-6 text-center text-[14px] text-slate-500 font-medium">
             {t('auth.signin.no_account')}{' '}
             <a href="/register" className="font-bold text-[#4F46E5] hover:text-[#4338CA] hover:underline transition-colors">
               {t('auth.signin.create_account')}

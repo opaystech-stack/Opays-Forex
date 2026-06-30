@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
+import { computeAccessVerdict } from '../lib/access.js';
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -112,7 +113,7 @@ export default async function authRoutes(app, opts) {
   // Me
   app.get('/me', { preHandler: [app.authenticate] }, async (request) => {
     const result = await app.pg.query(
-      'SELECT id, email, first_name, last_name, role, agency_id, is_active, created_at FROM users WHERE id = $1',
+      'SELECT id, email, first_name, last_name, role, agency_id, is_active, created_at, paid_access, paid_access_until FROM users WHERE id = $1',
       [request.user.id]
     );
     if (result.rows.length === 0) {
@@ -247,6 +248,14 @@ export default async function authRoutes(app, opts) {
 }
 
 function mapUser(row) {
+  // Verdict d'accès calculé CÔTÉ SERVEUR (Z4, Property 4) : l'essai 30 jours et
+  // l'accès payant sont évalués ici à partir de `created_at`/`paid_access` de
+  // foxdb, puis exposés en champs additifs. Le client ne fait que les refléter.
+  const verdict = computeAccessVerdict({
+    createdAt: row.created_at,
+    paidAccess: row.paid_access ?? false,
+    paidAccessUntil: row.paid_access_until ?? null,
+  });
   return {
     id: row.id,
     email: row.email,
@@ -256,5 +265,10 @@ function mapUser(row) {
     agencyId: row.agency_id,
     isActive: row.is_active,
     createdAt: row.created_at,
+    // Champs additifs d'accès (autorité serveur) :
+    accessGranted: verdict.accessGranted,
+    trialActive: verdict.trialActive,
+    trialEndsAt: verdict.trialEndsAt,
+    paidAccess: verdict.paidAccess,
   };
 }

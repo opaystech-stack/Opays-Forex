@@ -59,8 +59,14 @@ self.addEventListener('fetch', (e) => {
           return response;
         })
         .catch(() => {
-          // Only use cache as offline fallback
-          return caches.match('./index.html');
+          // Z1 — Repli vers le shell mis en cache UNIQUEMENT hors-ligne.
+          // Un réseau lent/instable (mobile) ne doit PAS démarrer l'app sur un
+          // `index.html` mis en cache « sans session » : tant qu'on est en ligne
+          // on reste strictement network-first et on laisse l'échec remonter.
+          if (navigator.onLine === false) {
+            return caches.match('./index.html');
+          }
+          return Response.error();
         })
     );
     return;

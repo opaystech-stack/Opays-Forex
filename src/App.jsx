@@ -144,14 +144,24 @@ function MoreMenuPage({ setActiveTab, hasPermission, isModuleEnabled }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
         {items.map(item => {
           const Icon = item.icon;
+          const handleSelect = () => {
+            if (item.id === 'admin-plateforme') {
+              navigate('/admin-plateforme');
+            } else {
+              setActiveTab(item.id);
+            }
+          };
           return (
             <div
               key={item.id}
-              onClick={() => {
-                if (item.id === 'admin-plateforme') {
-                  navigate('/admin-plateforme');
-                } else {
-                  setActiveTab(item.id);
+              role="button"
+              tabIndex={0}
+              aria-label={item.label}
+              onClick={handleSelect}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleSelect();
                 }
               }}
               className="card"

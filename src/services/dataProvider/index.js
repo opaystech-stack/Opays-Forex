@@ -37,3 +37,4 @@ export function getDataProvider(backend = getDataBackend()) {
 }
 
 export { apiProvider, supabaseProvider };
+export { SESSION_UNKNOWN } from './apiProvider';

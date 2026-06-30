@@ -15,6 +15,7 @@ const reminderSchema = z.object({
 export default async function reminderRoutes(app) {
   app.addHook('preHandler', app.authenticate);
   app.addHook('preHandler', app.requireAgency);
+  app.addHook('preHandler', app.requireAccess);
 
   app.get('/', async (request) => {
     const { rows } = await app.pg.query(

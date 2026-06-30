@@ -81,5 +81,16 @@ export function toAppUser(u) {
     first_name: u.firstName ?? u.first_name ?? null,
     last_name: u.lastName ?? u.last_name ?? null,
     is_active: u.isActive ?? u.is_active ?? true,
+    isActive: u.isActive ?? u.is_active ?? true,
+    // --- auth-access-mobile-fixes (Z4) ----------------------------------
+    // Le verdict d'accès et la base d'essai sont calculés CÔTÉ SERVEUR et
+    // exposés via /api/auth/me ; on les préserve ici pour que `loadProfile`
+    // puisse refléter le verdict serveur (non falsifiable côté client).
+    createdAt: u.createdAt ?? u.created_at ?? null,
+    accessGranted:
+      typeof u.accessGranted === 'boolean' ? u.accessGranted : undefined,
+    trialActive: typeof u.trialActive === 'boolean' ? u.trialActive : undefined,
+    trialEndsAt: u.trialEndsAt ?? null,
+    paidAccess: typeof u.paidAccess === 'boolean' ? u.paidAccess : undefined,
   };
 }

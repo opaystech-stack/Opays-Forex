@@ -40,6 +40,22 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE INDEX IF NOT EXISTS idx_users_agency ON users(agency_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
+-- ==========================================================================
+-- auth-access-mobile-fixes (Z4) — Essai 30 jours imposé côté serveur
+-- --------------------------------------------------------------------------
+-- Migration additive et non destructive : ajoute l'autorité d'accès payant à
+-- la table `users`. `created_at` (déjà présent ci-dessus) sert de base d'essai
+-- (30 jours). Le verdict d'accès est calculé côté serveur (cf. api/lib/access.js)
+-- et exposé via GET /api/auth/me. Les colonnes sont ajoutées avec IF NOT EXISTS
+-- afin de ne pas casser les données existantes.
+--   - paid_access        : accès payant accordé (indépendant de l'essai).
+--   - paid_access_until  : éventuelle échéance d'accès payant (NULL = illimité).
+-- (Nommage aligné sur supabase/migrations/0001_paid_access_control.sql, qui
+--  porte l'autorité côté Supabase ; ici l'autorité est l'API Fastify / foxdb.)
+-- ==========================================================================
+ALTER TABLE users ADD COLUMN IF NOT EXISTS paid_access BOOLEAN DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS paid_access_until TIMESTAMPTZ;
+
 -- Employees (sub-accounts / cashiers of an agency)
 CREATE TABLE IF NOT EXISTS employees (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

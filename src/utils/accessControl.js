@@ -15,6 +15,15 @@ export const isAccessGranted = (profile) => {
     return false;
   }
 
+  // auth-access-mobile-fixes (Z4) : lorsqu'un verdict d'accès EXPLICITE est
+  // présent (calculé côté serveur et exposé via /api/auth/me), le client le
+  // reflète tel quel — sans recalculer l'essai à partir de `created_at` (qui
+  // serait falsifiable côté client). Ainsi, un compte hors essai non payé
+  // (ex. daysAgo=30, paid=false ⇒ accessGranted=false) est bien bloqué.
+  if (typeof profile.accessGranted === 'boolean') {
+    return profile.accessGranted;
+  }
+
   // 30 days free trial check based on profile creation date
   const createdDate = profile.created_at || profile.createdAt || profile.date_creation;
   if (createdDate) {

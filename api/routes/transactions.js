@@ -66,6 +66,7 @@ async function recomputeForAgency(client, op, agencyId) {
 export default async function transactionRoutes(app, opts) {
   app.addHook('preHandler', app.authenticate);
   app.addHook('preHandler', app.requireAgency);
+  app.addHook('preHandler', app.requireAccess);
 
   // List
   app.get('/', async (request) => {

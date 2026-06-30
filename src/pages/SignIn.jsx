@@ -55,7 +55,7 @@ export default function SignIn() {
   };
 
   return (
-    <div className="landing-reset min-h-[100dvh] flex overflow-x-hidden">
+    <div className="landing-reset min-h-[100svh] flex overflow-x-hidden">
       {/* Left Panel - Brand */}
       <motion.div
         initial={{ opacity: 0, x: -30 }}
@@ -93,7 +93,7 @@ export default function SignIn() {
         initial={{ opacity: 0, x: 30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
-        className="flex-1 min-w-0 relative flex flex-col p-6 sm:p-12 lg:p-16 bg-white overflow-y-auto"
+        className="flex-1 min-w-0 relative flex flex-col p-6 sm:p-12 lg:p-16 bg-white overflow-y-auto [padding-bottom:calc(1.5rem+env(safe-area-inset-bottom,0px))]"
       >
         {/* LangToggle */}
         <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10">
@@ -159,6 +159,10 @@ export default function SignIn() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onFocus={(e) => {
+                    const el = e.target;
+                    setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 250);
+                  }}
                   placeholder={t('auth.signin.password_placeholder')}
                   required
                   autoComplete="current-password"

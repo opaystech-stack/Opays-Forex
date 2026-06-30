@@ -27,7 +27,7 @@ function AuthCircles() {
 
 export default function SignUp() {
   const navigate = useNavigate();
-  const { signUp, signInWithGoogle } = useApp();
+  const { signUp, signInWithGoogle, isApiBackend } = useApp();
   const t = useT();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -67,8 +67,18 @@ export default function SignUp() {
     setLoading(false);
 
     if (result.success) {
-      // Direct integration check or Supabase session presence
-      if (result.user || result.data?.user?.confirmed_at || result.data?.session) {
+      // Mode API Fastify : la session est portée par le cookie httpOnly posé
+      // par `POST /api/auth/register`. On connecte directement le nouvel
+      // inscrit et on redirige vers /app, même si la réponse n'échoie pas
+      // d'objet `user` (la session est cookie-based). On NE montre PAS d'écran
+      // de confirmation d'e-mail bloquant sur ce chemin.
+      if (isApiBackend) {
+        navigate('/app');
+        return;
+      }
+      // Chemin Supabase uniquement : redirige si une session existe déjà,
+      // sinon affiche l'écran de confirmation d'e-mail.
+      if (result.data?.user?.confirmed_at || result.data?.session) {
         navigate('/app');
       } else {
         setSuccess(t('auth.signup.success'));
@@ -89,7 +99,7 @@ export default function SignUp() {
   };
 
   return (
-    <div className="landing-reset min-h-[100dvh] flex">
+    <div className="landing-reset min-h-[100svh] flex">
       {/* Left Panel - Brand */}
       <motion.div
         initial={{ opacity: 0, x: -30 }}
@@ -130,7 +140,7 @@ export default function SignUp() {
         initial={{ opacity: 0, x: 30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
-        className="flex-1 min-w-0 relative flex flex-col p-6 sm:p-10 lg:p-12 bg-white overflow-y-auto"
+        className="flex-1 min-w-0 relative flex flex-col p-6 sm:p-10 lg:p-12 bg-white overflow-y-auto [padding-bottom:calc(1.5rem+env(safe-area-inset-bottom,0px))]"
       >
         {/* Sélecteur de langue */}
         <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10">
@@ -279,6 +289,10 @@ export default function SignUp() {
                   type={showConfirm ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  onFocus={(e) => {
+                    const el = e.target;
+                    setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 250);
+                  }}
                   placeholder={t('auth.signup.confirm_placeholder')}
                   required
                   autoComplete="new-password"

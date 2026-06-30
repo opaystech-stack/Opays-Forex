@@ -35,16 +35,49 @@ import {
   keysToSnake,
 } from './mappers';
 
+// Sentinelle « session indéterminée » (Z1) : renvoyée par `getSession()`
+// lorsqu'une erreur RÉSEAU transitoire empêche de trancher l'état de session
+// (≠ d'un 401/403 confirmé par le serveur). Le bootstrap de session doit alors
+// CONSERVER l'utilisateur courant plutôt que de le déconnecter sur un simple
+// aléa réseau (fréquent sur mobile / réseau instable).
+export const SESSION_UNKNOWN = Symbol('session-unknown');
+
 export const apiProvider = {
   auth: {
-    // Restaure la session courante depuis le cookie JWT (ou null si 401).
+    // Restaure la session courante depuis le cookie JWT.
+    //
+    // Z1 — Persistance de session : on DISTINGUE un 401/403 confirmé (serveur
+    // joignable, utilisateur non authentifié → session effacée) d'une erreur
+    // réseau transitoire (`fetch` rejette sans `err.status`, ou 5xx). Une erreur
+    // réseau ne DOIT JAMAIS détruire une session valide : on réessaie quelques
+    // fois, et en dernier recours on renvoie `SESSION_UNKNOWN` pour que le
+    // bootstrap conserve l'état courant (ne pas rediriger vers /login).
+    //
+    // Note même origine (cookie) : `authApi` cible `VITE_API_URL`, qui DOIT être
+    // same-origin avec le front en production pour que le cookie httpOnly `token`
+    // (`sameSite: 'lax'`) accompagne `GET /api/auth/me` sur mobile. Voir le
+    // commentaire de `API_BASE` dans `src/services/api.js`.
     async getSession() {
-      try {
-        const res = await authApi.me();
-        return res?.success ? toAppUser(res.user) : null;
-      } catch {
-        return null;
+      const MAX_ATTEMPTS = 3;
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+        try {
+          const res = await authApi.me();
+          return res?.success ? toAppUser(res.user) : null;
+        } catch (err) {
+          // 401/403 = non authentifié confirmé par le serveur → session effacée.
+          if (err?.status === 401 || err?.status === 403) {
+            return null;
+          }
+          // Toute autre erreur (réseau, 5xx) est transitoire : nouvelle tentative.
+          if (attempt < MAX_ATTEMPTS) {
+            await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
+            continue;
+          }
+          // Réseau toujours indisponible : on ne déconnecte pas l'utilisateur.
+          return SESSION_UNKNOWN;
+        }
       }
+      return SESSION_UNKNOWN;
     },
     async signIn(email, password) {
       const res = await authApi.login({ email, password });
@@ -60,7 +93,7 @@ export const apiProvider = {
         password,
         firstName: metadata.firstName ?? metadata.first_name,
         lastName: metadata.lastName ?? metadata.last_name,
-        agencyName: metadata.agencyName ?? metadata.agency_name,
+        agencyName: metadata.agencyName ?? metadata.agency_name ?? metadata.business_name,
       });
       return {
         success: !!res?.success,

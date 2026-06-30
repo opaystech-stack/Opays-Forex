@@ -12,6 +12,7 @@ const walletSchema = z.object({
 export default async function walletRoutes(app, opts) {
   app.addHook('preHandler', app.authenticate);
   app.addHook('preHandler', app.requireAgency);
+  app.addHook('preHandler', app.requireAccess);
 
   // List
   app.get('/', async (request) => {

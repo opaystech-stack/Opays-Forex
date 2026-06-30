@@ -11,6 +11,7 @@ const schema = z.object({
 export default async function(app, _opts) {
   app.addHook('preHandler', app.authenticate);
   app.addHook('preHandler', app.requireAgency);
+  app.addHook('preHandler', app.requireAccess);
   app.get('/', async (req) => {
     const { rows } = await app.pg.query('SELECT * FROM subscriptions WHERE agency_id = $1 ORDER BY next_billing_date', [req.agencyId]);
     return { success: true, data: rows };

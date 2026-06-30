@@ -312,6 +312,10 @@
     box-shadow: 4px 0 20px rgba(15, 23, 42, 0.04);
     padding-bottom: 0;
     overflow-y: auto;
+    /* Colonne bornée : le logo reste fixe en haut, la liste d'onglets occupe le
+       reste et défile pour que les derniers items (Prêts) restent atteignables. */
+    display: flex;
+    flex-direction: column;
   }
   .sidebar-logo {
     display: block;
@@ -333,6 +337,11 @@
     height: auto;
     gap: 4px;
     padding: 14px 10px;
+    /* Défilement effectif : occupe la hauteur restante (flex: 1 / min-height: 0)
+       et défile verticalement (overflow-y: auto) pour atteindre les Prêts. */
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
   }
   .navbar-tab {
     flex: none;

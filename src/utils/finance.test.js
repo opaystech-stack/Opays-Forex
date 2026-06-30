@@ -8,6 +8,8 @@ import {
   applyBalances,
   computeServiceAmount,
   computeOperationAmounts,
+  trialRemainingDays,
+  TRIAL_DURATION_DAYS,
 } from './finance';
 
 describe('finance helpers', () => {
@@ -226,5 +228,48 @@ describe('computeOperationAmounts', () => {
     const result = computeOperationAmounts({ sourceAmount: 100, exchangeRate: 3650, serviceRate: 150 });
     expect(result.ok).toBe(false);
     expect(result.destAmount).toBeUndefined();
+  });
+});
+
+describe('trialRemainingDays (présentation de l\'essai 30 jours)', () => {
+  const NOW = Date.parse('2024-06-15T12:00:00.000Z');
+  const DAY = 24 * 60 * 60 * 1000;
+
+  it('expose une durée d\'essai par défaut de 30 jours', () => {
+    expect(TRIAL_DURATION_DAYS).toBe(30);
+  });
+
+  it('calcule les jours restants à partir de createdAt (essai actif)', () => {
+    const createdAt = new Date(NOW - 10 * DAY).toISOString();
+    const res = trialRemainingDays({ createdAt }, NOW);
+    expect(res.active).toBe(true);
+    expect(res.remainingDays).toBe(20); // 30 - 10
+  });
+
+  it('borne les jours restants à 0 une fois l\'essai expiré', () => {
+    const createdAt = new Date(NOW - 45 * DAY).toISOString();
+    const res = trialRemainingDays({ createdAt }, NOW);
+    expect(res.active).toBe(false);
+    expect(res.remainingDays).toBe(0);
+  });
+
+  it('au jour 30 pile, l\'essai n\'est plus actif (0 jour restant)', () => {
+    const createdAt = new Date(NOW - 30 * DAY).toISOString();
+    const res = trialRemainingDays({ createdAt }, NOW);
+    expect(res.active).toBe(false);
+    expect(res.remainingDays).toBe(0);
+  });
+
+  it('priorise trialEndsAt fourni par le serveur', () => {
+    const trialEndsAt = new Date(NOW + 5 * DAY).toISOString();
+    const res = trialRemainingDays({ createdAt: new Date(NOW - 100 * DAY).toISOString(), trialEndsAt }, NOW);
+    expect(res.active).toBe(true);
+    expect(res.remainingDays).toBe(5);
+    expect(res.endsAt).toBe(trialEndsAt);
+  });
+
+  it('retourne un état inactif pour une entrée absente ou invalide', () => {
+    expect(trialRemainingDays({}, NOW)).toEqual({ active: false, remainingDays: 0, endsAt: null });
+    expect(trialRemainingDays({ createdAt: 'pas-une-date' }, NOW)).toEqual({ active: false, remainingDays: 0, endsAt: null });
   });
 });

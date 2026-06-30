@@ -11,6 +11,7 @@ const schema = z.object({
 export default async function(app, _opts) {
   app.addHook('preHandler', app.authenticate);
   app.addHook('preHandler', app.requireAgency);
+  app.addHook('preHandler', app.requireAccess);
   app.get('/', async (req) => {
     const { rows } = await app.pg.query('SELECT * FROM customers WHERE agency_id = $1 ORDER BY name', [req.agencyId]);
     return { success: true, data: rows.map(r => ({ id: r.id, agencyId: r.agency_id, name: r.name, phone: r.phone, email: r.email, idNumber: r.id_number, address: r.address, kycStatus: r.kyc_status, metadata: r.metadata, createdAt: r.created_at })) };

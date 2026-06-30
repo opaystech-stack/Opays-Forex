@@ -31,6 +31,7 @@ import transferMethodRoutes from './routes/transfer-methods.js';
 import subscriptionProviderRoutes from './routes/subscription-providers.js';
 import invitationRoutes from './routes/invitations.js';
 import { resolveTenant } from './lib/tenant.js';
+import { computeAccessVerdict } from './lib/access.js';
 
 // --- Durcissement : validation des secrets critiques au démarrage (R3) ------
 // Le serveur REFUSE de démarrer si un secret critique est absent ou laissé à
@@ -148,6 +149,40 @@ app.decorate('requireAgency', async (request, reply) => {
     return reply.status(result.status).send({ success: false, error: result.error });
   }
   request.agencyId = result.agencyId;
+});
+
+// Access middleware (auth-access-mobile-fixes Z4) — impose l'essai 30 jours et
+// l'accès payant CÔTÉ SERVEUR sur les routes de données sensibles. Le verdict
+// est calculé à partir de `created_at`/`paid_access` de foxdb (non falsifiable
+// côté client) ; un essai expiré sans accès payant est refusé en HTTP 402
+// (Payment Required). Complète, sans le remplacer, le verrou `requireAgency`.
+app.decorate('requireAccess', async (request, reply) => {
+  // Un superadmin (Editeur_Plateforme) n'est jamais soumis à l'essai.
+  if (request.user?.role === 'superadmin') return;
+  try {
+    const { rows } = await app.pg.query(
+      'SELECT created_at, paid_access, paid_access_until FROM users WHERE id = $1',
+      [request.user.id]
+    );
+    if (rows.length === 0) {
+      return reply.status(401).send({ success: false, error: 'Unauthorized' });
+    }
+    const { accessGranted } = computeAccessVerdict({
+      createdAt: rows[0].created_at,
+      paidAccess: rows[0].paid_access ?? false,
+      paidAccessUntil: rows[0].paid_access_until ?? null,
+    });
+    if (!accessGranted) {
+      return reply.status(402).send({
+        success: false,
+        error: 'Trial expired',
+        code: 'trial_expired',
+      });
+    }
+  } catch (err) {
+    app.log.error(err);
+    return reply.status(500).send({ success: false, error: 'Access check failed' });
+  }
 });
 
 // Health check

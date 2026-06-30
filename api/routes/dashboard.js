@@ -1,6 +1,7 @@
 export default async function(app, _opts) {
   app.addHook('preHandler', app.authenticate);
   app.addHook('preHandler', app.requireAgency);
+  app.addHook('preHandler', app.requireAccess);
   app.get('/summary', async (req) => {
     const agencyId = req.agencyId;
     const [wallets, txns, customers, pendingTransfers, pendingOrders, openTickets] = await Promise.all([

@@ -240,3 +240,47 @@ export const sumMonthlyProfit = (transactions = [], monthISO = currentMonthISO()
     .filter((t) => isCompleted(t) && typeof t.timestamp === 'string' && t.timestamp.startsWith(monthISO))
     .reduce((acc, t) => acc + (Number(t.profit_usd) || 0), 0);
 };
+
+// --- Essai gratuit (présentation des jours restants) -----------------------
+//
+// auth-access-mobile-fixes (Z4) : l'AUTORITÉ de l'essai 30 jours reste le
+// SERVEUR (cf. api/lib/access.js, exposé via /api/auth/me). Ce helper est
+// PUREMENT de présentation : il calcule, pour l'UI, le nombre de jours d'essai
+// restants à partir de la date de création du compte (ou d'une échéance
+// `trialEndsAt` fournie par le serveur). Il ne décide JAMAIS de l'accès.
+//
+// Règles :
+//   - durée d'essai par défaut : 30 jours ;
+//   - `trialEndsAt` (ISO) prioritaire si fourni ; sinon `createdAt + 30 jours` ;
+//   - jours restants = ceil((fin - now) / 1 jour), borné à 0 (jamais négatif) ;
+//   - date invalide/absente ⇒ { active: false, remainingDays: 0, endsAt: null }.
+export const TRIAL_DURATION_DAYS = 30;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export const trialRemainingDays = (
+  { createdAt, trialEndsAt } = {},
+  now = Date.now(),
+) => {
+  let endTime = NaN;
+
+  if (trialEndsAt) {
+    endTime = new Date(trialEndsAt).getTime();
+  } else if (createdAt) {
+    const createdTime = new Date(createdAt).getTime();
+    if (!Number.isNaN(createdTime)) {
+      endTime = createdTime + TRIAL_DURATION_DAYS * DAY_MS;
+    }
+  }
+
+  if (Number.isNaN(endTime)) {
+    return { active: false, remainingDays: 0, endsAt: null };
+  }
+
+  const remainingMs = endTime - now;
+  const remainingDays = remainingMs > 0 ? Math.ceil(remainingMs / DAY_MS) : 0;
+  return {
+    active: remainingMs > 0,
+    remainingDays,
+    endsAt: new Date(endTime).toISOString(),
+  };
+};

@@ -1,4 +1,13 @@
 const API_BASE = (() => {
+  // Z1 — Cohérence du cookie de session sur mobile : le cookie httpOnly `token`
+  // est posé par Fastify avec `sameSite: 'lax'` + `secure` en production. Pour
+  // qu'il accompagne automatiquement `GET /api/auth/me` (et donc que la session
+  // survive à un F5 sur mobile), `VITE_API_URL` DOIT être SAME-ORIGIN avec le
+  // front en production (même domaine, p. ex. `https://fox.opays.io/api`). À
+  // défaut (sous-domaine/proxy d'origine différente), les politiques cookies
+  // mobiles plus strictes peuvent ne pas envoyer le cookie. Le repli
+  // `window.location.origin + '/api'` ci-dessous garantit le same-origin par
+  // défaut ; ne surcharger `VITE_API_URL` qu'avec une URL de même origine.
   const candidates = [
     import.meta.env.VITE_API_URL,
     import.meta.env.VITE_PUBLIC_API_URL,

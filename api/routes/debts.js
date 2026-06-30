@@ -14,6 +14,7 @@ const statusSchema = z.object({ status: z.enum(['pending', 'settled']) });
 export default async function debtRoutes(app) {
   app.addHook('preHandler', app.authenticate);
   app.addHook('preHandler', app.requireAgency);
+  app.addHook('preHandler', app.requireAccess);
 
   app.get('/', async (request) => {
     const { rows } = await app.pg.query(

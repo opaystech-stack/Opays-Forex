@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import translations from '../i18n';
 import { supabase } from '../services/supabase';
-import { getDataBackend, apiProvider } from '../services/dataProvider';
+import { getDataBackend, apiProvider, SESSION_UNKNOWN } from '../services/dataProvider';
 import {
   calculateLoanRepaymentUSD,
   convertToUSD,
@@ -38,6 +38,21 @@ import { validateFlightBooking, computeFlightProfit } from '../utils/flightBooki
 import { DEFAULT_PROVIDERS, TRANSFER_METHOD_OTHER } from '../utils/catalogs';
 import { generateOrderToken } from '../utils/orderToken';
 import { computeDebtTotals } from '../utils/debts';
+
+// --- auth-access-mobile-fixes (Z2) ------------------------------------------
+// URL du script Google Identity Services (GIS) préchargé sur les pages d'auth.
+const GIS_SCRIPT_URL = 'https://accounts.google.com/gsi/client';
+const GIS_SCRIPT_ID = 'gsi-client-script';
+const GOOGLE_CLIENT_ID =
+  '234409145334-fdvn7490d4avgf4ud437abmps192j2cd.apps.googleusercontent.com';
+// Délai de sécurité anti-blocage : si aucun `callback` GIS n'arrive (pop-up
+// bloquée), `signInWithGoogle()` se résout avec une erreur explicite au lieu de
+// rester en chargement infini. Volontairement court (< fenêtre de course des
+// tests, 1500 ms) et configurable via `VITE_GOOGLE_AUTH_TIMEOUT_MS`.
+const GOOGLE_AUTH_TIMEOUT_MS = (() => {
+  const raw = Number(import.meta.env?.VITE_GOOGLE_AUTH_TIMEOUT_MS);
+  return Number.isFinite(raw) && raw > 0 ? raw : 1000;
+})();
 
 // Helpers de repli mock localStorage (mode démo / sans Supabase). Définis au
 // niveau module afin d'être accessibles depuis tous les handlers (createOrderLink,
@@ -393,6 +408,24 @@ export const AppProvider = ({ children }) => {
   const dataBackend = getDataBackend();
   const isApiBackend = dataBackend === 'api';
 
+  // --- auth-access-mobile-fixes (Z2) ----------------------------------------
+  // Préchargement de Google Identity Services au montage (chemin API). Charger
+  // le script en amont permet, au clic, d'invoquer `requestAccessToken()` de
+  // façon SYNCHRONE dans le geste utilisateur (sans `await` préalable), ce qui
+  // évite que la pop-up soit bloquée par les navigateurs mobiles.
+  useEffect(() => {
+    if (!isApiBackend) return;
+    if (typeof document === 'undefined') return;
+    if (window.google?.accounts?.oauth2) return;
+    if (document.getElementById(GIS_SCRIPT_ID)) return;
+    const script = document.createElement('script');
+    script.id = GIS_SCRIPT_ID;
+    script.src = GIS_SCRIPT_URL;
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+  }, [isApiBackend]);
+
   const getAppBaseUrl = useCallback(() => {
     const candidates = [
       import.meta.env.VITE_APP_URL,
@@ -727,9 +760,17 @@ export const AppProvider = ({ children }) => {
     // --- Backend API Fastify : session restaurée depuis le cookie JWT -------
     if (isApiBackend) {
       let active = true;
-      apiProvider.auth.getSession().then((sessionUser) => {
+      apiProvider.auth.getSession().then((sessionResult) => {
         if (!active) return;
-        setUser((prev) => (prev?.isDemo ? prev : sessionUser));
+        // Z1 — Ne JAMAIS déconnecter sur un aléa réseau transitoire. `getSession()`
+        // renvoie `SESSION_UNKNOWN` quand l'état n'a pas pu être tranché (réseau) :
+        // on conserve alors l'utilisateur courant. Un 401 confirmé renvoie `null`
+        // (déconnexion), un succès renvoie l'utilisateur restauré.
+        setUser((prev) => {
+          if (prev?.isDemo) return prev;
+          if (sessionResult === SESSION_UNKNOWN) return prev;
+          return sessionResult;
+        });
         setAuthChecked(true);
       });
       return () => { active = false; };
@@ -805,35 +846,42 @@ export const AppProvider = ({ children }) => {
     // --- Backend API Fastify : authentification via Google Identity Services ------
     if (isApiBackend) {
       return new Promise((resolve) => {
-        const loadGsiScript = () => {
-          return new Promise((resolveScript) => {
-            if (window.google?.accounts?.oauth2) {
-              resolveScript(true);
-              return;
-            }
-            const script = document.createElement('script');
-            script.src = 'https://accounts.google.com/gsi/client';
-            script.async = true;
-            script.defer = true;
-            script.onload = () => resolveScript(true);
-            script.onerror = () => resolveScript(false);
-            document.body.appendChild(script);
-          });
+        let settled = false;
+
+        // Résolution unique : neutralise le délai de sécurité et garantit que la
+        // Promise ne se résout qu'une seule fois (callback OU timeout OU erreur).
+        const finish = (result) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(safetyTimer);
+          resolve(result);
         };
 
-        loadGsiScript().then((success) => {
-          if (!success) {
-            resolve({ success: false, error: 'Impossible de charger le service Google.' });
-            return;
-          }
+        // Garde anti-blocage (pop-up bloquée) : si aucun callback GIS n'arrive
+        // dans la fenêtre impartie, on résout avec une erreur EXPLICITE plutôt
+        // que de laisser un spinner infini. Le bouton peut ainsi être réarmé.
+        const safetyTimer = setTimeout(() => {
+          finish({
+            success: false,
+            popupBlocked: true,
+            error:
+              "La fenêtre Google ne s'est pas ouverte. Autorisez les pop-ups pour ce site, puis réessayez.",
+          });
+        }, GOOGLE_AUTH_TIMEOUT_MS);
 
+        // Initialise le client GIS et déclenche la pop-up de façon SYNCHRONE
+        // (dans le geste utilisateur) lorsque le script est déjà préchargé.
+        const startTokenClient = () => {
           try {
             const client = window.google.accounts.oauth2.initTokenClient({
-              client_id: '234409145334-fdvn7490d4avgf4ud437abmps192j2cd.apps.googleusercontent.com',
+              client_id: GOOGLE_CLIENT_ID,
               scope: 'email profile openid',
               callback: async (tokenResponse) => {
                 if (tokenResponse.error) {
-                  resolve({ success: false, error: tokenResponse.error_description || 'Authentification annulée.' });
+                  finish({
+                    success: false,
+                    error: tokenResponse.error_description || 'Authentification annulée.',
+                  });
                   return;
                 }
                 try {
@@ -842,20 +890,53 @@ export const AppProvider = ({ children }) => {
                   if (result.success) {
                     setUser(result.user);
                     setAuthChecked(true);
-                    resolve({ success: true });
+                    finish({ success: true });
                   } else {
-                    resolve({ success: false, error: result.error });
+                    finish({ success: false, error: result.error });
                   }
                 } catch (e) {
-                  resolve({ success: false, error: e.message || 'Authentification Google échouée.' });
+                  finish({ success: false, error: e.message || 'Authentification Google échouée.' });
                 }
               },
             });
+            // Appel synchrone : GIS préchargé, aucun `await` ne précède ce point.
             client.requestAccessToken();
           } catch (err) {
-            resolve({ success: false, error: err.message || 'Erreur d\'initialisation Google OAuth.' });
+            finish({ success: false, error: err.message || "Erreur d'initialisation Google OAuth." });
           }
-        });
+        };
+
+        // Cas attendu : GIS préchargé au montage de la page d'auth.
+        if (window.google?.accounts?.oauth2) {
+          startTokenClient();
+          return;
+        }
+
+        // Repli best-effort : le script n'est pas encore prêt — on le charge à la
+        // volée. Le délai de sécurité ci-dessus garantit une résolution même si
+        // le script ne se charge jamais.
+        let script = document.getElementById(GIS_SCRIPT_ID);
+        if (!script) {
+          script = document.createElement('script');
+          script.id = GIS_SCRIPT_ID;
+          script.src = GIS_SCRIPT_URL;
+          script.async = true;
+          script.defer = true;
+          document.body.appendChild(script);
+        }
+        script.addEventListener(
+          'load',
+          () => {
+            if (window.google?.accounts?.oauth2) startTokenClient();
+            else finish({ success: false, error: 'Impossible de charger le service Google.' });
+          },
+          { once: true },
+        );
+        script.addEventListener(
+          'error',
+          () => finish({ success: false, error: 'Impossible de charger le service Google.' }),
+          { once: true },
+        );
       });
     }
 
@@ -948,11 +1029,24 @@ export const AppProvider = ({ children }) => {
     }
 
     if (isApiBackend) {
+      // Z4 : le verdict d'accès est calculé CÔTÉ SERVEUR et renvoyé par
+      // /api/auth/me (champ `accessGranted`). Le client ne fait que le refléter
+      // (autorité non falsifiable). Repli rétro-compatible sur `isActive` si le
+      // serveur n'expose pas encore le verdict.
+      const serverVerdict =
+        typeof user.accessGranted === 'boolean'
+          ? user.accessGranted
+          : (user.isActive ?? true);
       setProfilAcces({
         id: user.id,
         user_id: user.id,
         role: user.role === 'superadmin' ? 'admin' : (user.role === 'agency_admin' ? 'admin' : 'user'),
-        acces_autorise: user.isActive ?? true,
+        acces_autorise: serverVerdict,
+        // Verdict serveur explicite (consommé en priorité par isAccessGranted).
+        accessGranted: serverVerdict,
+        trialActive: user.trialActive,
+        trialEndsAt: user.trialEndsAt ?? null,
+        paidAccess: user.paidAccess ?? false,
         createdAt: user.createdAt,
         created_at: user.createdAt,
       });
@@ -3069,6 +3163,7 @@ export const AppProvider = ({ children }) => {
       isUsingMock,
       user,
       hasCredentials,
+      isApiBackend,
       profilAcces,
       profileStatus,
       accessError,

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'opaysfox-v5';
+const CACHE_NAME = 'opaysfox-v6';
 const STATIC_ASSETS = [
   './',
   './index.html',

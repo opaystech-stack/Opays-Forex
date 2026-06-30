@@ -3,7 +3,7 @@ import { useApp } from './context/AppContext';
 const translations = {
   fr: {
     app: { subtitle: 'Gestion Forex', title: 'OpaysFox', demo: 'Démo' },
-    nav: { dashboard: 'Dashboard', transactions: 'Transactions', wallets: 'Portefeuilles', expenses: 'Dépenses', loans: 'Prêts', settings: 'Paramètres', clients_aria: 'Gestion des clients', employes: 'Employés', platform_admin: 'Administration plateforme', transferts: 'Transferts', abonnements: 'Abonnements', billets: 'Billets d\'avion', remote_orders: 'Commandes à distance', more: 'Menu' },
+    nav: { dashboard: 'Dashboard', transactions: 'Transactions', wallets: 'Portefeuilles', expenses: 'Dépenses', loans: 'Prêts', settings: 'Paramètres', clients: 'Clients', clients_aria: 'Gestion des clients', employes: 'Employés', platform_admin: 'Administration plateforme', transferts: 'Transferts', abonnements: 'Abonnements', billets: 'Billets d\'avion', remote_orders: 'Commandes à distance', more: 'Menu' },
     loading: { data: 'Chargement des données...', init_title: 'Initialisation...', session_check: 'Vérification de la session en cours', skeleton: 'Chargement…', page: 'Chargement de la page…' },
     dashboard: {
       patrimoine: 'Patrimoine Global',
@@ -352,7 +352,18 @@ const translations = {
       yes: 'Oui',
       no: 'Non',
       save: 'Enregistrer',
-      confirm_delete: 'Supprimer ce brouillon ? Cette action est irréversible.'
+      confirm_delete: 'Supprimer ce brouillon ? Cette action est irréversible.',
+      add: 'Ajouter',
+      cancel: 'Annuler',
+      logout: 'Déconnexion'
+    },
+    profile_drawer: {
+      title: 'Mon Profil',
+      agencies: 'Mes Agences',
+      active_agency: 'Agence Active',
+      add_agency: 'Ajouter une agence',
+      new_agency_placeholder: "Nom de l'agence...",
+      agency_added: 'Agence ajoutée avec succès !'
     },
     landing: {
       lang_aria: 'Changer de langue',
@@ -942,7 +953,7 @@ const translations = {
   },
   en: {
     app: { subtitle: 'Forex Management', title: 'OpaysFox', demo: 'Demo' },
-    nav: { dashboard: 'Dashboard', transactions: 'Transactions', wallets: 'Wallets', expenses: 'Expenses', loans: 'Loans', settings: 'Settings', clients_aria: 'Customer management', employes: 'Employees', platform_admin: 'Platform administration', transferts: 'Transfers', abonnements: 'Subscriptions', billets: 'Flight tickets', remote_orders: 'Remote orders', more: 'Menu' },
+    nav: { dashboard: 'Dashboard', transactions: 'Transactions', wallets: 'Wallets', expenses: 'Expenses', loans: 'Loans', settings: 'Settings', clients: 'Clients', clients_aria: 'Customer management', employes: 'Employees', platform_admin: 'Platform administration', transferts: 'Transfers', abonnements: 'Subscriptions', billets: 'Flight tickets', remote_orders: 'Remote orders', more: 'Menu' },
     loading: { data: 'Loading data...', init_title: 'Initializing...', session_check: 'Checking session', skeleton: 'Loading…', page: 'Loading page…' },
     dashboard: {
       patrimoine: 'Net Worth',
@@ -1287,7 +1298,15 @@ const translations = {
         mmoney: 'M-Money'
       }
     },
-    common: { yes: 'Yes', no: 'No', save: 'Save', confirm_delete: 'Delete this draft? This action is irreversible.' },
+    common: { yes: 'Yes', no: 'No', save: 'Save', confirm_delete: 'Delete this draft? This action is irreversible.', add: 'Add', cancel: 'Cancel', logout: 'Logout' },
+    profile_drawer: {
+      title: 'My Profile',
+      agencies: 'My Agencies',
+      active_agency: 'Active Agency',
+      add_agency: 'Add an agency',
+      new_agency_placeholder: 'Agency name...',
+      agency_added: 'Agency added successfully!'
+    },
     landing: {
       lang_aria: 'Change language',
       lang_fr: 'FR',

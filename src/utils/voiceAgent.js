@@ -222,7 +222,7 @@ export const callGeminiWithTimeout = ({ supabase, payload, timeoutMs = DEFAULT_G
       }, timeoutMs);
     });
 
-    const invokePromise = geminiApi.proxy(payload)
+    const invokePromise = geminiApi.proxy(payload, controller.signal)
       .then((res) => {
         if (!res?.success) throw new Error(res?.error || 'Erreur Gemini');
         return res.text;

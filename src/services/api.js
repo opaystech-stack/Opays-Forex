@@ -46,7 +46,7 @@ async function api(path, options = {}) {
 
 export const apiClient = {
   get: (path) => api(path, { method: 'GET' }),
-  post: (path, body) => api(path, { method: 'POST', body: JSON.stringify(body) }),
+  post: (path, body, options = {}) => api(path, { method: 'POST', body: JSON.stringify(body), ...options }),
   put: (path, body) => api(path, { method: 'PUT', body: JSON.stringify(body) }),
   delete: (path) => api(path, { method: 'DELETE' }),
 };
@@ -222,5 +222,6 @@ export const userApi = {
 };
 
 export const geminiApi = {
-  proxy: (payload) => apiClient.post('/gemini/proxy', payload),
+  // `signal` (optionnel) permet d'annuler reellement la requete au timeout.
+  proxy: (payload, signal) => apiClient.post('/gemini/proxy', payload, signal ? { signal } : {}),
 };

@@ -70,6 +70,11 @@ if (!process.env.DATABASE_URL) {
 const app = Fastify({
   logger: { level: process.env.NODE_ENV === 'production' ? 'warn' : 'info' },
   trustProxy: true,
+  // Autorise les corps JSON volumineux : le proxy Gemini (/api/gemini/proxy)
+  // recoit des images/audio encodes en base64. `validateMediaInput` accepte
+  // jusqu'a 10 Mo de media, soit ~13,7 Mo de JSON base64 ; sans cette limite,
+  // Fastify rejetait avec 413 (defaut 1 Mo) et le scan/photo echouait.
+  bodyLimit: 15 * 1024 * 1024,
 });
 
 // CORS : liste blanche stricte définie par CORS_ORIGIN (valeurs séparées par

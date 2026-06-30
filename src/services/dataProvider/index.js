@@ -15,6 +15,9 @@ import { supabaseProvider } from './supabaseProvider';
 const VALID_BACKENDS = new Set(['api', 'supabase', 'mock']);
 
 export function getDataBackend() {
+  if (typeof window !== 'undefined' && window.location.hostname === 'fox.opays.io') {
+    return 'api';
+  }
   const flag = import.meta.env.VITE_DATA_BACKEND;
   if (typeof flag === 'string' && VALID_BACKENDS.has(flag)) {
     return flag;

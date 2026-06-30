@@ -67,8 +67,8 @@ export default function SignUp() {
     setLoading(false);
 
     if (result.success) {
-      // Supabase may require email confirmation — check if user is immediately logged in
-      if (result.data?.user?.confirmed_at || result.data?.session) {
+      // Direct integration check or Supabase session presence
+      if (result.user || result.data?.user?.confirmed_at || result.data?.session) {
         navigate('/app');
       } else {
         setSuccess(t('auth.signup.success'));

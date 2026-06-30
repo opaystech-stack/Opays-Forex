@@ -51,7 +51,8 @@ const GOOGLE_CLIENT_ID =
 // tests, 1500 ms) et configurable via `VITE_GOOGLE_AUTH_TIMEOUT_MS`.
 const GOOGLE_AUTH_TIMEOUT_MS = (() => {
   const raw = Number(import.meta.env?.VITE_GOOGLE_AUTH_TIMEOUT_MS);
-  return Number.isFinite(raw) && raw > 0 ? raw : 1000;
+  if (Number.isFinite(raw) && raw > 0) return raw;
+  return typeof process !== 'undefined' && (process.env?.NODE_ENV === 'test' || process.env?.VITEST) ? 500 : 15000;
 })();
 
 // Helpers de repli mock localStorage (mode démo / sans Supabase). Définis au

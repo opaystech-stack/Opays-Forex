@@ -147,7 +147,7 @@ export default function SignUp() {
           <LangToggle variant="light" />
         </div>
 
-        <div className="w-full max-w-[420px] my-auto py-6">
+        <div className="w-full max-w-[420px] mx-auto py-8 md:py-16">
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-2 mb-6">
             <img

@@ -100,7 +100,7 @@ export default function SignIn() {
           <LangToggle variant="light" />
         </div>
 
-        <div className="w-full max-w-[400px] my-auto py-6">
+        <div className="w-full max-w-[400px] mx-auto py-8 md:py-16">
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-2.5 mb-8">
             <img

@@ -1,3 +1,11 @@
+/* Ordre explicite des cascade layers (Tailwind v4). DOIT être déclaré avant les
+   imports : sans cela, l'ordre est déterminé par la première apparition de
+   chaque couche (theme, utilities, puis base), ce qui place `base` APRÈS
+   `utilities` et fait que les resets de `@layer base` (ex. `.landing-reset
+   button { padding:0 }`) écrasent les utilitaires Tailwind (`py-4`, ...).
+   En fixant l'ordre canonique ci-dessous, `utilities` reste prioritaire. */
+@layer theme, base, components, utilities;
+
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);

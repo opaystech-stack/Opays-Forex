@@ -22,6 +22,16 @@ export default defineConfig({
       host: 'localhost',
       protocol: 'ws',
     },
+    // Proxy de développement : /api -> backend Fastify local. Garde les appels
+    // au backend SAME-ORIGIN côté navigateur, condition nécessaire pour que le
+    // cookie de session httpOnly `sameSite=lax` accompagne /api/auth/me en dev
+    // (reproduit le comportement de production, cf. auth-access-mobile-fixes Z1).
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:3001',
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     // Ensure consistent hashing for cache busting

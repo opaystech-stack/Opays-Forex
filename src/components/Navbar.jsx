@@ -68,8 +68,8 @@ export default function Navbar({
     isModuleEnabled && isModuleEnabled('commande_distance')
       ? { id: 'remote_orders', label: t('nav.remote_orders') || 'Commandes', icon: ClipboardList }
       : null,
-    isAdmin && isAdmin()
-      ? { id: 'admin', label: t('nav.admin') || 'Admin Agence', icon: Shield }
+    user
+      ? { id: 'admin', label: 'Admin', icon: Shield }
       : null,
     isPlatformEditor
       ? { id: 'admin-plateforme', label: t('nav.platform_admin') || 'Admin Plateforme', icon: Sliders }

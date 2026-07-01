@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Building2, Plus, Check, User, LogOut } from 'lucide-react';
+import { X, Building2, Plus, Check, User, LogOut, Trash2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useT } from '../i18n';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +21,7 @@ export default function ProfileDrawer({ isOpen, onClose }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
   const userInitials = user?.email
     ? user.email.slice(0, 2).toUpperCase()
@@ -51,6 +52,24 @@ export default function ProfileDrawer({ isOpen, onClose }) {
     if (res?.success) {
       onClose();
       navigate('/login');
+    }
+  };
+
+  const handleDeleteAgency = async (agencyId) => {
+    setShowDeleteConfirm(null);
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      const res = await fetch('/api/agencies/' + agencyId, { method: 'DELETE', credentials: 'include' });
+      const data = await res.json();
+      if (data.success) {
+        setSuccessMsg('Agence supprimée');
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        setErrorMsg(data.error || 'Erreur lors de la suppression');
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'Erreur réseau');
     }
   };
 
@@ -113,19 +132,28 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                 {platformAgencies.map((agency) => {
                   const isActive = currentAgency?.id === agency.id;
                   return (
-                    <button
-                      key={agency.id}
-                      type="button"
-                      className={`profile-agency-item ${isActive ? 'active' : ''}`}
-                      onClick={() => {
-                        switchAgency(agency);
-                        onClose();
-                      }}
-                    >
-                      <Building2 size={16} className="agency-icon" />
-                      <span className="agency-name">{agency.name}</span>
-                      {isActive && <Check size={16} className="agency-check" />}
-                    </button>
+                    <div key={agency.id} className="profile-agency-row">
+                      <button
+                        type="button"
+                        className={'profile-agency-item' + (isActive ? ' active' : '')}
+                        onClick={() => {
+                          switchAgency(agency);
+                          onClose();
+                        }}
+                      >
+                        <Building2 size={16} className="agency-icon" />
+                        <span className="agency-name">{agency.name}</span>
+                        {isActive && <Check size={16} className="agency-check" />}
+                      </button>
+                      <button
+                        type="button"
+                        className="profile-delete-agency-btn"
+                        onClick={() => setShowDeleteConfirm(agency.id)}
+                        title="Supprimer cette agence"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   );
                 })}
               </div>

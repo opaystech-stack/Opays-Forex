@@ -393,8 +393,8 @@ export default function SettingsPage() {
 /* Agency deletion sub-component */
 function AgencyDangerSection() {
   const { currentAgency } = useApp();
-  const [showConfirm, setShowConfirm] = React.useState(false);
-  const [delMsg, setDelMsg] = React.useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [delMsg, setDelMsg] = useState(null);
 
   const handleDelete = async () => {
     if (!currentAgency) return;

@@ -34,7 +34,7 @@ export default async function moduleRoutes(app) {
       `INSERT INTO module_states (agency_id, module_name, is_enabled)
        VALUES ($1, $2, $3)
        ON CONFLICT (agency_id, module_name)
-       DO UPDATE SET enabled = EXCLUDED.enabled, updated_at = NOW()
+       DO UPDATE SET is_enabled = EXCLUDED.is_enabled, updated_at = NOW()
        RETURNING module_name, is_enabled`,
       [request.agencyId, module_name, is_enabled]
     );

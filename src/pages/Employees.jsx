@@ -7,7 +7,7 @@ import { useT } from '../i18n';
 export default function Employees() {
   const { user, employees, invitations, createInvitation, isUsingMock } = useApp();
   const t = useT();
-  const [form, setForm] = useState({ email: '', firstName: '', lastName: '', role: 'agent', phone: '' });
+  const [form, setForm] = useState({ email: '', role: 'agent' });
   const [message, setMessage] = useState(null);
   const allMembers = [...(Array.isArray(employees) ? employees : []), ...(Array.isArray(invitations) ? invitations.filter(i => i.state === 'en_attente') : [])];
   const [loading, setLoading] = useState(false);
@@ -20,7 +20,7 @@ export default function Employees() {
       const res = await createInvitation({ email: form.email, role: form.role, permission_grants: [] });
       if (res.success) {
         setMessage({ type: 'success', text: 'Invitation envoyée avec succès' });
-        setForm({ email: '', firstName: '', lastName: '', role: 'agent', phone: '' });
+        setForm({ email: '', role: 'agent' });
       } else {
         setMessage({ type: 'error', text: res.error || 'Erreur lors de l\'envoi' });
       }

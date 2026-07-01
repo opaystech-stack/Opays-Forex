@@ -177,7 +177,7 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
 
     try {
       setAiLoading(true);
-      const request = await buildGeminiRequest({ kind: 'ocr', wallets, file });
+      const request = await buildGeminiRequest({ kind: 'ocr', wallets, file, isUsingMock });
       const textResponse = await callGeminiWithTimeout({
         supabase,
         payload: {

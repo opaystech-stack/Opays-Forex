@@ -118,7 +118,7 @@ export default function ProfileDrawer({ isOpen, onClose }) {
               <div className="profile-details">
                 <span className="profile-email">{user?.email || 'Demo User'}</span>
                 <span className="profile-role">
-                  {currentAgency ? `${'Agence Active'} : ${currentAgency.name}` : 'Aucune agence active'}
+                  {currentAgency ? 'Agence Active : ' + currentAgency.name : 'Aucune agence active'}
                 </span>
               </div>
             </div>

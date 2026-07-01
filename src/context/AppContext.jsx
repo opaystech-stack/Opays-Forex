@@ -560,16 +560,17 @@ export const AppProvider = ({ children }) => {
 
     if (!hasCredentials || user?.isDemo) {
       console.log('Supabase credentials not found or Demo Mode active. Using Mock Data.');
-      // Load mock from localStorage or defaults
-      const localWallets = localStorage.getItem('forex_wallets');
-      const localRates = localStorage.getItem('forex_rates');
-      const localTxns = localStorage.getItem('forex_txns');
-      const localExp = localStorage.getItem('forex_expenses');
-      const localCust = localStorage.getItem('forex_customers');
-      const localLoans = localStorage.getItem('forex_loans');
-      const localDebts = localStorage.getItem('forex_debts');
-      const localTemplates = localStorage.getItem('forex_templates');
-      const localReminders = localStorage.getItem('forex_reminders');
+      // Load mock from localStorage or defaults (agency-scoped keys)
+      const aid = currentAgency?.id || 'default';
+      const localWallets = localStorage.getItem('forex_wallets_' + aid);
+      const localRates = localStorage.getItem('forex_rates_' + aid);
+      const localTxns = localStorage.getItem('forex_txns_' + aid);
+      const localExp = localStorage.getItem('forex_expenses_' + aid);
+      const localCust = localStorage.getItem('forex_customers_' + aid);
+      const localLoans = localStorage.getItem('forex_loans_' + aid);
+      const localDebts = localStorage.getItem('forex_debts_' + aid);
+      const localTemplates = localStorage.getItem('forex_templates_' + aid);
+      const localReminders = localStorage.getItem('forex_reminders_' + aid);
 
       setWallets(localWallets ? JSON.parse(localWallets) : MOCK_WALLETS);
       setRates(localRates ? JSON.parse(localRates) : MOCK_RATES);
@@ -1227,7 +1228,11 @@ export const AppProvider = ({ children }) => {
   // Update localStorage helper if using mock data
   const updateLocalMock = (key, data) => {
     if (isUsingMock) {
-      localStorage.setItem(key, JSON.stringify(data));
+      const aid = currentAgency?.id || 'default';
+      const scopedKey = key.includes('_agency') || key.includes('_module') || key.includes('_transfer') || key.includes('_subscription') || key.includes('_flight') || key.includes('_order') || key.includes('_employee') || key.includes('_invitation') || key.includes('_method') || key.includes('_provider') || key.includes('_link')
+        ? key
+        : 'forex_' + key.replace('forex_', '') + '_' + aid;
+      localStorage.setItem(scopedKey, JSON.stringify(data));
     }
   };
 
@@ -3301,7 +3306,10 @@ export const AppProvider = ({ children }) => {
       setModuleEnabled,
       setModuleEntitlement,
       setAgencyState,
-      switchAgency: setCurrentAgency,
+      switchAgency: (agency) => {
+        setCurrentAgency(agency);
+        setTimeout(function() { fetchData(); }, 50);
+      },
       createAgency,
       platformAgencies,
       platformModuleEntitlements,

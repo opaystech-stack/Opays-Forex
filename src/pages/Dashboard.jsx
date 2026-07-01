@@ -121,7 +121,7 @@ export default function Dashboard({
   searchQuery: propSearchQuery,
   setSearchQuery: propSetSearchQuery,
 }) {
-  const { wallets, transactions, expenses, getNetWorthUSD, convertToUSD, getDrafts, confirmDraft, deleteDraft, loading, loans, getOutstandingLoansUSD } = useApp();
+  const { wallets, transactions, expenses, getNetWorthUSD, convertToUSD, getDrafts, confirmDraft, deleteDraft, loading, loans, getOutstandingLoansUSD, currentAgency } = useApp();
   const t = useT();
 
   const [localSelectedWalletId, localSetSelectedWalletId] = useState(null);

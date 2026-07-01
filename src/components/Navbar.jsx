@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, ArrowLeftRight, TrendingDown, Landmark, Coins,
-  Users, SendHorizonal, Tv, Plane, ClipboardList, MoreHorizontal, Shield, Sliders,
+  SendHorizonal, Tv, Plane, ClipboardList, MoreHorizontal, Shield, Sliders,
   Building2, ArrowLeft, Plus, Menu,
 } from 'lucide-react';
 import { useT } from '../i18n';
@@ -51,11 +51,11 @@ export default function Navbar({
     { id: 'back-to-app', label: t('nav.dashboard') || 'Retour App', icon: ArrowLeft },
   ];
 
-  // Onglets conditionnels (SaaS / Modules additionnels)
+  // Onglets conditionnels (SaaS / Modules additionnels).
+  // NB (Bug B) : l'onglet "Employés" est volontairement absent du menu latéral
+  // PC : la gestion des employés s'effectue depuis l'Espace_Administration_Agence
+  // (Console_Admin), pas depuis la navigation courante de l'agence.
   const conditionalTabs = [
-    hasPermission && hasPermission('employes.gerer')
-      ? { id: 'employes', label: t('nav.employes') || 'Employés', icon: Users }
-      : null,
     isModuleEnabled && isModuleEnabled('transfert_argent')
       ? { id: 'transferts', label: t('nav.transferts') || 'Transferts', icon: SendHorizonal }
       : null,

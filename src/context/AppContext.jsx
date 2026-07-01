@@ -47,12 +47,18 @@ const GOOGLE_CLIENT_ID =
   '234409145334-fdvn7490d4avgf4ud437abmps192j2cd.apps.googleusercontent.com';
 // Délai de sécurité anti-blocage : si aucun `callback` GIS n'arrive (pop-up
 // bloquée), `signInWithGoogle()` se résout avec une erreur explicite au lieu de
-// rester en chargement infini. Volontairement court (< fenêtre de course des
-// tests, 1500 ms) et configurable via `VITE_GOOGLE_AUTH_TIMEOUT_MS`.
+// rester en chargement infini. Configurable via `VITE_GOOGLE_AUTH_TIMEOUT_MS`.
+//
+// Bug C : 15 s s'avéraient trop courts en production pour un utilisateur qui
+// doit choisir un compte Google parmi plusieurs, valider un nouveau compte, ou
+// subit une connexion lente : la garde se déclenchait prématurément ("La fenêtre
+// Google ne s'est pas ouverte") alors que la pop-up s'ouvrait correctement.
+// On monte à 60 s en production. En environnement de test, on reste court
+// (500 ms) pour que la Promise se résolve dans la fenêtre de race des tests.
 const GOOGLE_AUTH_TIMEOUT_MS = (() => {
   const raw = Number(import.meta.env?.VITE_GOOGLE_AUTH_TIMEOUT_MS);
   if (Number.isFinite(raw) && raw > 0) return raw;
-  return typeof process !== 'undefined' && (process.env?.NODE_ENV === 'test' || process.env?.VITEST) ? 500 : 15000;
+  return typeof process !== 'undefined' && (process.env?.NODE_ENV === 'test' || process.env?.VITEST) ? 500 : 60000;
 })();
 
 // Helpers de repli mock localStorage (mode démo / sans Supabase). Définis au
@@ -85,7 +91,7 @@ import {
 } from '../utils/customerHistory';
 import {
   isAccessGranted,
-  isAdmin,
+  isAdmin as isProfileAdmin,
   isRlsDenied,
   LOAD_TIMEOUT_MS,
 } from '../utils/accessControl';
@@ -2379,6 +2385,39 @@ export const AppProvider = ({ children }) => {
     );
   };
 
+  // isAdmin (Bug A) : expose un booléen correct pour l'accès à la Console_Admin.
+  // Cause racine : la fonction pure `isAdmin(profile)` de accessControl.js
+  // n'accepte que `profile.role === 'admin'` et retourne `false` si elle est
+  // appelée sans argument. Or, en base, le rôle des créateurs d'agence est
+  // `agency_admin` ou `superadmin`, et l'UI appelait `isAdmin()` (sans profil).
+  // Ce wrapper contextuel reconnait tous les cas réels :
+  //   - rôle serveur `superadmin` / `agency_admin` (user.role renvoyé par /me) ;
+  //   - rôle effectif d'agence `proprietaire` (Propriétaire_Agence, Req 2.2) ;
+  //   - verdict de la fonction pure sur `profilAcces.role === 'admin'`
+  //     (rétro-compatibilité, y compris mode démo) ;
+  //   - mode démo explicite.
+  // Signature tolérante : peut être appelé sans argument (`isAdmin()`) ou avec
+  // un profil (`isAdmin(profilAcces)`) pour préserver les appels existants.
+  const isAdmin = useCallback(
+    (profile) => {
+      // Priorité au profil passé en argument (AdminRoute appelle isAdmin(profilAcces)).
+      if (profile && typeof profile === 'object') {
+        if (isProfileAdmin(profile)) return true;
+        if (profile.role === 'agency_admin' || profile.role === 'superadmin') return true;
+      }
+      // Rôle serveur exposé par /api/auth/me.
+      if (user?.role === 'superadmin' || user?.role === 'agency_admin') return true;
+      // Rôle effectif dans l'agence courante (Propriétaire_Agence).
+      if (currentRole === 'proprietaire') return true;
+      // Mode démo local.
+      if (user?.isDemo) return true;
+      // Rétro-compat : profilAcces du contexte (role mappé en 'admin' par loadProfile).
+      if (isProfileAdmin(profilAcces)) return true;
+      return false;
+    },
+    [user, currentRole, profilAcces],
+  );
+
   // Module UTILISABLE selon l'activation à deux niveaux (Req 6.5).
   const isModuleEnabled = (moduleKey) =>
     computeModuleEnabled(moduleKey, { moduleStates, entitlements: moduleEntitlements });
@@ -3201,7 +3240,7 @@ export const AppProvider = ({ children }) => {
       loadProfile,
       submitPaymentProof,
       isAccessGranted,
-      isAdmin,
+      isAdmin: isAdmin, // Bug A — wrapper contextuel (booléen), pas la fonction pure
       signUp,
       signIn,
       signInWithGoogle,

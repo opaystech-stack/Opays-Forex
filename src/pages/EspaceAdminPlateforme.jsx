@@ -428,6 +428,22 @@ export default function EspaceAdminPlateforme({ activeTab }) {
                 <span className="kpi-label stat-label">{t('platform_admin.stats_total')}</span>
               </div>
               <div className="kpi-value stat-value">{stats.total}</div>
+
+      {/* Stats globales enrichies */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "12px", marginBottom: "20px" }}>
+        <div className="card" style={{ padding: "14px" }}>
+          <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: 500 }}>Portefeuilles</div>
+          <div style={{ fontSize: "22px", fontWeight: 700, color: "#4F46E5" }}>{(wallets || []).length}</div>
+        </div>
+        <div className="card" style={{ padding: "14px" }}>
+          <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: 500 }}>Transactions</div>
+          <div style={{ fontSize: "22px", fontWeight: 700, color: "#0E7490" }}>{(transactions || []).length}</div>
+        </div>
+        <div className="card" style={{ padding: "14px" }}>
+          <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: 500 }}>Employes</div>
+          <div style={{ fontSize: "22px", fontWeight: 700, color: "#7C3AED" }}>{(employees || []).length}</div>
+        </div>
+      </div>
             </div>
           </div>
         </>

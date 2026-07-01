@@ -42,3 +42,5 @@ playwright/.cache/
 # Sorties et configs de test temporaires (ne pas versionner)
 vitest-*.json
 vitest-out.txt
+api/.env
+api/db/migrations/*.rollback.sql

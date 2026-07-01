@@ -43,4 +43,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 EXPOSE 80
 
 WORKDIR /app/api
-CMD ["supervisord", "-c", "/etc/supervisor.d/supervisord.conf", "-n"]
+CMD sh -c "node db/migrate.js && exec supervisord -c /etc/supervisor.d/supervisord.conf -n"

@@ -72,7 +72,7 @@ export default function Navbar({
       ? { id: 'admin', label: 'Admin', icon: Shield }
       : null,
     isPlatformEditor
-      ? { id: 'admin-plateforme', label: t('nav.platform_admin') || 'Admin Plateforme', icon: Sliders }
+      ? { id: 'admin-plateforme', label: 'Admin Plateforme', icon: Sliders }
       : null,
   ].filter(Boolean);
 

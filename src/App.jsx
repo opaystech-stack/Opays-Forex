@@ -28,6 +28,7 @@ const Paiement = lazy(() => import('./pages/Paiement'));
 const ConsoleAdmin = lazy(() => import('./pages/ConsoleAdmin'));
 // Formulaire_Commande — page publique de commande à distance (agency-operations-expansion, Req 14.3)
 const FormulaireCommande = lazy(() => import('./pages/FormulaireCommande'));
+const AgencyAdmin = lazy(() => import('./pages/AgencyAdmin'));
 const SuperAdmin = lazy(() => import('./pages/SuperAdmin'));
 const Tickets = lazy(() => import('./pages/Tickets'));
 // Nouvelles pages — agency-operations-expansion (tâche 22.1)
@@ -834,9 +835,18 @@ function AppContent() {
         }
       />
 
-      {/* Console_Admin — authentifié (PrivateRoute) + rôle admin (AdminRoute, R6.9) */}
+      {/* Admin Agence — accessible à tous les utilisateurs connectés */}
       <Route
         path="/admin"
+        element={
+          <PrivateRoute>
+            <AgencyAdmin />
+          </PrivateRoute>
+        }
+      />
+      {/* Console_Admin — authentifié + rôle admin */}
+      <Route
+        path="/admin/console"
         element={
           <PrivateRoute>
             <AdminRoute>

@@ -41,13 +41,13 @@ export default function Employees() {
       <div className="ofx-screen-header">
         <div className="ofx-screen-icon"><Users size={28} /></div>
         <div>
-          <h2 className="ofx-screen-title">{t('employees.title')}</h2>
-          <p className="ofx-screen-desc">{t('employees.subtitle')}</p>
+          <h2 className="ofx-screen-title">{'Employés'}</h2>
+          <p className="ofx-screen-desc">{'Invitez des collaborateurs et gérez leurs accès'}</p>
         </div>
       </div>
 
       {message && (
-        <div className={`ofx-alert ${message.type === 'success' ? 'ofx-alert-success' : 'ofx-alert-error'}`}>
+        <div className={"ofx-alert " + (message.type === 'success' ? 'ofx-alert-success' : 'ofx-alert-error')}>
           {message.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
           <span>{message.text}</span>
         </div>
@@ -83,14 +83,14 @@ export default function Employees() {
           </div>
         </div>
         <button type="submit" className="ofx-btn ofx-btn-primary" disabled={loading}>
-          <Plus size={16} /> {loading ? t('common.saving') : t('employees.add')}
+          <Plus size={16} /> {loading ? 'Envoi...' : 'Ajouter'}
         </button>
       </form>
 
       <div className="ofx-section">
-        <div className="ofx-section-header">{t('employees.list')} ({employees.length})</div>
+        <div className="ofx-section-header">{'Liste des membres'} ({employees.length})</div>
         <div className="ofx-list">
-          {allMembers.length === 0 ? <p className="ofx-empty">{t('employees.empty')}</p> : allMembers.map(e => (
+          {allMembers.length === 0 ? <p className="ofx-empty">{'Aucun membre pour le moment'}</p> : allMembers.map(e => (
             <div key={e.id} className="ofx-list-item">
               <div className="ofx-list-icon primary"><User size={18} /></div>
               <div className="ofx-list-body">

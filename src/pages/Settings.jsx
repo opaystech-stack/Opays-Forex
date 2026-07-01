@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Settings, Save, AlertTriangle, RefreshCw, LogOut, ToggleLeft, ToggleRight, Lock } from 'lucide-react';
+import { Settings, Save, AlertTriangle, RefreshCw, LogOut, ToggleLeft, ToggleRight, Lock, Trash2 } from 'lucide-react';
 import { useT } from '../i18n';
 import TemplatesManager from '../components/TemplatesManager';
 import { BASE_MODULES, OPTIONAL_MODULES, ADDITIONAL_MODULES } from '../utils/moduleEntitlements';
@@ -383,6 +383,67 @@ export default function SettingsPage() {
           <span>{t('settings.logout_button')}</span>
         </button>
       </div>
+
+      {/* Agency danger zone */}
+      <AgencyDangerSection />
+    </div>
+  );
+}
+
+/* Agency deletion sub-component */
+function AgencyDangerSection() {
+  const { currentAgency } = useApp();
+  const [showConfirm, setShowConfirm] = React.useState(false);
+  const [delMsg, setDelMsg] = React.useState(null);
+
+  const handleDelete = async () => {
+    if (!currentAgency) return;
+    setDelMsg(null);
+    try {
+      const res = await fetch('/api/agencies/' + currentAgency.id, { method: 'DELETE', credentials: 'include' });
+      const data = await res.json();
+      if (data.success) {
+        setDelMsg({ type: 'success', text: 'Agence supprimée. Rechargement...' });
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        setDelMsg({ type: 'error', text: data.error || 'Erreur lors de la suppression' });
+      }
+    } catch (err) {
+      setDelMsg({ type: 'error', text: err.message || 'Erreur réseau' });
+    }
+  };
+
+  if (!currentAgency) return null;
+
+  return (
+    <div className="card" style={{ border: '1px solid #FECACA' }}>
+      <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', color: '#DC2626' }}>
+        <AlertTriangle size={18} />
+        <span>Zone de danger</span>
+      </h3>
+      <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '12px' }}>
+        Supprimer l&apos;agence <strong>{currentAgency.name}</strong>. Toutes les donn&eacute;es seront perdues.
+      </p>
+      {delMsg && (
+        <div className={'alert ' + (delMsg.type === 'success' ? 'alert-success' : 'alert-info')} style={{ marginBottom: '12px' }}>
+          <span>{delMsg.text}</span>
+        </div>
+      )}
+      {!showConfirm ? (
+        <button type="button" className="btn btn-outline" style={{ borderColor: '#DC2626', color: '#DC2626' }} onClick={() => setShowConfirm(true)}>
+          <Trash2 size={14} />
+          <span>Supprimer cette agence</span>
+        </button>
+      ) : (
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button type="button" className="btn btn-danger" onClick={handleDelete}>
+            Confirmer la suppression
+          </button>
+          <button type="button" className="btn btn-outline" onClick={() => setShowConfirm(false)}>
+            Annuler
+          </button>
+        </div>
+      )}
     </div>
   );
 }

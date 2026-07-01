@@ -35,7 +35,7 @@ export default function ProfileDrawer({ isOpen, onClose }) {
     try {
       const res = await createAgency(newAgencyName.trim());
       if (res.success) {
-        setSuccessMsg(t('profile_drawer.agency_added') || 'Agence ajoutée avec succès !');
+        setSuccessMsg('Agence ajoutée avec succès !');
         setNewAgencyName('');
         setIsCreating(false);
       } else {
@@ -79,7 +79,7 @@ export default function ProfileDrawer({ isOpen, onClose }) {
             <div className="profile-drawer-header">
               <div className="profile-drawer-title-area">
                 <User size={20} className="profile-drawer-icon" />
-                <h3>{t('profile_drawer.title') || 'Mon Profil'}</h3>
+                <h3>{'Mon Profil'}</h3>
               </div>
               <button
                 type="button"
@@ -99,7 +99,7 @@ export default function ProfileDrawer({ isOpen, onClose }) {
               <div className="profile-details">
                 <span className="profile-email">{user?.email || 'Demo User'}</span>
                 <span className="profile-role">
-                  {currentAgency ? `${t('profile_drawer.active_agency') || 'Agence Active'} : ${currentAgency.name}` : 'Aucune agence active'}
+                  {currentAgency ? `${'Agence Active'} : ${currentAgency.name}` : 'Aucune agence active'}
                 </span>
               </div>
             </div>
@@ -108,7 +108,7 @@ export default function ProfileDrawer({ isOpen, onClose }) {
 
             {/* Liste des Agences */}
             <div className="profile-agencies-section">
-              <h4 className="profile-section-title">{t('profile_drawer.agencies') || 'Mes Agences'}</h4>
+              <h4 className="profile-section-title">{'Mes Agences'}</h4>
               <div className="profile-agencies-list">
                 {platformAgencies.map((agency) => {
                   const isActive = currentAgency?.id === agency.id;
@@ -138,13 +138,13 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                   onClick={() => setIsCreating(true)}
                 >
                   <Plus size={16} />
-                  <span>{t('profile_drawer.add_agency') || 'Ajouter une agence'}</span>
+                  <span>{'Ajouter une agence'}</span>
                 </button>
               ) : (
                 <form onSubmit={handleAddAgency} className="profile-add-agency-form">
                   <input
                     type="text"
-                    placeholder={t('profile_drawer.new_agency_placeholder') || "Nom de l'agence..."}
+                    placeholder={"Nom de l'agence..."}
                     value={newAgencyName}
                     onChange={(e) => setNewAgencyName(e.target.value)}
                     className="form-control"
@@ -156,7 +156,7 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                       type="submit"
                       className="btn btn-primary btn-sm"
                     >
-                      {t('common.add') || 'Ajouter'}
+                      {'Ajouter'}
                     </button>
                     <button
                       type="button"
@@ -167,7 +167,7 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                         setSuccessMsg('');
                       }}
                     >
-                      {t('common.cancel') || 'Annuler'}
+                      {'Annuler'}
                     </button>
                   </div>
                 </form>
@@ -185,7 +185,7 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                 onClick={handleLogout}
               >
                 <LogOut size={16} />
-                <span>{t('common.logout') || 'Déconnexion'}</span>
+                <span>{'Déconnexion'}</span>
               </button>
             </div>
           </motion.div>

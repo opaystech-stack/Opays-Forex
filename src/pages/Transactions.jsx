@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { supabase } from '../services/supabase';
+// Mock check via contexte
 import { ArrowLeftRight, Image, Mic, Square, Sparkles, CheckCircle2, AlertCircle, Camera } from 'lucide-react';
 import {
   buildGeminiRequest,
@@ -14,7 +14,7 @@ import {
 
 import { useT } from '../i18n';
 export default function Transactions({ draftToEdit, clearDraftToEdit }) {
-  const { wallets, addTransaction, confirmDraft, convertToUSD, customers, findOrCreateCustomer } = useApp();
+  const { wallets, addTransaction, confirmDraft, convertToUSD, customers, findOrCreateCustomer, isUsingMock } = useApp();
   const t = useT();
   
   // Form state
@@ -164,7 +164,7 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
   // Consomme le module commun `voiceAgent.js` : validation format/taille avant
   // transmission, appel proxy avec délai, parsing sûr, validation des champs.
   const processImageWithGemini = async (file) => {
-    if (!supabase) {
+    if (isUsingMock) {
       console.log('Supabase non configuré. Simulation OCR activée.');
       setAiLoading(true);
       setTimeout(async () => {
@@ -208,7 +208,7 @@ export default function Transactions({ draftToEdit, clearDraftToEdit }) {
 
   // Saisie vocale (Agent_Vocal) : consomme le module commun `voiceAgent.js`.
   const processAudioWithGemini = async (audioBlob) => {
-    if (!supabase) {
+    if (isUsingMock) {
       console.log('Supabase non configuré. Simulation vocale activée.');
       setAiLoading(true);
       setTimeout(async () => {

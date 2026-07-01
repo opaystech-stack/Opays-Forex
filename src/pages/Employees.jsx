@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Users, Plus, Trash2, CheckCircle2, AlertCircle, User, Mail, Phone, Shield } from 'lucide-react';
 import { useT } from '../i18n';
-import { employeeApi } from '../services/api';
+// Utilise createInvitation du contexte
 
 export default function Employees() {
-  const { user, employees, setEmployees, isUsingMock } = useApp();
+  const { user, employees, invitations, createInvitation, isUsingMock } = useApp();
   const t = useT();
   const [form, setForm] = useState({ email: '', firstName: '', lastName: '', role: 'agent', phone: '' });
   const [message, setMessage] = useState(null);
+  const allMembers = [...(Array.isArray(employees) ? employees : []), ...(Array.isArray(invitations) ? invitations.filter(i => i.state === 'en_attente') : [])];
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -16,31 +17,23 @@ export default function Employees() {
     setMessage(null);
     setLoading(true);
     try {
-      let newEmployee;
-      if (isUsingMock) {
-        newEmployee = { id: crypto.randomUUID(), ...form, agencyId: user?.agencyId, isActive: true, createdAt: new Date().toISOString() };
+      const res = await createInvitation({ email: form.email, role: form.role, permission_grants: [] });
+      if (res.success) {
+        setMessage({ type: 'success', text: 'Invitation envoyée avec succès' });
+        setForm({ email: '', firstName: '', lastName: '', role: 'agent', phone: '' });
       } else {
-        const res = await employeeApi.create(form);
-        newEmployee = res.data;
+        setMessage({ type: 'error', text: res.error || 'Erreur lors de l\'envoi' });
       }
-      setEmployees([newEmployee, ...employees]);
-      setMessage({ type: 'success', text: t('employees.created') });
-      setForm({ email: '', firstName: '', lastName: '', role: 'agent', phone: '' });
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || t('common.error') });
+      setMessage({ type: 'error', text: err.message || 'Une erreur est survenue' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id) => {
-    try {
-      if (!isUsingMock) await employeeApi.delete(id);
-      setEmployees(employees.filter(e => e.id !== id));
-      setMessage({ type: 'success', text: t('employees.deleted') });
-    } catch (err) {
-      setMessage({ type: 'error', text: err.message || t('common.error') });
-    }
+    // La suppression des employés se fait via le panneau d'administration
+    setMessage({ type: 'info', text: 'Utilisez le panneau Admin pour gérer les membres' });
   };
 
   return (
@@ -97,14 +90,13 @@ export default function Employees() {
       <div className="ofx-section">
         <div className="ofx-section-header">{t('employees.list')} ({employees.length})</div>
         <div className="ofx-list">
-          {employees.length === 0 ? <p className="ofx-empty">{t('employees.empty')}</p> : employees.map(e => (
+          {allMembers.length === 0 ? <p className="ofx-empty">{t('employees.empty')}</p> : allMembers.map(e => (
             <div key={e.id} className="ofx-list-item">
               <div className="ofx-list-icon primary"><User size={18} /></div>
               <div className="ofx-list-body">
-                <div className="ofx-list-title">{e.firstName} {e.lastName}</div>
-                <div className="ofx-list-sub">{e.email} &bull; {e.phone || '-'} &bull; {e.role}</div>
+                <div className="ofx-list-title">{e.email}</div>
+                <div className="ofx-list-sub">Rôle : {e.role}{e.state === 'en_attente' ? ' (En attente)' : ' (Actif)'}</div>
               </div>
-              <button className="ofx-icon-btn danger" onClick={() => handleDelete(e.id)}><Trash2 size={16} /></button>
             </div>
           ))}
         </div>

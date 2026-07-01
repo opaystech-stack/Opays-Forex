@@ -112,6 +112,7 @@
   html {
     /* Empêche le débordement horizontal global (R8.4) */
     overflow-x: hidden;
+    overflow-y: auto;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -1821,7 +1822,8 @@ select.form-control { cursor: pointer; }
 .mobile-layout-active {
   position: relative;
   height: 100dvh;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .canvas-background-wrapper {

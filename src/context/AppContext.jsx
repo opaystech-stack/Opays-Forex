@@ -2722,7 +2722,11 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const createAgency = async (name) => {
+  const createAgency = async (opts) => {
+    const name = typeof opts === 'string' ? opts : (opts?.name || '');
+    const slug = typeof opts === 'object' ? (opts?.slug || null) : null;
+    const description = typeof opts === 'object' ? (opts?.description || null) : null;
+    if (!name.trim()) return { success: false, error: "Le nom de l'agence est requis." };
     if (isApiBackend) {
       try {
         const res = await apiProvider.auth.createAgency(name);
@@ -2744,6 +2748,8 @@ export const AppProvider = ({ children }) => {
       const newAgency = {
         id: `agency_${Date.now()}`,
         name,
+        slug: slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+        description,
         state: 'active',
         owner_id: user?.id || 'demo-owner',
         created_at: new Date().toISOString()
@@ -2755,7 +2761,10 @@ export const AppProvider = ({ children }) => {
       return { success: true, data: newAgency };
     }
     try {
-      const { data, error } = await supabase.from('agencies').insert([{ name, owner_id: user.id, state: 'active' }]).select();
+      const insertData = { name, owner_id: user.id, state: 'active' };
+      if (slug) insertData.slug = slug;
+      if (description) insertData.description = description;
+      const { data, error } = await supabase.from('agencies').insert([insertData]).select();
       if (error) throw error;
       const agencyRes = await supabase.from('agencies').select('*').order('created_at', { ascending: true });
       if (!agencyRes.error) {

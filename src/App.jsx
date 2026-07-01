@@ -118,7 +118,7 @@ function MoreMenuPage({ setActiveTab, hasPermission, isModuleEnabled }) {
       label: t('nav.admin') || 'Admin Agence',
       icon: Shield,
       description: 'Gérer les autorisations et valider les accès de l\'agence',
-      show: isAdmin && isAdmin(),
+      show: true, // Admin visible for all connected users
     },
     {
       id: 'admin-plateforme',
@@ -474,22 +474,21 @@ function AppShell() {
                 <Sliders size={18} />
               </button>
             )}
-            {isAdmin && isAdmin() && (
-              <button
-                aria-label={t('nav.admin') || 'Admin Agence'}
-                title={t('nav.admin') || 'Admin Agence'}
-                className={`settings-fab${activeTab === 'admin' ? ' active' : ''}`}
-                style={{
-                  background: activeTab === 'admin'
-                    ? 'linear-gradient(135deg, var(--indigo-strong) 0%, var(--indigo-deep) 100%)'
-                    : 'var(--bg-secondary, rgba(79, 70, 229, 0.08))',
-                  color: activeTab === 'admin' ? '#ffffff' : 'var(--indigo-strong)'
-                }}
-                onClick={() => setActiveTab(activeTab === 'admin' ? 'dashboard' : 'admin')}
-              >
-                <Shield size={18} />
-              </button>
-            )}
+            {/* Admin shield visible for ALL connected users */}
+            <button
+              aria-label={t('nav.admin') || 'Admin Agence'}
+              title={t('nav.admin') || 'Admin Agence'}
+              className={`settings-fab${activeTab === 'admin' ? ' active' : ''}`}
+              style={{
+                background: activeTab === 'admin'
+                  ? 'linear-gradient(135deg, var(--indigo-strong) 0%, var(--indigo-deep) 100%)'
+                  : 'var(--bg-secondary, rgba(79, 70, 229, 0.08))',
+                color: activeTab === 'admin' ? '#ffffff' : 'var(--indigo-strong)'
+              }}
+              onClick={() => setActiveTab(activeTab === 'admin' ? 'dashboard' : 'admin')}
+            >
+              <Shield size={18} />
+            </button>
             <button
               aria-label={t('nav.clients_aria')}
               className="clients-fab"

@@ -15,6 +15,7 @@ export default function Navbar({
   hasPermission,
   isModuleEnabled,
   mode = 'agency',
+  onOpenProfile,
 }) {
   const t = useT();
   const navigate = useNavigate();
@@ -132,6 +133,16 @@ export default function Navbar({
             {t('app.demo')}
           </span>
         )}
+        <button
+          type="button"
+          className="sidebar-user-btn"
+          onClick={onOpenProfile}
+          aria-label="Mon Profil"
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', marginTop: '8px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'transparent', cursor: 'pointer', width: '100%', color: 'var(--text-primary)', fontSize: '13px' }}
+        >
+          <User size={16} />
+          <span>Mon Profil</span>
+        </button>
       </div>
 
       <div className="navbar-tabs-container">

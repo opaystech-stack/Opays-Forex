@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { readdirSync, readFileSync, createHash } from 'fs';
+import { readdirSync, readFileSync } from 'fs';
+import { createHash } from 'crypto';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import pg from 'pg';
@@ -37,7 +38,7 @@ async function run() {
   const opts = parseArgs();
   const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    ssl: false,
   });
 
   try {

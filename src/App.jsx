@@ -677,6 +677,11 @@ function PlatformAdminScreen() {
         isUsingMock={isUsingMock}
         hasPermission={hasPermission}
         isModuleEnabled={isModuleEnabled}
+        onOpenProfile={() => setPlatformDrawerOpen(true)}
+      />
+      <ProfileDrawer
+        isOpen={platformDrawerOpen}
+        onClose={() => setPlatformDrawerOpen(false)}
       />
       <div className="main-layout platform-layout">
         <StandaloneAdminHeader onBack={() => navigate('/app')} onLogout={handleLogout} />
@@ -700,6 +705,7 @@ function PlatformAdminScreen() {
 function AdminConsoleScreen() {
   const navigate = useNavigate();
   const { isUsingMock, hasPermission, isModuleEnabled, logOut } = useApp();
+  const [adminDrawerOpen, setAdminDrawerOpen] = useState(false);
 
   const handleLogout = async () => {
     const res = await logOut();
@@ -715,6 +721,11 @@ function AdminConsoleScreen() {
         isUsingMock={isUsingMock}
         hasPermission={hasPermission}
         isModuleEnabled={isModuleEnabled}
+        onOpenProfile={() => setAdminDrawerOpen(true)}
+      />
+      <ProfileDrawer
+        isOpen={adminDrawerOpen}
+        onClose={() => setAdminDrawerOpen(false)}
       />
       <div className="main-layout platform-layout">
         <StandaloneAdminHeader onBack={() => navigate('/app')} onLogout={handleLogout} />

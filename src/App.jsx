@@ -408,6 +408,7 @@ function AppShell() {
           isUsingMock={isUsingMock}
           hasPermission={hasPermission}
           isModuleEnabled={isModuleEnabled}
+          onOpenProfile={() => setProfileDrawerOpen(true)}
         />
 
         {/* 6. Profile & Multi-Agencies Drawer */}
@@ -439,6 +440,7 @@ function AppShell() {
         activeTab={activeTab}
         setActiveTab={handleTabChange}
         isUsingMock={isUsingMock}
+        onOpenProfile={() => setProfileDrawerOpen(true)}
         hasPermission={hasPermission}
         isModuleEnabled={isModuleEnabled}
       />

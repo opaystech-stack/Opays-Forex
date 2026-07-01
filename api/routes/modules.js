@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const stateSchema = z.object({
-  module_key: z.string().min(1),
+  module_name: z.string().min(1),
   enabled: z.boolean(),
 });
 
@@ -12,7 +12,7 @@ export default async function moduleRoutes(app) {
   // États d'activation des modules fonctionnels de l'agence.
   app.get('/states', async (request) => {
     const { rows } = await app.pg.query(
-      'SELECT module_key, enabled FROM module_states WHERE agency_id = $1',
+      'SELECT module_name, is_enabled FROM module_states WHERE agency_id = $1',
       [request.agencyId]
     );
     return { success: true, data: rows };
@@ -21,7 +21,7 @@ export default async function moduleRoutes(app) {
   // Habilitations (droits) accordées par la plateforme.
   app.get('/entitlements', async (request) => {
     const { rows } = await app.pg.query(
-      'SELECT module_key, granted FROM module_entitlements WHERE agency_id = $1',
+      'SELECT module_name, granted FROM module_entitlements WHERE agency_id = $1',
       [request.agencyId]
     );
     return { success: true, data: rows };
@@ -29,14 +29,14 @@ export default async function moduleRoutes(app) {
 
   // Active/désactive un module fonctionnel (persisté, isolé par agence).
   app.put('/states', async (request, reply) => {
-    const { module_key, enabled } = stateSchema.parse(request.body);
+    const { module_name, is_enabled } = stateSchema.parse(request.body);
     const { rows } = await app.pg.query(
-      `INSERT INTO module_states (agency_id, module_key, enabled)
+      `INSERT INTO module_states (agency_id, module_name, is_enabled)
        VALUES ($1, $2, $3)
-       ON CONFLICT (agency_id, module_key)
+       ON CONFLICT (agency_id, module_name)
        DO UPDATE SET enabled = EXCLUDED.enabled, updated_at = NOW()
-       RETURNING module_key, enabled`,
-      [request.agencyId, module_key, enabled]
+       RETURNING module_name, is_enabled`,
+      [request.agencyId, module_name, is_enabled]
     );
     return reply.send({ success: true, data: rows[0] });
   });

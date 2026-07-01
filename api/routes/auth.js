@@ -299,18 +299,18 @@ async function autoEnableAllModules(pgClient, agencyId) {
 
   for (const mod of additionalModules) {
     await pgClient.query(
-      `INSERT INTO module_entitlements (agency_id, module_key, granted)
+      `INSERT INTO module_entitlements (agency_id, module_name, granted)
        VALUES ($1, $2, true)
-       ON CONFLICT (agency_id, module_key) DO UPDATE SET granted = true`,
+       ON CONFLICT (agency_id, module_name) DO UPDATE SET granted = true`,
       [agencyId, mod]
     );
   }
 
   for (const mod of [...optionalModules, ...additionalModules]) {
     await pgClient.query(
-      `INSERT INTO module_states (agency_id, module_key, enabled)
+      `INSERT INTO module_states (agency_id, module_name, is_enabled)
        VALUES ($1, $2, true)
-       ON CONFLICT (agency_id, module_key) DO UPDATE SET enabled = true`,
+       ON CONFLICT (agency_id, module_name) DO UPDATE SET is_enabled = true`,
       [agencyId, mod]
     );
   }

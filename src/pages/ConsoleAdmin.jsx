@@ -308,9 +308,9 @@ export default function ConsoleAdmin() {
       <div className="screen-header">
         <h2 className="screen-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Shield size={20} color="var(--color-primary)" />
-          <span>Administration des accès</span>
+          <span>{t('admin.title')}</span>
         </h2>
-        <p className="screen-desc">Gérez les accès et les permissions des utilisateurs</p>
+        <p className="screen-desc">{t('admin.subtitle')}</p>
       </div>
 
       {error && (
